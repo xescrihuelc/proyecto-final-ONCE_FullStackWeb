@@ -1,0 +1,72 @@
+.imputacion-container {
+    flex-shrink: 0; /* no se reduzca */
+    flex-grow: 1; /* o que crezca para ocupar espacio */
+    min-width: 0; /* importante para flex */
+}
+
+.imputacion-title {
+    font-size: 2rem;
+    color: #004080;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.imputacion-form {
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0, 64, 128, 0.1);
+    /* padding: 2rem; */
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+    box-sizing: border-box;
+}
+
+.imputacion-label {
+    font-weight: 600;
+    color: #004080;
+    display: flex;
+    flex-direction: column;
+}
+
+.imputacion-input,
+.imputacion-textarea {
+    padding: 0.6rem 0.8rem;
+    font-size: 1rem;
+    border: 1.5px solid #cbd5e0;
+    border-radius: 5px;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    font-family: inherit;
+    resize: vertical;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.imputacion-input:focus,
+.imputacion-textarea:focus {
+    outline: none;
+    border-color: #00a3e0;
+    box-shadow: 0 0 6px #00a3e0aa;
+}
+
+.imputacion-btn {
+    align-self: flex-start;
+    width: 100%;
+    max-width: 100%;
+}
+.dashboard-logo {
+    height: 100px;
+    width: auto;
+    object-fit: contain;
+    opacity: 0.9;
+}
+.dashboard-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    width: 100%;
+}
