@@ -1,7 +1,7 @@
 const { User } = require("../models/user.model");
 const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-const { JWT_SECRET } = require("../config");
+// const jwt = require("jsonwebtoken");
+// const { JWT_SECRET } = require("../config");
 
 //
 const login = async (req, res) => {
@@ -26,7 +26,7 @@ const login = async (req, res) => {
     }
 
     // Generar token con el userId en el payload .sign() y un JWT secret
-    const accessToken = jwt.sign({ userId: user._id }, JWT_SECRET);
+    // const accessToken = jwt.sign({ userId: user._id }, JWT_SECRET);
     res.send({ Token: accessToken });
 };
 //
