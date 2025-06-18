@@ -1,9 +1,9 @@
 const TOKEN_KEY = "vic_token";
 
-export function login(username, password) {
+export function login(email, password) {
     return new Promise((resolve, reject) => {
         setTimeout(() => {
-            if (username && password) {
+            if (email && password) {
                 const fakeToken = "fake-jwt-token";
                 localStorage.setItem(TOKEN_KEY, fakeToken);
                 resolve(fakeToken);
