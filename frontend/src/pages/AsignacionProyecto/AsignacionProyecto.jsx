@@ -1,28 +1,14 @@
-import { useContext } from "react";
-import { ProyectoContext } from "../../context/ProyectoContext";
+import ListaProyectos from "../../components/ListaProyectos/ListaProyectos";
+import MisProyectos from "../../components/ListaProyectos/MisProyectos";
 
 const AsignacionProyecto = () => {
-  const { proyectos } = useContext(ProyectoContext);
-
-  return (
-    <div className="container">
-      <h2>Gestión de Proyectos</h2>
-      {proyectos.length === 0 ? (
-        <p>No hay proyectos disponibles.</p>
-      ) : (
-        proyectos.map(proyecto => (
-          <div key={proyecto.id} className="proyecto-item">
-            <h3>{proyecto.nombre}</h3>
-            <ul>
-              {proyecto.tareas.map(tarea => (
-                <li key={tarea.id}>{tarea.nombre}</li>
-              ))}
-            </ul>
-          </div>
-        ))
-      )}
-    </div>
-  );
+    return (
+        <div className="container">
+            <h2>Gestión de Proyectos</h2>
+            <ListaProyectos />
+            <MisProyectos />
+        </div>
+    );
 };
 
 export default AsignacionProyecto;

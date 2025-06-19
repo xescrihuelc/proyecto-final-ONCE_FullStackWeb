@@ -1,0 +1,33 @@
+.gestion-usuarios {
+    padding: 2rem;
+}
+
+.gestion-usuarios h1 {
+    margin-bottom: 1rem;
+}
+
+.gestion-usuarios table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.gestion-usuarios th,
+.gestion-usuarios td {
+    border: 1px solid #ddd;
+    padding: 0.75rem;
+    text-align: left;
+}
+
+.gestion-usuarios button {
+    margin-right: 0.5rem;
+    padding: 0.3rem 0.6rem;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.gestion-usuarios button:last-child {
+    background-color: #e74c3c;
+}
