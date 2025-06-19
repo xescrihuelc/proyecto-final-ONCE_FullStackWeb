@@ -1,3 +1,5 @@
+// ===== Archivo: pages/Login/Login.jsx =====
+
 import "./Login.css";
 import logo from "../../assets/LOGO_Ajuntament_VIC_NEGRO.png";
 import { useState } from "react";

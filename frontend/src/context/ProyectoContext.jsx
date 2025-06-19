@@ -1,50 +1,63 @@
-// ProyectoContext.js
+// src/context/ProyectoContext.jsx
 import React, { createContext, useState, useEffect } from "react";
 
 export const ProyectoContext = createContext();
 
 export const ProyectoProvider = ({ children }) => {
+    const datosSimulados = [
+        {
+            id: 1,
+            nombre: "Proyecto A",
+            tareas: [
+                { id: 101, nombre: "Diseño", asignados: [] },
+                { id: 102, nombre: "Desarrollo", asignados: [] },
+            ],
+        },
+        {
+            id: 2,
+            nombre: "Proyecto B",
+            tareas: [
+                { id: 201, nombre: "Documentación", asignados: [] },
+                { id: 202, nombre: "Testing", asignados: [] },
+            ],
+        },
+    ];
+
     const [proyectos, setProyectos] = useState(() => {
         const saved = localStorage.getItem("proyectos");
-        return saved ? JSON.parse(saved) : [];
+        return saved ? JSON.parse(saved) : datosSimulados;
     });
 
     useEffect(() => {
         localStorage.setItem("proyectos", JSON.stringify(proyectos));
     }, [proyectos]);
 
-    // Función para que un usuario se añada a una tarea (solo front)
     const asignarUsuarioATarea = (proyectoId, tareaId, usuarioId) => {
         setProyectos((prev) =>
-            prev.map((proyecto) => {
-                if (proyecto.id === proyectoId) {
-                    return {
-                        ...proyecto,
-                        tareas: proyecto.tareas.map((tarea) => {
-                            if (tarea.id === tareaId) {
-                                // Aquí se añade usuarioId a la lista de asignados (crea o actualiza)
-                                return {
-                                    ...tarea,
-                                    asignados: tarea.asignados
-                                        ? [
-                                              ...new Set([
-                                                  ...tarea.asignados,
-                                                  usuarioId,
-                                              ]),
-                                          ]
-                                        : [usuarioId],
-                                };
-                            }
-                            return tarea;
-                        }),
-                    };
-                }
-                return proyecto;
-            })
+            prev.map((proyecto) =>
+                proyecto.id === proyectoId
+                    ? {
+                          ...proyecto,
+                          tareas: proyecto.tareas.map((tarea) =>
+                              tarea.id === tareaId
+                                  ? {
+                                        ...tarea,
+                                        asignados: tarea.asignados
+                                            ? [
+                                                  ...new Set([
+                                                      ...tarea.asignados,
+                                                      usuarioId,
+                                                  ]),
+                                              ]
+                                            : [usuarioId],
+                                    }
+                                  : tarea
+                          ),
+                      }
+                    : proyecto
+            )
         );
     };
-
-    // Funciones admin para agregar/modificar proyectos aquí...
 
     return (
         <ProyectoContext.Provider

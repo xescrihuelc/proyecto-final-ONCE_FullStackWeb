@@ -1,3 +1,5 @@
+// ===== Archivo: App.jsx =====
+
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login/Login";
 import Dashboard from "./pages/Dashboard/Dashboard";
@@ -14,19 +16,22 @@ import ProtectedRoute from "./components/routing/ProtectedRoute";
 import "./App.css";
 
 function HomeRedirect() {
-    const { role } = useAuth();
+    const { role, loading } = useAuth();
+
+    if (loading) return <p>Cargando...</p>;
 
     if (role === "admin") return <Navigate to="/admin" replace />;
     if (role === "manager")
         return <Navigate to="/AsignacionProyecto" replace />;
     if (role === "trabajador") return <Navigate to="/imputacion" replace />;
 
-    // Si no tiene rol válido, logout forzado (opcional) o login
     return <Navigate to="/login" replace />;
 }
 
 function App() {
-    const { token, logout } = useAuth();
+    const { token, logout, loading } = useAuth();
+
+    if (loading) return <p>Cargando autenticación...</p>;
 
     return (
         <BrowserRouter>
@@ -36,13 +41,10 @@ function App() {
                     <div className="main-content">
                         <Header onLogout={logout} />
                         <Routes>
-                            {/* Login no accesible si ya hay token */}
                             <Route
                                 path="/login"
                                 element={<Navigate to="/" replace />}
                             />
-
-                            {/* Ruta raíz que redirige según rol */}
                             <Route
                                 path="/"
                                 element={
@@ -51,7 +53,6 @@ function App() {
                                     </ProtectedRoute>
                                 }
                             />
-                            {/* Rutas protegidas */}
                             <Route
                                 path="/dashboard"
                                 element={
@@ -100,7 +101,6 @@ function App() {
                                     </ProtectedRoute>
                                 }
                             />
-                            {/* Cualquier ruta no definida redirige a raíz */}
                             <Route
                                 path="*"
                                 element={<Navigate to="/" replace />}
@@ -109,7 +109,6 @@ function App() {
                     </div>
                 </div>
             ) : (
-                // Sin token, solo acceso a login
                 <Routes>
                     <Route path="/login" element={<Login />} />
                     <Route

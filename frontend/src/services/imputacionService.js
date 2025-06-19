@@ -1,3 +1,5 @@
+// ===== Archivo: services/imputacionService.js =====
+
 // src/services/imputacionService.js
 
 export const getDiasHabiles = async (mes = "06", anio = "2025") => {

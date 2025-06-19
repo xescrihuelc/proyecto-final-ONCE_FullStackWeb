@@ -1,3 +1,5 @@
+// === AdminPage.jsx mejorado con campos 'esEuropeo' y 'activo' ===
+
 import { useState, useContext } from "react";
 import {
     BarChart,
@@ -9,16 +11,6 @@ import {
 } from "recharts";
 import "./AdminPage.css";
 import { ProyectoContext } from "../../context/ProyectoContext";
-const proyectosIniciales = [
-    {
-        id: 1,
-        nombre: "Proyecto A",
-        tareas: [
-            { id: 1, nombre: "Diseño", maxHoras: 7.5 },
-            { id: 2, nombre: "Desarrollo", maxHoras: 7.5 },
-        ],
-    },
-];
 
 const usuariosIniciales = [
     { id: 1, nombre: "Juan Pérez", email: "juan@mail.com" },
@@ -30,6 +22,8 @@ const AdminPage = () => {
     const [nuevoProyecto, setNuevoProyecto] = useState({
         nombre: "",
         tareas: [],
+        esEuropeo: false,
+        activo: true,
     });
     const [nuevaTarea, setNuevaTarea] = useState({ nombre: "" });
     const [nuevoUsuario, setNuevoUsuario] = useState({ nombre: "", email: "" });
@@ -54,7 +48,12 @@ const AdminPage = () => {
             setProyectoEditado(null);
         } else {
             setProyectos([...proyectos, { ...p, id: Date.now() }]);
-            setNuevoProyecto({ nombre: "", tareas: [] });
+            setNuevoProyecto({
+                nombre: "",
+                tareas: [],
+                esEuropeo: false,
+                activo: true,
+            });
         }
     };
 
@@ -80,7 +79,14 @@ const AdminPage = () => {
         tareas: p.tareas.length,
     }));
 
-    const proyectoActual = proyectoEditado || nuevoProyecto;
+    const proyectoActual = {
+        nombre: "",
+        tareas: [],
+        esEuropeo: false,
+        activo: true,
+        ...(proyectoEditado || nuevoProyecto),
+    };
+
     const setProyectoActual = proyectoEditado
         ? setProyectoEditado
         : setNuevoProyecto;
@@ -108,6 +114,33 @@ const AdminPage = () => {
                         })
                     }
                 />
+                <label>
+                    <input
+                        type="checkbox"
+                        checked={proyectoActual.esEuropeo}
+                        onChange={(e) =>
+                            setProyectoActual({
+                                ...proyectoActual,
+                                esEuropeo: e.target.checked,
+                            })
+                        }
+                    />
+                    Proyecto Europeo
+                </label>
+                <label style={{ marginLeft: "1rem" }}>
+                    <input
+                        type="checkbox"
+                        checked={proyectoActual.activo}
+                        onChange={(e) =>
+                            setProyectoActual({
+                                ...proyectoActual,
+                                activo: e.target.checked,
+                            })
+                        }
+                    />
+                    Proyecto Activo
+                </label>
+
                 <div>
                     <input
                         className="input-inline"
@@ -171,7 +204,11 @@ const AdminPage = () => {
                 ) : (
                     proyectos.map((p) => (
                         <div key={p.id} className="proyecto-item">
-                            <strong>{p.nombre}</strong>
+                            <strong>{p.nombre}</strong>{" "}
+                            {p.esEuropeo && <span>🌍</span>}{" "}
+                            {!p.activo && (
+                                <em style={{ color: "gray" }}>(Inactivo)</em>
+                            )}
                             <button
                                 className="edit"
                                 onClick={() => setProyectoEditado({ ...p })}
