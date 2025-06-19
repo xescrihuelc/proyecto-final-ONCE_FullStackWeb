@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const ingredientSchema = new mongoose.Schema({
+const templateSchema = new mongoose.Schema({
     name: { type: String, required: true },
     userId: { type: String, required: true },
     quantity: { type: Number, default: 1 },
@@ -8,6 +8,6 @@ const ingredientSchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now },
 });
 
-const Ingredient = mongoose.model("Ingredient", ingredientSchema);
+const Template = mongoose.model("Template", templateSchema);
 
-module.exports = { Ingredient };
+module.exports = { Template };
