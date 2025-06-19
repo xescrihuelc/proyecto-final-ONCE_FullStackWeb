@@ -3,12 +3,23 @@ import { ProyectoContext } from "../../context/ProyectoContext";
 import { AuthContext } from "../../context/AuthContext";
 
 const MisProyectos = () => {
-    const { proyectos } = useContext(ProyectoContext);
+    const { proyectos = [] } = useContext(ProyectoContext); // fallback a array vacío
     const { user } = useContext(AuthContext);
 
-    // Filtramos los proyectos donde el usuario esté asignado a alguna tarea
-    const proyectosUsuario = proyectos.filter((proyecto) =>
-        proyecto.tareas.some((tarea) => tarea.asignados?.includes(user.id))
+    if (!user?.id) {
+        // Si user o user.id no está definido aún, mostramos mensaje o nada
+        return <p>Cargando usuario...</p>;
+    }
+
+    // Filtrar proyectos donde alguna tarea tenga asignado al usuario
+    const proyectosUsuario = proyectos.filter(
+        (proyecto) =>
+            Array.isArray(proyecto.tareas) && // asegurar que tareas es array
+            proyecto.tareas.some(
+                (tarea) =>
+                    Array.isArray(tarea.asignados) &&
+                    tarea.asignados.includes(user.id)
+            )
     );
 
     return (
@@ -22,8 +33,10 @@ const MisProyectos = () => {
                     <h4>{proyecto.nombre}</h4>
                     <ul>
                         {proyecto.tareas
-                            .filter((tarea) =>
-                                tarea.asignados?.includes(user.id)
+                            .filter(
+                                (tarea) =>
+                                    Array.isArray(tarea.asignados) &&
+                                    tarea.asignados.includes(user.id)
                             )
                             .map((tarea) => (
                                 <li key={tarea.id}>{tarea.nombre}</li>

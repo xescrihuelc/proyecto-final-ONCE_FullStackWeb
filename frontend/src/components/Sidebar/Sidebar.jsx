@@ -16,13 +16,13 @@ export default function Sidebar() {
                     <NavLink to="/imputacion">Imputación de Horas</NavLink>
                 </li>
                 <li>
-                    <NavLink to="/AsignacionProyecto">
-                        Gestión de Proyectos
-                    </NavLink>
+                    <NavLink to="/AsignacionProyecto">Proyectos</NavLink>
                 </li>
                 {role === "admin" && (
                     <li>
-                        <NavLink to="/admin">Administración</NavLink>
+                        <NavLink to="/admin">
+                            Admistrar Proyectos - Usuarios
+                        </NavLink>
                     </li>
                 )}
                 {role === "admin" && (
