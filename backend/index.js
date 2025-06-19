@@ -15,7 +15,7 @@ const main = () => {
     app.use(express.json());
     console.log("Mongo URL: ", process.env.MONGO_URI);
 
-    // app.use("/ingredients", auth, templateRoutes);
+    // app.use("/template", auth, templateRoutes);
     app.use("/", templateRoutes);
     app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
