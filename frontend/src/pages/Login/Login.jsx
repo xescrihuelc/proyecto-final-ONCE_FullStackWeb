@@ -1,12 +1,16 @@
 import './Login.css';
 import logo from '../../assets/LOGO_Ajuntament_VIC_NEGRO.png';
 import { useState } from 'react';
-import { login } from '../../services/authService'; // importa la función de login simulada
+import { login as loginService } from '../../services/authService';
+import { useAuth } from '../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
-const Login = ({ onLogin }) => {
+const Login = () => {
   const [credentials, setCredentials] = useState({ email: '', password: '' });
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setCredentials({ ...credentials, [e.target.name]: e.target.value });
@@ -17,8 +21,9 @@ const Login = ({ onLogin }) => {
     setLoading(true);
     setError(null);
     try {
-      const token = await login(credentials.email, credentials.password); // login simulado con email
-      onLogin(token); // actualiza el estado token en App.jsx
+      const userData = await loginService(credentials.email, credentials.password);
+      login(userData); // actualiza contexto
+      navigate('/');   // redirige al dashboard
     } catch (err) {
       setError('Correo o contraseña inválidos');
     } finally {

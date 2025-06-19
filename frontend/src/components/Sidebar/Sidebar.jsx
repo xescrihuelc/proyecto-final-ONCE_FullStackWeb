@@ -1,22 +1,19 @@
-import React from 'react';
-import { NavLink } from 'react-router-dom';
-import './Sidebar.css';
+import { NavLink } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
+import "./Sidebar.css";
 
 export default function Sidebar() {
+  const { role } = useAuth();
+
   return (
     <nav className="sidebar">
       <h2>Menú</h2>
       <ul>
-        <li>
-          <NavLink to="/" className={({ isActive }) => isActive ? 'active' : ''}>
-            Dashboard
-          </NavLink>
-        </li>
-        <li>
-          <NavLink to="/imputacion" className={({ isActive }) => isActive ? 'active' : ''}>
-            Imputación de horas
-          </NavLink>
-        </li>
+        <li><NavLink to="/dashboard">Dashboard</NavLink></li>
+        <li><NavLink to="/imputacion">Imputación de Horas</NavLink></li>
+        <li><NavLink to="/AsignacionProyecto">Gestión de Proyectos</NavLink></li>
+        {role === "admin" && <li><NavLink to="/admin">Administración</NavLink></li>}
+        {role === "admin" && <li><NavLink to="/usuarios">Gestión de Usuarios</NavLink></li>}
       </ul>
     </nav>
   );

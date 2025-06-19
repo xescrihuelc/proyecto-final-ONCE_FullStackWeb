@@ -1,23 +1,41 @@
-const TOKEN_KEY = "vic_token";
+export const login = async (email, password) => {
+    let mockUser = null;
 
-export function login(email, password) {
-    return new Promise((resolve, reject) => {
-        setTimeout(() => {
-            if (email && password) {
-                const fakeToken = "fake-jwt-token";
-                localStorage.setItem(TOKEN_KEY, fakeToken);
-                resolve(fakeToken);
-            } else {
-                reject("Credenciales inválidas");
-            }
-        }, 500);
-    });
-}
+    if (email === "admin@vic.com" && password === "1234") {
+        mockUser = {
+            email,
+            role: "admin",
+            token: "mock-token-123",
+        };
+    } else if (email === "manager@vic.com" && password === "1234") {
+        mockUser = {
+            email,
+            role: "manager",
+            token: "mock-token-456",
+        };
+    } else if (email === "trabajador@vic.com" && password === "1234") {
+        mockUser = {
+            email,
+            role: "trabajador",
+            token: "mock-token-789",
+        };
+    } else {
+        throw new Error("Credenciales inválidas");
+    }
 
-export function logout() {
-    localStorage.removeItem(TOKEN_KEY);
-}
+    localStorage.setItem("user", JSON.stringify(mockUser));
+    localStorage.setItem("token", mockUser.token);
+    return mockUser;
+};
 
-export function getToken() {
-    return localStorage.getItem(TOKEN_KEY);
-}
+export const logout = () => {
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+};
+
+export const getToken = () => localStorage.getItem("token");
+
+export const getUserData = () => {
+    const user = localStorage.getItem("user");
+    return user ? JSON.parse(user) : null;
+};
