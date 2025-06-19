@@ -29,7 +29,6 @@ html,
 }
 
 .sidebar {
-    width: 250px; /* ancho fijo */
     background-color: #004080;
     color: white;
     padding: 1rem;

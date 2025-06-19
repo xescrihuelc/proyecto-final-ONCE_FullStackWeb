@@ -1,38 +1,60 @@
-// ===== Archivo: components/Sidebar/Sidebar.jsx =====
+// components/Sidebar/Sidebar.jsx
 
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import "./Sidebar.css";
 
 export default function Sidebar() {
-    const { role } = useAuth();
+    const { role, logout, user } = useAuth();
 
     return (
-        <nav className="sidebar">
-            <h2>Menú</h2>
-            <ul>
-                <li>
-                    <NavLink to="/dashboard">Dashboard</NavLink>
-                </li>
-                <li>
-                    <NavLink to="/imputacion">Imputación de Horas</NavLink>
-                </li>
-                <li>
-                    <NavLink to="/AsignacionProyecto">Proyectos</NavLink>
-                </li>
-                {role === "admin" && (
+        <>
+            <nav className="sidebar">
+                <h2>Menú</h2>
+                <ul>
                     <li>
-                        <NavLink to="/admin">
-                            Admistrar Proyectos - Usuarios
-                        </NavLink>
+                        <NavLink to="/dashboard">Dashboard</NavLink>
                     </li>
-                )}
-                {role === "admin" && (
                     <li>
-                        <NavLink to="/GestionUser">Gestión de Usuarios</NavLink>
+                        <NavLink to="/imputacion">Imputación de Horas</NavLink>
                     </li>
-                )}
-            </ul>
-        </nav>
+                    <li>
+                        <NavLink to="/AsignacionProyecto">Proyectos</NavLink>
+                    </li>
+                    {role === "admin" && (
+                        <>
+                            <li>
+                                <NavLink to="/admin">Admin Proyectos</NavLink>
+                            </li>
+                            <li>
+                                <NavLink to="/GestionUser">
+                                    Gestión de Usuarios
+                                </NavLink>
+                            </li>
+                        </>
+                    )}
+                </ul>
+
+                {/* Solo visible en escritorio */}
+                <div className="sidebar-footer sidebar-desktop-only">
+                    <small>
+                        {user?.nombre} ({role})
+                    </small>
+                    <button onClick={logout} className="sidebar-logout">
+                        Cerrar sesión
+                    </button>
+                </div>
+            </nav>
+
+            {/* Solo visible en móvil */}
+            <div className="sidebar-footer sidebar-mobile-only">
+                <small>
+                    {user?.nombre} ({role})
+                </small>
+                <button onClick={logout} className="sidebar-logout">
+                    Cerrar sesión
+                </button>
+            </div>
+        </>
     );
 }
