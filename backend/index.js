@@ -7,7 +7,8 @@ const { dbConnection } = require("./db");
 const swaggerUi = require("swagger-ui-express");
 const swaggerDocument = require("./swagger-output.json");
 
-const templateRoutes = require("./routes/template.routes");
+const tasksRoutes = require("./routes/tasks.routes");
+const usersRoutes = require("./routes/users.routes");
 
 const main = () => {
     const app = express();
@@ -16,7 +17,8 @@ const main = () => {
     console.log("Mongo URL: ", process.env.MONGO_URI);
 
     // app.use("/template", auth, templateRoutes);
-    app.use("/", templateRoutes);
+    app.use("/tasks", tasksRoutes);
+    app.use("/users", usersRoutes);
     app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
     dbConnection();
