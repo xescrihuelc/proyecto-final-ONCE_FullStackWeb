@@ -1,51 +1,31 @@
-// src/services/authService.js
+import { API_URL } from "../utils/config";
 
 export const login = async (email, password) => {
-    return new Promise((resolve, reject) => {
-        setTimeout(() => {
-            const users = {
-                "admin@vic.com": {
-                    user: {
-                        id: 1,
-                        nombre: "Administrador VIC",
-                        email: "admin@vic.com",
-                    },
-                    token: "admin-token-123",
-                    role: "admin",
-                },
-                "manager@vic.com": {
-                    user: {
-                        id: 2,
-                        nombre: "Manager VIC",
-                        email: "manager@vic.com",
-                    },
-                    token: "manager-token-456",
-                    role: "manager",
-                },
-                "trabajador@vic.com": {
-                    user: {
-                        id: 3,
-                        nombre: "Trabajador VIC",
-                        email: "trabajador@vic.com",
-                    },
-                    token: "trabajador-token-789",
-                    role: "trabajador",
-                },
-            };
-
-            if (users[email] && password === "1234") {
-                resolve(users[email]);
-            } else {
-                reject("Credenciales inválidas");
-            }
-        }, 500);
+    const response = await fetch(`${API_URL}/users/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
     });
+
+    if (!response.ok) {
+        const { message } = await response.json();
+        throw new Error(message || "Credenciales incorrectas");
+    }
+
+    const data = await response.json();
+    localStorage.setItem("user", JSON.stringify(data.user));
+    localStorage.setItem("token", data.token);
+    return data;
 };
 
 export const logout = () => {
-    localStorage.clear();
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
 };
 
-export const getToken = () => {
-    return localStorage.getItem("token");
+export const getToken = () => localStorage.getItem("token");
+
+export const getUserData = () => {
+    const user = localStorage.getItem("user");
+    return user ? JSON.parse(user) : null;
 };

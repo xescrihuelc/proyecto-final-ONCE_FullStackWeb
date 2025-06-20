@@ -1,18 +1,16 @@
-// ===== Archivo: pages/Login/Login.jsx =====
-
 import "./Login.css";
 import logo from "../../assets/LOGO_Ajuntament_VIC_NEGRO.png";
 import { useState } from "react";
-import { login as loginService } from "../../services/authService";
-import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 
 const Login = () => {
+    const { login } = useAuth();
+    const navigate = useNavigate();
+
     const [credentials, setCredentials] = useState({ email: "", password: "" });
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
-    const { login } = useAuth();
-    const navigate = useNavigate();
 
     const handleChange = (e) => {
         setCredentials({ ...credentials, [e.target.name]: e.target.value });
@@ -23,14 +21,10 @@ const Login = () => {
         setLoading(true);
         setError(null);
         try {
-            const userData = await loginService(
-                credentials.email,
-                credentials.password
-            );
-            login(userData); // actualiza contexto
-            navigate("/"); // redirige al dashboard
+            await login(credentials.email, credentials.password);
+            navigate("/");
         } catch (err) {
-            setError("Correo o contraseña inválidos");
+            setError(err.message || "Correo o contraseña inválidos");
         } finally {
             setLoading(false);
         }

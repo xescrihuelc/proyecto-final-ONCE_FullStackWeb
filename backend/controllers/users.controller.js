@@ -3,28 +3,34 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { JWT_SECRET } = require("../config");
 
+// backend/controllers/users.controller.js
 
 const login = async (req, res) => {
-    //
-    // Recibir username y passwd
     const { email, password } = req.body;
     if (!email || !password) {
-        return res.status(404).json({ error: "Missing email or password" });
-    }
-    // Validar que el email exista
-    const user = await Users.findOne({ email: email });
-    if (!user) {
-        return res.status(404).json({ error: "INVALID_CREDENTIALS" });
-    }
-    // Validar que el password del email sea la misma que el recibido
-    const isPasswordMatch = bcrypt.compareSync(password, user.password);
-    if (!isPasswordMatch) {
-        return res.status(404).json({ error: "INVALID_CREDENTIALS" });
+        return res.status(400).json({ message: "Faltan datos" });
     }
 
-    // Generar token con el userId en el payload .sign() y un JWT secret
-    const accessToken = jwt.sign({ userId: user._id }, JWT_SECRET);
-    res.send({ Token: accessToken });
+    const user = await Users.findOne({ email: email });
+    if (!user) {
+        return res.status(401).json({ message: "Credenciales incorrectas" });
+    }
+
+    const isPasswordMatch = bcrypt.compareSync(password, user.password);
+    if (!isPasswordMatch) {
+        return res.status(401).json({ message: "Credenciales incorrectas" });
+    }
+
+    const token = jwt.sign({ userId: user._id }, "tortilladepatata"); // o tu JWT_SECRET real
+
+    res.json({
+        user: {
+            id: user._id,
+            email: user.email,
+            role: user.role || "trabajador", // por si no tiene rol aún
+        },
+        token,
+    });
 };
 
 const createUser = async (req, res) => {
@@ -40,7 +46,7 @@ const createUser = async (req, res) => {
         const user = new Users({
             _id: new mongoose.Types.ObjectId(),
             email: email,
-            password: hashedPassword
+            password: hashedPassword,
         });
         await user.save();
         res.status(201).send("User created");
@@ -66,9 +72,18 @@ const getUserById = async (req, res) => {
 };
 
 const updateUser = async (req, res) => {
-    const user = await Users.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const user = await Users.findByIdAndUpdate(req.params.id, req.body, {
+        new: true,
+    });
     if (!user) return res.status(404).json({ error: "User not found" });
     res.json(user);
 };
 
-module.exports = { login, createUser, getAllUsers, getUserById, updateUser };
+module.exports = {
+    loginUser: login,
+    login,
+    createUser,
+    getAllUsers,
+    getUserById,
+    updateUser,
+};
