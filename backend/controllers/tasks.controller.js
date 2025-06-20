@@ -13,8 +13,15 @@ exports.getTaskById = async (req, res) => {
 };
 
 exports.createTask = async (req, res) => {
+  const { estructura, lineaTrabajo, subnivel, subtarea } = req.body;
+  if (!subtarea) {
+    subtarea = "";
+  }
+  const fullTaskName =
+    estructura + "_" + lineaTrabajo + "_" + subnivel + "_" + subtarea;
   const task = new Tasks({
     _id: new mongoose.Types.ObjectId(),
+    fullTaskName,
     ...req.body,
   });
   await task.save();
