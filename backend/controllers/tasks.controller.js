@@ -1,6 +1,26 @@
 const { Tasks } = require("../models/tasks.model");
 const mongoose = require("mongoose");
 
+const checkImportantFields = async (body) => {
+    let res_json;
+
+    if (!body.subnivel) {
+        res_json = "subnivel";
+        return [false, res_json];
+    }
+
+    if (!body.lineaTrabajo) {
+        res_json = "lineaTrabajo";
+        return [false, res_json];
+    }
+
+    if (!body.estructura) {
+        res_json = "estructura";
+        return [false, res_json];
+    }
+    return [true];
+};
+
 exports.getAllTasks = async (req, res) => {
     const tasks = await Tasks.find();
     res.json(tasks);
@@ -13,16 +33,13 @@ exports.getTaskById = async (req, res) => {
 };
 
 exports.createTask = async (req, res) => {
-    if (!req.body.subnivel) {
-        return res.status(407).json({ error: "Missing required subnivel" });
-    }
+    const arePresentImportantFields = await checkImportantFields(req.body);
 
-    if (!req.body.lineaTrabajo) {
-        return res.status(407).json({ error: "Missing required lineaTrabajo" });
-    }
-
-    if (!req.body.estructura) {
-        return res.status(407).json({ error: "Missing required estructura" });
+    if (arePresentImportantFields[0] == false) {
+        const requiredParam = arePresentImportantFields[1];
+        return res
+            .status(406)
+            .json({ error: `Missing required ${requiredParam}` });
     }
 
     const task = new Tasks({
@@ -34,6 +51,15 @@ exports.createTask = async (req, res) => {
 };
 
 exports.updateTask = async (req, res) => {
+    const arePresentImportantFields = await checkImportantFields(req.body);
+
+    if (arePresentImportantFields[0] == false) {
+        const requiredParam = arePresentImportantFields[1];
+        return res
+            .status(406)
+            .json({ error: `Missing required ${requiredParam}` });
+    }
+
     const task = await Tasks.findByIdAndUpdate(req.params.id, req.body, {
         new: true,
     });
