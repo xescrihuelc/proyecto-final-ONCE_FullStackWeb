@@ -2,7 +2,7 @@ const { Users } = require("../models/users.model");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { JWT_SECRET } = require("../config");
-
+const { default: mongoose } = require("mongoose");
 
 const login = async (req, res) => {
     //
@@ -28,10 +28,13 @@ const login = async (req, res) => {
 };
 
 const createUser = async (req, res) => {
-    // Recibir email y password
-    const { email, password } = req.body;
+    // Recibir email, password y name
+    const { email, password, name } = req.body;
     if (!email || !password) {
         return res.status(404).json({ error: "Missing email or password" });
+    }
+    if (!name) {
+        return res.status(404).json({ error: "Missing required name" });
     }
     // Hashear password
     const hashedPassword = bcrypt.hashSync(password);
@@ -39,8 +42,9 @@ const createUser = async (req, res) => {
     try {
         const user = new Users({
             _id: new mongoose.Types.ObjectId(),
+            name: name,
             email: email,
-            password: hashedPassword
+            password: hashedPassword,
         });
         await user.save();
         res.status(201).send("User created");
@@ -66,7 +70,9 @@ const getUserById = async (req, res) => {
 };
 
 const updateUser = async (req, res) => {
-    const user = await Users.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const user = await Users.findByIdAndUpdate(req.params.id, req.body, {
+        new: true,
+    });
     if (!user) return res.status(404).json({ error: "User not found" });
     res.json(user);
 };
