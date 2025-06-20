@@ -50,15 +50,6 @@ const createUser = async (req, res) => {
 
     if (!roles) {
         return res.status(404).json({ error: "Missing required roles" });
-    } else {
-        if (!Array.isArray(roles)) {
-            return res.status(406).json({ error: "Roles must be an array" });
-        }
-        if (roles.length === 0) {
-            return res
-                .status(406)
-                .json({ error: "Roles array cannot be empty" });
-        }
     }
 
     if (!dailyHours) {
@@ -68,14 +59,6 @@ const createUser = async (req, res) => {
             return res.status(406).json({
                 error: "Daily hours must be a number and not negative",
             });
-        }
-    }
-
-    if (!assignedTasks) {
-        return res.status(404).json({ error: "Required tasks array" });
-    } else {
-        if (!Array.isArray(assignedTasks)) {
-            return res.status(406).json({ error: "Roles must be an array" });
         }
     }
 
@@ -91,6 +74,7 @@ const createUser = async (req, res) => {
             email: email,
             roles: roles,
             dailyHours: dailyHours,
+            assignedTasks: assignedTasks,
         });
         await user.save();
         res.status(201).send("User created");
