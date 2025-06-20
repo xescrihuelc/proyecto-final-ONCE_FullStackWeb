@@ -42,7 +42,8 @@ exports.createTask = async (req, res) => {
             .json({ error: `Missing required ${requiredParam}` });
     }
 
-    const { estructura, lineaTrabajo, subnivel, subtarea } = req.body;
+    const { estructura, lineaTrabajo, subnivel } = req.body;
+    let { subtarea } = req.body;
     if (!subtarea) {
         subtarea = "";
     }
