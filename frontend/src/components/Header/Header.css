@@ -1,10 +1,16 @@
 .header {
+    position: sticky;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 70px;
+    z-index: 1000;
     background: #ffffff;
     padding: 1rem 2rem;
-    border-bottom: 1px solid #ddd;
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
+    border-bottom: 1px solid #ddd;
     box-shadow: 0 2px 4px rgb(0 0 0 / 0.05);
 }
 
