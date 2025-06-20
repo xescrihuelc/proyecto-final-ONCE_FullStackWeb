@@ -36,78 +36,81 @@ function App() {
     return (
         <BrowserRouter>
             {token ? (
-                <div className="app-container">
-                    <Sidebar />
-                    <div className="main-content">
-                        <Header onLogout={logout} />
-                        <Routes>
-                            <Route
-                                path="/login"
-                                element={<Navigate to="/" replace />}
-                            />
-                            <Route
-                                path="/"
-                                element={
-                                    <ProtectedRoute>
-                                        <HomeRedirect />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/dashboard"
-                                element={
-                                    <ProtectedRoute>
-                                        <Dashboard />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/AsignacionProyecto"
-                                element={
-                                    <ProtectedRoute>
-                                        <AsignacionProyecto />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/imputacion"
-                                element={
-                                    <ProtectedRoute>
-                                        <Imputacion />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/imputacion-horas"
-                                element={
-                                    <ProtectedRoute>
-                                        <ImputacionHoras />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/admin"
-                                element={
-                                    <ProtectedRoute requiredRole="admin">
-                                        <AdminPage />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/GestionUser"
-                                element={
-                                    <ProtectedRoute requiredRole="admin">
-                                        <GestionUsuarios />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="*"
-                                element={<Navigate to="/" replace />}
-                            />
-                        </Routes>
+                <>
+                    <Header onLogout={logout} />{" "}
+                    {/* 🔥 Mueve el header arriba y fuera */}
+                    <div className="app-container">
+                        <Sidebar />
+                        <div className="main-content">
+                            <Routes>
+                                <Route
+                                    path="/login"
+                                    element={<Navigate to="/" replace />}
+                                />
+                                <Route
+                                    path="/"
+                                    element={
+                                        <ProtectedRoute>
+                                            <HomeRedirect />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/dashboard"
+                                    element={
+                                        <ProtectedRoute>
+                                            <Dashboard />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/AsignacionProyecto"
+                                    element={
+                                        <ProtectedRoute>
+                                            <AsignacionProyecto />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/imputacion"
+                                    element={
+                                        <ProtectedRoute>
+                                            <Imputacion />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/imputacion-horas"
+                                    element={
+                                        <ProtectedRoute>
+                                            <ImputacionHoras />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/admin"
+                                    element={
+                                        <ProtectedRoute requiredRole="admin">
+                                            <AdminPage />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/GestionUser"
+                                    element={
+                                        <ProtectedRoute requiredRole="admin">
+                                            <GestionUsuarios />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="*"
+                                    element={<Navigate to="/" replace />}
+                                />
+                            </Routes>
+                        </div>
                     </div>
-                </div>
+                </>
             ) : (
                 <Routes>
                     <Route path="/login" element={<Login />} />
