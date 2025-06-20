@@ -9,15 +9,15 @@ const usersSchema = new mongoose.Schema({
     password: { type: String, required: true },
     roles: {
         type: [String],
-        enum: ['admin', 'user'],
-        default: ['user'],
-        required: true
+        enum: ["admin", "user"],
+        default: ["user"],
+        required: true,
     },
     dailyHours: Number,
     isActive: Boolean,
     assignedTasks: {
         type: [Schema.Types.ObjectId],
-    }
+    },
 });
 
 const Users = mongoose.model("Users", usersSchema);

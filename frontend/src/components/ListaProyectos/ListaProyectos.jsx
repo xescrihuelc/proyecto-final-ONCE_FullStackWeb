@@ -15,10 +15,10 @@ const ListaProyectos = () => {
 
     const handleAsignar = (proyectoId, tareaId) => {
         const actualizados = proyectos.map((proyecto) =>
-            proyecto.id === proyectoId
+            proyecto.id === proyectoId || proyecto._id === proyectoId
                 ? {
                       ...proyecto,
-                      tareas: proyecto.tareas.map((tarea) =>
+                      tareas: obtenerTareas(proyecto).map((tarea) =>
                           tarea.id === tareaId
                               ? {
                                     ...tarea,
@@ -43,11 +43,26 @@ const ListaProyectos = () => {
         setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
     };
 
+    const obtenerTareas = (proyecto) => {
+        if (Array.isArray(proyecto.tareas)) return proyecto.tareas;
+        if (typeof proyecto.subtarea === "string") {
+            return proyecto.subtarea.split(",").map((t, i) => ({
+                id: `${proyecto._id}-${i}`,
+                nombre: t.trim(),
+                asignados: [],
+            }));
+        }
+        return [];
+    };
+
     if (loading || viewLoading) return <p>Cargando proyectos disponibles...</p>;
     if (!user)
         return <p>No estás autenticado. Inicia sesión para continuar.</p>;
 
-    const proyectosVisibles = proyectos.filter((p) => p.activo !== false);
+    const proyectosVisibles = proyectos.filter((p) => {
+        if (p.activo !== undefined) return p.activo;
+        return p.subnivel !== "Inactivo";
+    });
 
     return (
         <div style={{ marginTop: "2rem" }}>
@@ -55,55 +70,67 @@ const ListaProyectos = () => {
             {proyectosVisibles.length === 0 ? (
                 <p>No hay proyectos activos registrados aún.</p>
             ) : (
-                proyectosVisibles.map((proyecto) => (
-                    <div
-                        key={proyecto.id}
-                        style={{
-                            marginBottom: "1.5rem",
-                            borderBottom: "1px solid #ddd",
-                            paddingBottom: "1rem",
-                        }}
-                    >
-                        <h4>{proyecto.nombre}</h4>
-                        <button onClick={() => toggleExpanded(proyecto.id)}>
-                            {expanded[proyecto.id]
-                                ? "Ocultar tareas"
-                                : "Mostrar tareas"}
-                        </button>
-                        {expanded[proyecto.id] && (
-                            <ul
-                                style={{
-                                    maxHeight: "200px",
-                                    overflowY: "auto",
-                                    marginTop: "0.5rem",
-                                }}
+                proyectosVisibles.map((proyecto) => {
+                    const tareas = obtenerTareas(proyecto);
+                    return (
+                        <div
+                            key={proyecto.id || proyecto._id}
+                            style={{
+                                marginBottom: "1.5rem",
+                                borderBottom: "1px solid #ddd",
+                                paddingBottom: "1rem",
+                            }}
+                        >
+                            <h4>{proyecto.nombre || proyecto.estructura}</h4>
+                            <button
+                                onClick={() =>
+                                    toggleExpanded(proyecto.id || proyecto._id)
+                                }
                             >
-                                {proyecto.tareas.map((tarea) => (
-                                    <li
-                                        key={tarea.id}
-                                        style={{ margin: "0.4rem 0" }}
-                                    >
-                                        {tarea.nombre} —{" "}
-                                        {tarea.asignados?.includes(user.id) ? (
-                                            <strong>Ya estás asignado</strong>
-                                        ) : (
-                                            <button
-                                                onClick={() =>
-                                                    handleAsignar(
-                                                        proyecto.id,
-                                                        tarea.id
-                                                    )
-                                                }
-                                            >
-                                                Asignarme
-                                            </button>
-                                        )}
-                                    </li>
-                                ))}
-                            </ul>
-                        )}
-                    </div>
-                ))
+                                {expanded[proyecto.id || proyecto._id]
+                                    ? "Ocultar tareas"
+                                    : "Mostrar tareas"}
+                            </button>
+                            {expanded[proyecto.id || proyecto._id] && (
+                                <ul
+                                    style={{
+                                        maxHeight: "200px",
+                                        overflowY: "auto",
+                                        marginTop: "0.5rem",
+                                    }}
+                                >
+                                    {tareas.map((tarea) => (
+                                        <li
+                                            key={tarea.id}
+                                            style={{ margin: "0.4rem 0" }}
+                                        >
+                                            {tarea.nombre} —{" "}
+                                            {tarea.asignados?.includes(
+                                                user.id
+                                            ) ? (
+                                                <strong>
+                                                    Ya estás asignado
+                                                </strong>
+                                            ) : (
+                                                <button
+                                                    onClick={() =>
+                                                        handleAsignar(
+                                                            proyecto.id ||
+                                                                proyecto._id,
+                                                            tarea.id
+                                                        )
+                                                    }
+                                                >
+                                                    Asignarme
+                                                </button>
+                                            )}
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </div>
+                    );
+                })
             )}
         </div>
     );
