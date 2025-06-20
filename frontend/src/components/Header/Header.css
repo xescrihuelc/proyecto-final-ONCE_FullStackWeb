@@ -1,0 +1,38 @@
+.header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 70px;
+    z-index: 1000;
+    width: 100%;
+    background: #ffffff;
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid #ddd;
+    box-shadow: 0 2px 4px rgb(0 0 0 / 0.05);
+    box-sizing: border-box;
+}
+
+.header h1 {
+    font-weight: 700;
+    font-size: 1.5rem;
+    color: #002e5d;
+}
+
+.btn-logout {
+    background-color: #e63946;
+    border: none;
+    padding: 0.5rem 1rem;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.btn-logout:hover {
+    background-color: #c5303e;
+}

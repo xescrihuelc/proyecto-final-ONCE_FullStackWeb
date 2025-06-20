@@ -1,35 +1,127 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+// ===== Archivo: App.jsx =====
 
-function App() {
-  const [count, setCount] = useState(0)
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import Login from "./pages/Login/Login";
+import Dashboard from "./pages/Dashboard/Dashboard";
+import Imputacion from "./pages/Imputacion/Imputacion";
+import AsignacionProyecto from "./pages/AsignacionProyecto/AsignacionProyecto";
+import Header from "./components/Header/Header";
+import Sidebar from "./components/Sidebar/Sidebar";
+import { useAuth } from "./context/AuthContext";
+import GestionUsuarios from "./pages/GestionUsuarios/GestionUsuarios";
+import AdminPage from "./pages/AdminPage/AdminPage";
+import ImputacionHoras from "./pages/Imputacion/ImputacionHoras";
+import ProtectedRoute from "./components/routing/ProtectedRoute";
 
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+import "./App.css";
+
+function HomeRedirect() {
+    const { role, loading } = useAuth();
+
+    if (loading) return <p>Cargando...</p>;
+
+    if (role === "admin") return <Navigate to="/admin" replace />;
+    if (role === "manager")
+        return <Navigate to="/AsignacionProyecto" replace />;
+    if (role === "trabajador") return <Navigate to="/imputacion" replace />;
+
+    return <Navigate to="/login" replace />;
 }
 
-export default App
+function App() {
+    const { token, logout, loading } = useAuth();
+
+    if (loading) return <p>Cargando autenticación...</p>;
+
+    return (
+        <BrowserRouter>
+            {token ? (
+                <>
+                    <Header onLogout={logout} />{" "}
+                    {/* 🔥 Mueve el header arriba y fuera */}
+                    <div className="app-container">
+                        <Sidebar />
+                        <div className="main-content">
+                            <Routes>
+                                <Route
+                                    path="/login"
+                                    element={<Navigate to="/" replace />}
+                                />
+                                <Route
+                                    path="/"
+                                    element={
+                                        <ProtectedRoute>
+                                            <HomeRedirect />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/dashboard"
+                                    element={
+                                        <ProtectedRoute>
+                                            <Dashboard />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/AsignacionProyecto"
+                                    element={
+                                        <ProtectedRoute>
+                                            <AsignacionProyecto />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/imputacion"
+                                    element={
+                                        <ProtectedRoute>
+                                            <Imputacion />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/imputacion-horas"
+                                    element={
+                                        <ProtectedRoute>
+                                            <ImputacionHoras />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/admin"
+                                    element={
+                                        <ProtectedRoute requiredRole="admin">
+                                            <AdminPage />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/GestionUser"
+                                    element={
+                                        <ProtectedRoute requiredRole="admin">
+                                            <GestionUsuarios />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="*"
+                                    element={<Navigate to="/" replace />}
+                                />
+                            </Routes>
+                        </div>
+                    </div>
+                </>
+            ) : (
+                <Routes>
+                    <Route path="/login" element={<Login />} />
+                    <Route
+                        path="*"
+                        element={<Navigate to="/login" replace />}
+                    />
+                </Routes>
+            )}
+        </BrowserRouter>
+    );
+}
+
+export default App;
