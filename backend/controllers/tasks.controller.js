@@ -13,6 +13,18 @@ exports.getTaskById = async (req, res) => {
 };
 
 exports.createTask = async (req, res) => {
+    if (!req.body.subnivel) {
+        return res.status(407).json({ error: "Missing required subnivel" });
+    }
+
+    if (!req.body.lineaTrabajo) {
+        return res.status(407).json({ error: "Missing required lineaTrabajo" });
+    }
+
+    if (!req.body.estructura) {
+        return res.status(407).json({ error: "Missing required estructura" });
+    }
+
     const task = new Tasks({
         _id: new mongoose.Types.ObjectId(),
         ...req.body,
@@ -22,7 +34,9 @@ exports.createTask = async (req, res) => {
 };
 
 exports.updateTask = async (req, res) => {
-    const task = await Tasks.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const task = await Tasks.findByIdAndUpdate(req.params.id, req.body, {
+        new: true,
+    });
     if (!task) return res.status(404).json({ error: "Task not found" });
     res.json(task);
 };
