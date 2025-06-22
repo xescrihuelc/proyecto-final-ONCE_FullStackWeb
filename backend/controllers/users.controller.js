@@ -115,18 +115,42 @@ const getUserById = async (req, res) => {
 };
 
 const updateUser = async (req, res) => {
-    const arePresentImportantFields = await checkImportantFields(req.body);
+    try {
+        const user = await Users.findById(req.params.id);
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
 
-    if (arePresentImportantFields[0] == false) {
-        const error_msg = arePresentImportantFields[1];
-        return res.status(406).json({ error: `${error_msg}` });
+        //If exists password field on body, it will be hashed
+        if (req.body.password) {
+            const newPassword = req.body.password;
+            const currentPassword = user.password;
+            const isPasswordMatch = bcrypt.compareSync(
+                newPassword,
+                currentPassword
+            );
+
+            // If new password is the same as current password, return error
+            if (isPasswordMatch) {
+                return res
+                    .status(406)
+                    .json({ error: "New password is the current password" });
+            }
+            req.body.password = bcrypt.hashSync(req.body.password);
+        }
+
+        const updatedUser = await Users.findByIdAndUpdate(
+            req.params.id,
+            req.body,
+            {
+                new: true,
+            }
+        );
+        res.json(updatedUser);
+    } catch (error) {
+        console.error(err);
+        res.status(500).json({ error: "Server error" });
     }
-
-    const user = await Users.findByIdAndUpdate(req.params.id, req.body, {
-        new: true,
-    });
-    if (!user) return res.status(404).json({ error: "User not found" });
-    res.json(user);
 };
 
 const deleteUser = async (req, res) => {
