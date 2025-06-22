@@ -1,6 +1,9 @@
+// === Componente: MisProyectos.jsx ===
+
 import { useContext, useEffect, useState } from "react";
 import { ProyectoContext } from "../../context/ProyectoContext";
 import { useAuth } from "../../context/AuthContext";
+import "./MisProyectos.css";
 
 const MisProyectos = () => {
     const { proyectos, setProyectos } = useContext(ProyectoContext);
@@ -81,73 +84,38 @@ const MisProyectos = () => {
     const keys = Object.keys(tareasPorProyecto);
 
     return (
-        <div style={{ marginTop: "2rem" }}>
-            <h2 style={{ marginBottom: "1rem" }}>Mis Tareas Asignadas</h2>
+        <div className="seccion">
+            <h2 className="seccion-titulo">Mis Tareas Asignadas</h2>
             {keys.length === 0 ? (
                 <p>No estás asignado a ninguna tarea actualmente.</p>
             ) : (
                 keys.map((key) => {
                     const proyecto = tareasPorProyecto[key];
                     return (
-                        <div
-                            key={key}
-                            style={{
-                                marginBottom: "1.5rem",
-                                border: "1px solid #ccc",
-                                borderRadius: "6px",
-                                backgroundColor: "#f9f9f9",
-                            }}
-                        >
+                        <div key={key} className="tarjeta-expandible">
                             <div
+                                className="tarjeta-cabecera"
                                 onClick={() => toggleExpand(key)}
-                                style={{
-                                    padding: "0.75rem 1rem",
-                                    fontWeight: "bold",
-                                    cursor: "pointer",
-                                    backgroundColor: "#eee",
-                                    borderBottom: "1px solid #ccc",
-                                }}
                             >
                                 {proyecto.nombre} {expanded[key] ? "▲" : "▼"}
                             </div>
 
                             {expanded[key] && (
-                                <ul
-                                    style={{
-                                        listStyle: "none",
-                                        padding: "1rem",
-                                        maxHeight: "250px",
-                                        overflowY: "auto",
-                                    }}
-                                >
+                                <ul className="lista-tareas">
                                     {proyecto.tareas.map((tarea) => (
                                         <li
                                             key={tarea.id}
-                                            style={{
-                                                marginBottom: "0.75rem",
-                                                display: "flex",
-                                                justifyContent: "space-between",
-                                                alignItems: "center",
-                                                borderBottom: "1px solid #eee",
-                                                paddingBottom: "0.5rem",
-                                            }}
+                                            className="tarjeta-tarea"
                                         >
                                             <span>{tarea.nombre}</span>
                                             <button
+                                                className="btn-cancelar"
                                                 onClick={() =>
                                                     cancelarAsignacion(
                                                         key,
                                                         tarea.id
                                                     )
                                                 }
-                                                style={{
-                                                    backgroundColor: "#d9534f",
-                                                    color: "white",
-                                                    border: "none",
-                                                    padding: "0.3rem 0.6rem",
-                                                    cursor: "pointer",
-                                                    borderRadius: "4px",
-                                                }}
                                             >
                                                 Cancelar
                                             </button>

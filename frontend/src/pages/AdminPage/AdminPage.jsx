@@ -1,4 +1,4 @@
-// === AdminPage.jsx actualizado para respetar clases y estructura ===
+// === AdminPage.jsx actualizado ===
 
 import { useState, useContext, useEffect } from "react";
 import {
@@ -20,6 +20,7 @@ const AdminPage = () => {
     const [nuevoUsuario, setNuevoUsuario] = useState({
         email: "",
         password: "",
+        roles: ["user"],
     });
     const [nuevoProyecto, setNuevoProyecto] = useState({
         nombre: "",
@@ -82,13 +83,23 @@ const AdminPage = () => {
         }
 
         try {
-            await createUser(nuevoUsuario.email, nuevoUsuario.password);
+            const sesameId = crypto.randomUUID();
+            await createUser({ ...nuevoUsuario, sesameEmployeeId: sesameId });
             const updatedUsers = await getAllUsers();
             setUsuarios(updatedUsers);
-            setNuevoUsuario({ email: "", password: "" });
+            setNuevoUsuario({ email: "", password: "", roles: ["user"] });
         } catch (err) {
             alert("Error creando usuario: " + err.message);
         }
+    };
+
+    const handleRoleChange = (role) => {
+        setNuevoUsuario((prev) => {
+            const roles = prev.roles.includes(role)
+                ? prev.roles.filter((r) => r !== role)
+                : [...prev.roles, role];
+            return { ...prev, roles };
+        });
     };
 
     const datosGrafico = proyectos.map((p) => ({
@@ -210,6 +221,24 @@ const AdminPage = () => {
                         })
                     }
                 />
+                <div style={{ marginTop: "0.5rem" }}>
+                    <label>
+                        <input
+                            type="checkbox"
+                            checked={nuevoUsuario.roles.includes("user")}
+                            onChange={() => handleRoleChange("user")}
+                        />
+                        Rol: Usuario
+                    </label>
+                    <label style={{ marginLeft: "1rem" }}>
+                        <input
+                            type="checkbox"
+                            checked={nuevoUsuario.roles.includes("admin")}
+                            onChange={() => handleRoleChange("admin")}
+                        />
+                        Rol: Administrador
+                    </label>
+                </div>
                 <button onClick={agregarUsuario}>Crear Usuario</button>
                 <ul style={{ marginTop: "1rem" }}>
                     {usuarios.map((u) => (

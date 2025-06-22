@@ -11,7 +11,7 @@ export const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [token, setToken] = useState(null);
-    const [role, setRole] = useState(null);
+    const [roles, setRoles] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -21,7 +21,7 @@ export const AuthProvider = ({ children }) => {
         if (storedUser && storedToken) {
             setUser(storedUser);
             setToken(storedToken);
-            setRole(storedUser.role);
+            setRoles(storedUser.roles || []); // Usar array
         }
 
         setLoading(false);
@@ -31,19 +31,19 @@ export const AuthProvider = ({ children }) => {
         const data = await apiLogin(email, password);
         setUser(data.user);
         setToken(data.token);
-        setRole(data.user.role);
+        setRoles(data.user.roles || []);
     };
 
     const logout = () => {
         apiLogout();
         setUser(null);
         setToken(null);
-        setRole(null);
+        setRoles([]);
     };
 
     return (
         <AuthContext.Provider
-            value={{ user, token, role, login, logout, loading }}
+            value={{ user, token, roles, login, logout, loading }}
         >
             {children}
         </AuthContext.Provider>

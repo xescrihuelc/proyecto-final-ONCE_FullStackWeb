@@ -16,14 +16,15 @@ import ProtectedRoute from "./components/routing/ProtectedRoute";
 import "./App.css";
 
 function HomeRedirect() {
-    const { role, loading } = useAuth();
+    const { roles, loading } = useAuth();
 
     if (loading) return <p>Cargando...</p>;
 
-    if (role === "admin") return <Navigate to="/admin" replace />;
-    if (role === "manager")
+    if (roles.includes("admin")) return <Navigate to="/admin" replace />;
+    if (roles.includes("manager"))
         return <Navigate to="/AsignacionProyecto" replace />;
-    if (role === "trabajador") return <Navigate to="/imputacion" replace />;
+    if (roles.includes("trabajador"))
+        return <Navigate to="/imputacion" replace />;
 
     return <Navigate to="/login" replace />;
 }

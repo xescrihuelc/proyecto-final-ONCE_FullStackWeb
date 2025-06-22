@@ -1,16 +1,19 @@
-// ===== Archivo: services/imputacionService.js =====
+import { API_URL } from "../utils/config";
 
-// src/services/imputacionService.js
+// Obtener días trabajados o ausencias simuladas desde Sesame
+export const getDiasSesame = async (
+    sesameEmployeeId,
+    fechaInicio,
+    fechaFin
+) => {
+    const res = await fetch(
+        `${API_URL}/sesame/simulacion?employeeId=${sesameEmployeeId}&from=${fechaInicio}&to=${fechaFin}`
+    );
 
-export const getDiasHabiles = async (mes = "06", anio = "2025") => {
-    // Datos simulados basados en el PDF que enviaste
-    return [
-        { fecha: "2025-06-03", dia: "Lunes", control: 1 },
-        { fecha: "2025-06-04", dia: "Martes", control: 1 },
-        { fecha: "2025-06-05", dia: "Miércoles", control: 1 },
-        { fecha: "2025-06-06", dia: "Jueves", control: 1 },
-        { fecha: "2025-06-07", dia: "Viernes", control: 0 }, // no trabajable
-        { fecha: "2025-06-10", dia: "Lunes", control: 1 },
-        // ...añade más simulados
-    ];
+    if (!res.ok) {
+        const { error } = await res.json();
+        throw new Error(error || "Error al consultar días trabajados");
+    }
+
+    return await res.json(); // devuelve data.data[0].days
 };

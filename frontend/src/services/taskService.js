@@ -20,12 +20,11 @@ export const parseTasksFromBackend = (task) => {
 };
 
 // Obtener todos los proyectos y convertirlos
-export const getAllTasks = async () => {
-    const res = await fetch(`${API_URL}/tasks`);
-    if (!res.ok) throw new Error("Error al cargar proyectos");
+export const getAllTasksLight = async () => {
+    const res = await fetch(`${API_URL}/tasks/light`);
+    if (!res.ok) throw new Error("Error al cargar tareas para el buscador");
 
-    const raw = await res.json();
-    return raw.map(parseTasksFromBackend);
+    return await res.json();
 };
 
 // Crear un nuevo proyecto (convertido previamente en el componente)
