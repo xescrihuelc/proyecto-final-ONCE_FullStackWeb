@@ -1,4 +1,4 @@
-const { mongoose } = require("mongoose");
+const mongoose = require("mongoose");
 const { Users } = require("../models/users.model");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
@@ -80,6 +80,8 @@ const createUser = async (req, res) => {
 };
 
 const getAllUsers = async (req, res) => {
+  console.log("YAY");
+
   const users = await Users.find();
   res.json(users);
 };
@@ -98,7 +100,7 @@ const updateUser = async (req, res) => {
   res.json(user);
 };
 
-exports.deleteUser = async (req, res) => {
+const deleteUser = async (req, res) => {
   const { id } = req.params;
 
   try {
@@ -118,4 +120,11 @@ exports.deleteUser = async (req, res) => {
   }
 };
 
-module.exports = { login, createUser, getAllUsers, getUserById, updateUser };
+module.exports = {
+  login,
+  createUser,
+  getAllUsers,
+  getUserById,
+  updateUser,
+  deleteUser,
+};
