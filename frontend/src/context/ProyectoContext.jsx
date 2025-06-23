@@ -1,36 +1,32 @@
 // src/context/ProyectoContext.jsx
-import React, { createContext, useState, useEffect } from "react";
+import React, { createContext, useState, useEffect, useContext } from "react";
+import { getAllTasks } from "../services/taskService";
+import { AuthContext } from "./AuthContext"; // ✅ importante
 
 export const ProyectoContext = createContext();
 
 export const ProyectoProvider = ({ children }) => {
-    const datosSimulados = [
-        {
-            id: 1,
-            nombre: "Proyecto A",
-            tareas: [
-                { id: 101, nombre: "Diseño", asignados: [] },
-                { id: 102, nombre: "Desarrollo", asignados: [] },
-            ],
-        },
-        {
-            id: 2,
-            nombre: "Proyecto B",
-            tareas: [
-                { id: 201, nombre: "Documentación", asignados: [] },
-                { id: 202, nombre: "Testing", asignados: [] },
-            ],
-        },
-    ];
+    const [proyectos, setProyectos] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    const [proyectos, setProyectos] = useState(() => {
-        const saved = localStorage.getItem("proyectos");
-        return saved ? JSON.parse(saved) : datosSimulados;
-    });
+    const { token } = useContext(AuthContext); // ✅ forma correcta
 
     useEffect(() => {
-        localStorage.setItem("proyectos", JSON.stringify(proyectos));
-    }, [proyectos]);
+        const fetchProyectos = async () => {
+            try {
+                if (!token) return;
+
+                const tareasBD = await getAllTasks(token); // ✅ token pasado correctamente
+                setProyectos(tareasBD);
+            } catch (err) {
+                console.error("Error al cargar proyectos:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchProyectos();
+    }, [token]);
 
     const asignarUsuarioATarea = (proyectoId, tareaId, usuarioId) => {
         setProyectos((prev) =>
@@ -61,7 +57,7 @@ export const ProyectoProvider = ({ children }) => {
 
     return (
         <ProyectoContext.Provider
-            value={{ proyectos, setProyectos, asignarUsuarioATarea }}
+            value={{ proyectos, setProyectos, asignarUsuarioATarea, loading }}
         >
             {children}
         </ProyectoContext.Provider>

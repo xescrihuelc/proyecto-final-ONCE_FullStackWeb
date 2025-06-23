@@ -1,0 +1,19 @@
+/* === Contenedor principal de la vista === */
+.vista-imputacion-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+/* === Título principal === */
+.vista-imputacion-container h2 {
+    text-align: center;
+    color: #003366;
+    font-size: 2rem;
+    margin-bottom: 2rem;
+}
+
+/* === Espaciado entre secciones === */
+.vista-imputacion-container > *:not(:last-child) {
+    margin-bottom: 2.5rem;
+}

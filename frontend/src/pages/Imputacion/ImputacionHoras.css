@@ -1,0 +1,69 @@
+/* ===== Archivo: ImputacionHoras.css ===== */
+
+/* === Contenedor principal === */
+.imputacion-horas-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 0 15px rgba(0, 64, 128, 0.08);
+}
+
+/* === Títulos === */
+.imputacion-horas-container h2 {
+    font-size: 1.8rem;
+    color: #003366;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.imputacion-horas-container h3 {
+    font-size: 1.2rem;
+    color: #004080;
+    margin-bottom: 1rem;
+}
+
+/* === Selects y Inputs === */
+.imputacion-horas-container select,
+.imputacion-horas-container input[type="text"] {
+    width: 100%;
+    padding: 0.6rem;
+    margin-bottom: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 1rem;
+    box-sizing: border-box;
+}
+
+/* === Botón === */
+.imputacion-horas-container button {
+    width: 100%;
+    background-color: #004080;
+    color: white;
+    padding: 0.8rem;
+    font-size: 1rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    margin-top: 0.5rem;
+}
+
+.imputacion-horas-container button:hover:not(:disabled) {
+    background-color: #0066cc;
+}
+
+.imputacion-horas-container button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+/* === Estadísticas === */
+.imputacion-horas-container p {
+    margin-top: 1.5rem;
+    font-size: 0.95rem;
+    color: #333;
+    text-align: center;
+}

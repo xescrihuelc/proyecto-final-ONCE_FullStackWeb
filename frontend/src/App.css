@@ -40,16 +40,14 @@ html,
 }
 
 .main-content {
-    flex: 1;
+    flex-grow: 1;
+    background-color: #f9fbfd;
+    padding: 1rem;
     overflow-y: auto;
-    padding-top: 80px; /* espacio para el header fixed */
-    padding-left: 2rem;
-    padding-right: 2rem;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
 }
-
 /* Responsive básico */
 @media (max-width: 768px) {
     .app-container {

@@ -3,15 +3,25 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
-import { AuthProvider } from "./context/AuthContext";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ProyectoProvider } from "./context/ProyectoContext";
+
+const Root = () => {
+    const { loading } = useAuth();
+
+    if (loading) return <div>Cargando usuario...</div>;
+
+    return (
+        <ProyectoProvider>
+            <App />
+        </ProyectoProvider>
+    );
+};
 
 ReactDOM.createRoot(document.getElementById("root")).render(
     //<React.StrictMode>
     <AuthProvider>
-        <ProyectoProvider>
-            <App />
-        </ProyectoProvider>
+        <Root />
     </AuthProvider>
     //</React.StrictMode>
 );

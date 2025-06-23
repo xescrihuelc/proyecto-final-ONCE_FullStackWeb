@@ -1,4 +1,4 @@
-// ===== Dashboard.jsx corregido (usando las clases correctas del CSS) =====
+// ===== Dashboard.jsx corregido y seguro =====
 
 import { useAuth } from "../../context/AuthContext";
 import { useContext } from "react";
@@ -14,33 +14,40 @@ import {
 import "./Dashboard.css";
 
 const Dashboard = () => {
-    const { role, user } = useAuth();
+    const { roles, user } = useAuth();
     const { proyectos } = useContext(ProyectoContext);
 
-    const proyectosActivos = proyectos.filter((p) => p.activo);
-    const proyectosInactivos = proyectos.filter((p) => !p.activo);
+    const proyectosActivos = proyectos?.filter((p) => p.activo) || [];
+    const proyectosInactivos = proyectos?.filter((p) => !p.activo) || [];
 
-    const tareasPorProyecto = proyectos.map((p) => ({
-        nombre: p.nombre,
-        tareas: p.tareas.length,
-    }));
+    const tareasPorProyecto =
+        proyectos?.map((p) => ({
+            nombre: p.nombre,
+            tareas: Array.isArray(p.tareas) ? p.tareas.length : 0,
+        })) || [];
 
-    const horasTotales = proyectos.reduce((acc, p) => {
-        return acc + p.tareas.reduce((sum, t) => sum + (t.horas || 0), 0);
+    const horasTotales = proyectos?.reduce((acc, p) => {
+        return (
+            acc +
+            (Array.isArray(p.tareas)
+                ? p.tareas.reduce((sum, t) => sum + (t.horas || 0), 0)
+                : 0)
+        );
     }, 0);
 
-    const tareasUsuario = proyectos.flatMap((p) =>
-        p.tareas.filter((t) => t.asignados?.includes(user?.id))
-    );
+    const tareasUsuario =
+        proyectos?.flatMap((p) =>
+            (p.tareas || []).filter((t) => t.asignados?.includes(user?.id))
+        ) || [];
 
     return (
         <div className="dashboard-container">
             <h2 className="dashboard-title">Bienvenido, {user?.nombre}</h2>
             <p className="dashboard-subtitle">
-                Rol: <strong>{role}</strong>
+                Rol: <strong>{roles?.join(", ")}</strong>
             </p>
 
-            {role === "admin" && (
+            {roles?.includes("admin") && (
                 <section className="dashboard-section">
                     <div className="dashboard-grid">
                         <div className="dashboard-card">
@@ -55,7 +62,11 @@ const Dashboard = () => {
                             <h2>Tareas Totales</h2>
                             <p>
                                 {proyectos.reduce(
-                                    (acc, p) => acc + p.tareas.length,
+                                    (acc, p) =>
+                                        acc +
+                                        (Array.isArray(p.tareas)
+                                            ? p.tareas.length
+                                            : 0),
                                     0
                                 )}
                             </p>
@@ -80,7 +91,7 @@ const Dashboard = () => {
                 </section>
             )}
 
-            {role === "manager" && (
+            {roles?.includes("manager") && (
                 <section className="dashboard-section">
                     <div className="dashboard-grid">
                         <div className="dashboard-card">
@@ -93,13 +104,13 @@ const Dashboard = () => {
                         </div>
                     </div>
                     <div className="dashboard-message">
-                        Este panel será más últil cuando se integren
-                        validaciones por backend.
+                        Este panel será más útil cuando se integren validaciones
+                        por backend.
                     </div>
                 </section>
             )}
 
-            {role === "trabajador" && (
+            {roles?.includes("trabajador") && (
                 <section className="dashboard-section">
                     <div className="dashboard-grid">
                         <div className="dashboard-card">
@@ -110,13 +121,9 @@ const Dashboard = () => {
                             <h2>Proyectos</h2>
                             <p>
                                 {
-                                    [
-                                        ...new Set(
-                                            tareasUsuario.map(
-                                                (t) => t.proyectoId
-                                            )
-                                        ),
-                                    ].length
+                                    new Set(
+                                        tareasUsuario.map((t) => t.proyectoId)
+                                    ).size
                                 }
                             </p>
                         </div>

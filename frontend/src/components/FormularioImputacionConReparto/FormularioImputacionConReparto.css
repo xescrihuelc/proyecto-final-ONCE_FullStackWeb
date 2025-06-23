@@ -1,0 +1,85 @@
+/* === Contenedor principal === */
+.formulario-imputacion-reparto {
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 64, 128, 0.1);
+    padding: 2rem;
+    margin: 2rem auto 0 auto;
+    max-width: 900px;
+    width: 95%;
+}
+
+/* === Encabezado === */
+.formulario-imputacion-reparto h3 {
+    font-size: 1.6rem;
+    color: #002b5c;
+    margin-bottom: 0.5rem;
+    text-align: center;
+}
+
+.formulario-imputacion-reparto p {
+    color: #555;
+    font-size: 0.95rem;
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+/* === Tabla de asignación === */
+.formulario-imputacion-reparto table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1.5rem;
+}
+
+.formulario-imputacion-reparto th,
+.formulario-imputacion-reparto td {
+    border: 1px solid #d9e2ec;
+    padding: 0.8rem;
+    font-size: 0.95rem;
+    text-align: left;
+}
+
+.formulario-imputacion-reparto th {
+    background-color: #f0f4f8;
+    color: #003366;
+    font-weight: 600;
+}
+
+/* === Inputs === */
+.formulario-imputacion-reparto input[type="text"] {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    transition: border-color 0.2s ease;
+}
+
+.formulario-imputacion-reparto input[type="text"]:focus {
+    border-color: #004080;
+    outline: none;
+}
+
+/* === Botón de guardar === */
+.btn-imputar {
+    display: block;
+    margin: 0 auto;
+    background-color: #004080;
+    color: #fff;
+    padding: 0.9rem 2rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: background-color 0.2s ease;
+}
+
+.btn-imputar:hover:not(:disabled) {
+    background-color: #0066cc;
+}
+
+.btn-imputar:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}

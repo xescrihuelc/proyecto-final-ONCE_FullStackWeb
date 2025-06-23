@@ -1,13 +1,13 @@
 // ===== Archivo: pages/AsignacionProyecto/AsignacionProyecto.jsx =====
 
-import ListaProyectos from "../../components/ListaProyectos/ListaProyectos";
 import MisProyectos from "../../components/ListaProyectos/MisProyectos";
+import BuscadorTareas from "../../components/ListaProyectos/BuscadorTareas";
 
 const AsignacionProyecto = () => {
     return (
         <div className="container">
             <h2>Gestión de Proyectos</h2>
-            <ListaProyectos />
+            <BuscadorTareas />
             <MisProyectos />
         </div>
     );
