@@ -1,38 +1,50 @@
 // src/services/taskService.js
-import { API_URL } from "../utils/config";
 
-// Parsea cada proyecto recibido del backend en un objeto usable con tareas
+import { API_URL } from "../utils/config";
+import { getToken } from "./authService";
+
+// Reutilizamos el parser que ya tienes
 export const parseTasksFromBackend = (task) => {
     const tareas =
         task.subtarea?.split(",").map((nombre, i) => ({
             id: `${task._id}-${i}`,
             nombre: nombre.trim(),
-            asignados: [], // esto se puede actualizar desde frontend
+            asignados: [], // puedes extender esto más adelante
         })) || [];
 
     return {
         id: task._id,
         nombre: task.estructura,
-        esEuropeo: task.lineaTrabajo === "Europeo",
+        esEuropeo: task.lineaTrabajo?.includes("Europeo"),
         activo: task.subnivel === "Activo",
         tareas,
     };
 };
 
-// Obtener todos los proyectos y convertirlos
-export const getAllTasksLight = async () => {
-    const res = await fetch(`${API_URL}/tasks/light`);
-    if (!res.ok) throw new Error("Error al cargar tareas para el buscador");
+// ✅ Esta es la única función que debes usar
+export const getAllTasks = async () => {
+    const token = getToken();
+    const res = await fetch(`${API_URL}/tasks`, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
 
-    return await res.json();
+    if (!res.ok) {
+        throw new Error("Error al cargar tareas para el buscador");
+    }
+
+    const raw = await res.json();
+    return raw.map(parseTasksFromBackend);
 };
 
-// Crear un nuevo proyecto (convertido previamente en el componente)
+// El resto permanece igual si lo necesitas más adelante:
 export const createTask = async (task) => {
     const res = await fetch(`${API_URL}/tasks`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${getToken()}`,
         },
         body: JSON.stringify(task),
     });
@@ -41,12 +53,12 @@ export const createTask = async (task) => {
     return await res.json();
 };
 
-// Actualizar proyecto existente (si decides usarlo)
 export const updateTask = async (id, updates) => {
     const res = await fetch(`${API_URL}/tasks/${id}`, {
         method: "PATCH",
         headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${getToken()}`,
         },
         body: JSON.stringify(updates),
     });

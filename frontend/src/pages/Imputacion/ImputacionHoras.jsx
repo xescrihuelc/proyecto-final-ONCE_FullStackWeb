@@ -5,7 +5,7 @@ import { useAuth } from "../../context/AuthContext";
 import { getAllTasks } from "../../services/taskService";
 import { createHourRecord } from "../../services/hourService";
 import { getDiasSesame } from "../../services/sesameService";
-import { getDateRangeForPeriod } from "../../utils/dateUtils";
+import { getRangoDelPeriodo } from "../../utils/dateUtils";
 import "./ImputacionHoras.css";
 
 function ImputacionHoras() {
@@ -31,7 +31,7 @@ function ImputacionHoras() {
 
     useEffect(() => {
         const cargarHorasYFechas = async () => {
-            const { from, to } = getDateRangeForPeriod("mes");
+            const { from, to } = getRangoDelPeriodo("mes");
 
             const [diasData, horasData] = await Promise.all([
                 getDiasSesame(user.sesameEmployeeId, from, to),
@@ -115,9 +115,7 @@ function ImputacionHoras() {
                     <option value="">Selecciona tarea</option>
                     {nuevoRegistro.proyecto &&
                         proyectos
-                            .find(
-                                (p) => p.id === Number(nuevoRegistro.proyecto)
-                            )
+                            .find((p) => p.id === nuevoRegistro.proyecto)
                             ?.tareas.map((t) => (
                                 <option key={t.id} value={t.id}>
                                     {t.nombre}

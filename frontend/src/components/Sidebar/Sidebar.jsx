@@ -3,7 +3,7 @@ import { useAuth } from "../../context/AuthContext";
 import "./Sidebar.css";
 
 export default function Sidebar() {
-    const { role, logout, user } = useAuth();
+    const { roles, logout, user } = useAuth();
 
     return (
         <>
@@ -14,10 +14,10 @@ export default function Sidebar() {
                         <NavLink to="/dashboard">Dashboard</NavLink>
                     </li>
                     <li>
-                        <NavLink to="/imputacion">Imputación de Horas</NavLink>
+                        <NavLink to="/panel-imputacion">Imputación de Horas</NavLink>
                     </li>
 
-                    {role === "admin" && (
+                    {roles?.includes("admin") && (
                         <>
                             <li>
                                 <NavLink to="/AsignacionProyecto">
@@ -39,7 +39,7 @@ export default function Sidebar() {
                 {/* Solo visible en escritorio */}
                 <div className="sidebar-footer sidebar-desktop-only">
                     <small>
-                        {user?.nombre} ({role})
+                        {user?.name} ({roles?.join(", ")})
                     </small>
                     <button onClick={logout} className="sidebar-logout">
                         Cerrar sesión
@@ -50,7 +50,7 @@ export default function Sidebar() {
             {/* Solo visible en móvil */}
             <div className="sidebar-footer sidebar-mobile-only">
                 <small>
-                    {user?.nombre} ({role})
+                    {user?.name} ({roles?.join(", ")})
                 </small>
                 <button onClick={logout} className="sidebar-logout">
                     Cerrar sesión

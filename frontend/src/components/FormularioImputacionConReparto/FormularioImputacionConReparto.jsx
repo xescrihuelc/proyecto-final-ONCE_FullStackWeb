@@ -1,22 +1,19 @@
-// src/components/FormularioImputacionConReparto/FormularioImputacionConReparto.jsx
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { postImputacionesDistribuidas } from "../../services/imputacionService";
 import "./FormularioImputacionConReparto.css";
 
-const tareasMock = [
-    { id: 1, nombre: "Diseño UI" },
-    { id: 2, nombre: "Desarrollo API" },
-    { id: 3, nombre: "Reuniones" },
-];
-
-export default function FormularioImputacionConReparto({ resumen }) {
+export default function FormularioImputacionConReparto({ resumen, tareas }) {
     const { user } = useAuth();
-    const [inputs, setInputs] = useState(
-        tareasMock.map((t) => ({ tareaId: t.id, valor: "" }))
-    );
+    const [inputs, setInputs] = useState([]);
     const [loading, setLoading] = useState(false);
+
+    // Inicializar inputs desde tareas reales
+    useEffect(() => {
+        if (tareas.length > 0) {
+            setInputs(tareas.map((t) => ({ tareaId: t.id, valor: "" })));
+        }
+    }, [tareas]);
 
     const handleChange = (index, nuevoValor) => {
         const actualizados = [...inputs];
@@ -60,14 +57,9 @@ export default function FormularioImputacionConReparto({ resumen }) {
         return asignaciones;
     };
 
-    // Utilidad para generar fecha a partir del índice (día trabajado i)
     const generarFechaDelDia = (i) => {
         const hoy = new Date();
-        const fecha = new Date(
-            hoy.getFullYear(),
-            hoy.getMonth(),
-            1 + i // desde día 1 del mes
-        );
+        const fecha = new Date(hoy.getFullYear(), hoy.getMonth(), 1 + i);
         return fecha.toISOString().split("T")[0];
     };
 
@@ -82,7 +74,7 @@ export default function FormularioImputacionConReparto({ resumen }) {
 
             await postImputacionesDistribuidas(distribucion);
             alert("Imputaciones guardadas correctamente ✅");
-            setInputs(tareasMock.map((t) => ({ tareaId: t.id, valor: "" })));
+            setInputs(tareas.map((t) => ({ tareaId: t.id, valor: "" })));
         } catch (err) {
             console.error("Error al guardar imputaciones:", err);
             alert("Error al guardar imputaciones.");
@@ -90,8 +82,6 @@ export default function FormularioImputacionConReparto({ resumen }) {
             setLoading(false);
         }
     };
-
-    const horasRestantes = resumen.horasRestantes;
 
     return (
         <div className="formulario-imputacion-reparto">
@@ -113,13 +103,13 @@ export default function FormularioImputacionConReparto({ resumen }) {
                     </tr>
                 </thead>
                 <tbody>
-                    {tareasMock.map((tarea, i) => (
+                    {tareas.map((tarea, i) => (
                         <tr key={tarea.id}>
                             <td>{tarea.nombre}</td>
                             <td>
                                 <input
                                     type="text"
-                                    value={inputs[i].valor}
+                                    value={inputs[i]?.valor || ""}
                                     onChange={(e) =>
                                         handleChange(i, e.target.value)
                                     }
@@ -133,7 +123,7 @@ export default function FormularioImputacionConReparto({ resumen }) {
 
             <button
                 onClick={handleGuardar}
-                disabled={horasRestantes <= 0 || loading}
+                disabled={resumen.horasRestantes <= 0 || loading}
                 className="btn-imputar"
             >
                 {loading ? "Guardando..." : "Guardar imputación"}

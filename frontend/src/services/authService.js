@@ -8,14 +8,31 @@ export const login = async (email, password) => {
     });
 
     if (!response.ok) {
-        const { message } = await response.json();
-        throw new Error(message || "Credenciales incorrectas");
+        const { error } = await response.json();
+        throw new Error(error || "Credenciales incorrectas");
     }
 
-    const data = await response.json();
-    localStorage.setItem("user", JSON.stringify(data.user));
-    localStorage.setItem("token", data.token);
-    return data;
+    const { Token } = await response.json();
+
+    const resUser = await fetch(`${API_URL}/users`);
+    if (!resUser.ok) throw new Error("Error al obtener usuarios");
+
+    const allUsers = await resUser.json();
+    const matchedUser = allUsers.find((u) => u.email === email);
+
+    if (!matchedUser) throw new Error("Usuario no encontrado tras login");
+
+    localStorage.setItem("user", JSON.stringify(matchedUser));
+    localStorage.setItem("token", Token);
+
+    return {
+        user: {
+            ...matchedUser,
+            roles: Array.isArray(matchedUser.roles)
+                ? matchedUser.roles
+                : [matchedUser.roles],
+        },
+    };
 };
 
 export const logout = () => {

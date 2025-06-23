@@ -3,13 +3,12 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login/Login";
 import Dashboard from "./pages/Dashboard/Dashboard";
-import Imputacion from "./pages/Imputacion/Imputacion";
+/* import Imputacion from "./pages/Imputacion/Imputacion"; */
 import ImputacionHoras from "./pages/Imputacion/ImputacionHoras";
 import VistaImputacion from "./pages/Imputacion/VistaImputacion";
 import AsignacionProyecto from "./pages/AsignacionProyecto/AsignacionProyecto";
 import GestionUsuarios from "./pages/GestionUsuarios/GestionUsuarios";
 import AdminPage from "./pages/AdminPage/AdminPage";
-
 import Header from "./components/Header/Header";
 import Sidebar from "./components/Sidebar/Sidebar";
 import ProtectedRoute from "./components/routing/ProtectedRoute";
@@ -67,14 +66,6 @@ function App() {
                                 element={
                                     <ProtectedRoute requiredRole="admin">
                                         <AsignacionProyecto />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/imputacion"
-                                element={
-                                    <ProtectedRoute>
-                                        <Imputacion />
                                     </ProtectedRoute>
                                 }
                             />
