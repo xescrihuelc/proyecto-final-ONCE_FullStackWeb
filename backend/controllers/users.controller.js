@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const { Users } = require("../models/users.model");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const { JWT_SECRET } = require("../config");
+const { JWT_SECRET } = require("../config-local");
 
 const checkImportantFields = async (body) => {
     let err_msg;
