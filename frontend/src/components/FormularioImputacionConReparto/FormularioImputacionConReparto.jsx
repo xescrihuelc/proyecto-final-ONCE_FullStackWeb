@@ -3,12 +3,16 @@ import { useAuth } from "../../context/AuthContext";
 import { postImputacionesDistribuidas } from "../../services/imputacionService";
 import "./FormularioImputacionConReparto.css";
 
+function roundToNearest15Minutes(hours) {
+    const interval = 0.25;
+    return Math.round(hours / interval) * interval;
+}
+
 export default function FormularioImputacionConReparto({ resumen, tareas }) {
     const { user } = useAuth();
     const [inputs, setInputs] = useState([]);
     const [loading, setLoading] = useState(false);
 
-    // Inicializar inputs desde tareas reales
     useEffect(() => {
         if (tareas.length > 0) {
             setInputs(tareas.map((t) => ({ tareaId: t.id, valor: "" })));
@@ -42,13 +46,22 @@ export default function FormularioImputacionConReparto({ resumen, tareas }) {
                 totalHoras = num;
             }
 
-            const horasPorDia = totalHoras / dias;
+            let horasPorDia = totalHoras / dias;
+            const redondeado = roundToNearest15Minutes(horasPorDia);
+
+            if (horasPorDia !== redondeado) {
+                alert(
+                    `El valor por día (${horasPorDia.toFixed(
+                        4
+                    )}) se ha redondeado a ${redondeado} (intervalos de 15 minutos).`
+                );
+            }
 
             for (let i = 0; i < dias; i++) {
                 asignaciones.push({
                     userId: user.id,
                     tareaId: input.tareaId,
-                    horas: parseFloat(horasPorDia.toFixed(2)),
+                    horas: redondeado,
                     fecha: generarFechaDelDia(i),
                 });
             }

@@ -6,17 +6,25 @@ import { getToken } from "./authService";
 // Reutilizamos el parser que ya tienes
 export const parseTasksFromBackend = (task) => {
     const tareas =
-        task.subtarea?.split(",").map((nombre, i) => ({
-            id: `${task._id}-${i}`,
-            nombre: nombre.trim(),
-            asignados: [], // puedes extender esto más adelante
-        })) || [];
+        task.subtarea?.length > 0
+            ? task.subtarea.split(",").map((nombre, i) => ({
+                  id: `${task._id}-${i}`,
+                  nombre: nombre.trim(),
+                  asignados: [],
+              }))
+            : [
+                  {
+                      id: `${task._id}-0`,
+                      nombre: "(Sin subtarea)",
+                      asignados: [],
+                  },
+              ];
 
     return {
         id: task._id,
         nombre: task.estructura,
         esEuropeo: task.lineaTrabajo?.includes("Europeo"),
-        activo: task.subnivel === "Activo",
+        activo: true, // 👈 Fuerza que sean visibles temporalmente
         tareas,
     };
 };
