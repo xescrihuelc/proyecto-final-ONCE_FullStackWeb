@@ -23,3 +23,6 @@
 **/*.sln
 **/*.sw?
 **/package-lock.json
+
+// Secrets
+**/.env
