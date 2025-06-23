@@ -1,0 +1,38 @@
+.calendario-resumen {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-bottom: 1rem;
+}
+
+.cabecera {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    font-weight: bold;
+    text-align: center;
+}
+
+.grilla {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.3rem;
+    text-align: center;
+}
+
+.dia {
+    padding: 0.5rem;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.trabajado {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.no-trabajado {
+    background-color: #f8d7da;
+    color: #721c24;
+    text-decoration: line-through;
+    opacity: 0.6;
+}

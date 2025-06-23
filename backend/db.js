@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const { MONGO_URI } = require("./config");
+const { MONGO_URI } = require("./config-local");
 
 // Conexión a la db de Mongo
 const dbConnection = async () => {

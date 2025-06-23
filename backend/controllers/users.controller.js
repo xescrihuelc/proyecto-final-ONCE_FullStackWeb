@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const { Users } = require("../models/users.model");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const { JWT_SECRET } = require("../config");
+const { JWT_SECRET } = require("../config-local");
 
 const checkImportantFields = async (body) => {
     let err_msg;
@@ -60,8 +60,15 @@ const login = async (req, res) => {
 
 const createUser = async (req, res) => {
     // Recibir email, password, name, surnames, roles, dailyHours, assignedTasks
-    const { email, password, name, surnames, roles, dailyHours, assignedTasks } =
-      req.body;
+    const {
+        email,
+        password,
+        name,
+        surnames,
+        roles,
+        dailyHours,
+        assignedTasks,
+    } = req.body;
 
     const arePresentImportantFields = await checkImportantFields(req.body);
 
@@ -169,7 +176,7 @@ const deleteUser = async (req, res) => {
 };
 
 module.exports = {
-    login,
+    loginUser: login,
     createUser,
     getAllUsers,
     getUserById,

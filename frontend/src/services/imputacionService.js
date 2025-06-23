@@ -1,16 +1,48 @@
-// ===== Archivo: services/imputacionService.js =====
-
 // src/services/imputacionService.js
 
-export const getDiasHabiles = async (mes = "06", anio = "2025") => {
-    // Datos simulados basados en el PDF que enviaste
-    return [
-        { fecha: "2025-06-03", dia: "Lunes", control: 1 },
-        { fecha: "2025-06-04", dia: "Martes", control: 1 },
-        { fecha: "2025-06-05", dia: "Miércoles", control: 1 },
-        { fecha: "2025-06-06", dia: "Jueves", control: 1 },
-        { fecha: "2025-06-07", dia: "Viernes", control: 0 }, // no trabajable
-        { fecha: "2025-06-10", dia: "Lunes", control: 1 },
-        // ...añade más simulados
-    ];
+import { API_URL } from "../utils/config";
+
+// Obtener días trabajados desde Sesame
+export const getDiasSesame = async (
+    sesameEmployeeId,
+    fechaInicio,
+    fechaFin
+) => {
+    const res = await fetch(
+        `${API_URL}/sesame/simulacion?employeeId=${sesameEmployeeId}&from=${fechaInicio}&to=${fechaFin}`
+    );
+
+    if (!res.ok) {
+        const { error } = await res.json();
+        throw new Error(error || "Error al consultar días trabajados");
+    }
+
+    return await res.json();
+};
+
+// Obtener imputaciones del backend por usuario y rango
+export const getImputacionesPorRango = async (userId, from, to) => {
+    const res = await fetch(
+        `${API_URL}/hours?userId=${userId}&from=${from}&to=${to}`
+    );
+    if (!res.ok) throw new Error("Error al obtener imputaciones");
+    return await res.json();
+};
+
+// POST: Guardar varias imputaciones distribuidas
+export const postImputacionesDistribuidas = async (imputaciones) => {
+    const res = await fetch(`${API_URL}/hours`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(imputaciones),
+    });
+
+    if (!res.ok) {
+        const { error } = await res.json();
+        throw new Error(error || "Error al guardar imputaciones");
+    }
+
+    return await res.json(); // devuelve las imputaciones guardadas
 };

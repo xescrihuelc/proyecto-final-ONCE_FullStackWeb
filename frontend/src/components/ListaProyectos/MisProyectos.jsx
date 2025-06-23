@@ -1,38 +1,60 @@
+// === Componente: MisProyectos.jsx ===
+
 import { useContext, useEffect, useState } from "react";
 import { ProyectoContext } from "../../context/ProyectoContext";
 import { useAuth } from "../../context/AuthContext";
+import "./MisProyectos.css";
 
 const MisProyectos = () => {
     const { proyectos, setProyectos } = useContext(ProyectoContext);
     const { user, loading } = useAuth();
-    const [proyectosUsuario, setProyectosUsuario] = useState([]);
+    const [tareasPorProyecto, setTareasPorProyecto] = useState({});
+    const [expanded, setExpanded] = useState({});
     const [viewLoading, setViewLoading] = useState(true);
-    const [mostrarTareas, setMostrarTareas] = useState({});
 
     useEffect(() => {
         if (user && proyectos.length > 0) {
-            const asignados = proyectos
-                .map((proyecto) => ({
-                    ...proyecto,
-                    tareas: proyecto.tareas.filter((t) =>
-                        t.asignados?.includes(user.id)
-                    ),
-                }))
-                .filter((proy) => proy.tareas.length > 0);
+            const agrupadas = {};
 
-            setProyectosUsuario(asignados);
+            proyectos.forEach((proyecto) => {
+                const tareas =
+                    proyecto.tareas ||
+                    proyecto.subtarea?.split(",").map((t, i) => ({
+                        id: `${proyecto._id}-${i}`,
+                        nombre: t.trim(),
+                        asignados: [],
+                    })) ||
+                    [];
+
+                const asignadas = tareas.filter((t) =>
+                    t.asignados?.includes(user.id)
+                );
+
+                if (asignadas.length > 0) {
+                    const key = proyecto.id || proyecto._id;
+                    agrupadas[key] = {
+                        nombre: proyecto.nombre || proyecto.estructura,
+                        tareas: asignadas.map((t) => ({
+                            ...t,
+                            proyectoId: key,
+                        })),
+                    };
+                }
+            });
+
+            setTareasPorProyecto(agrupadas);
         }
 
         const timeout = setTimeout(() => setViewLoading(false), 500);
         return () => clearTimeout(timeout);
-    }, [user, proyectos.length]);
+    }, [user, proyectos]);
 
     const cancelarAsignacion = (proyectoId, tareaId) => {
         const actualizados = proyectos.map((proyecto) =>
-            proyecto.id === proyectoId
+            proyecto.id === proyectoId || proyecto._id === proyectoId
                 ? {
                       ...proyecto,
-                      tareas: proyecto.tareas.map((tarea) =>
+                      tareas: (proyecto.tareas || []).map((tarea) =>
                           tarea.id === tareaId
                               ? {
                                     ...tarea,
@@ -45,14 +67,13 @@ const MisProyectos = () => {
                   }
                 : proyecto
         );
-
         setProyectos(actualizados);
     };
 
-    const toggleMostrar = (id) => {
-        setMostrarTareas((prev) => ({
+    const toggleExpand = (proyectoId) => {
+        setExpanded((prev) => ({
             ...prev,
-            [id]: !prev[id],
+            [proyectoId]: !prev[proyectoId],
         }));
     };
 
@@ -60,80 +81,51 @@ const MisProyectos = () => {
     if (!user)
         return <p>No estás autenticado. Inicia sesión para continuar.</p>;
 
+    const keys = Object.keys(tareasPorProyecto);
+
     return (
-        <div style={{ marginTop: "2rem" }}>
-            <h2 style={{ marginBottom: "1rem" }}>Mis Tareas Asignadas</h2>
-            {proyectosUsuario.length === 0 ? (
+        <div className="seccion">
+            <h2 className="seccion-titulo">Mis Tareas Asignadas</h2>
+            {keys.length === 0 ? (
                 <p>No estás asignado a ninguna tarea actualmente.</p>
             ) : (
-                proyectosUsuario.map((proyecto) => (
-                    <div
-                        key={proyecto.id}
-                        style={{
-                            marginBottom: "2rem",
-                            borderBottom: "1px solid #ccc",
-                            paddingBottom: "1rem",
-                        }}
-                    >
-                        <h3>{proyecto.nombre}</h3>
-                        <button
-                            onClick={() => toggleMostrar(proyecto.id)}
-                            style={{
-                                marginBottom: "0.5rem",
-                                cursor: "pointer",
-                            }}
-                        >
-                            {mostrarTareas[proyecto.id]
-                                ? "Ocultar tareas"
-                                : "Mostrar tareas"}
-                        </button>
-                        {mostrarTareas[proyecto.id] && (
-                            <ul
-                                style={{
-                                    listStyle: "none",
-                                    paddingLeft: 0,
-                                    maxHeight: "200px",
-                                    overflowY: "auto",
-                                    border: "1px solid #eee",
-                                    borderRadius: "4px",
-                                    padding: "0.5rem",
-                                }}
+                keys.map((key) => {
+                    const proyecto = tareasPorProyecto[key];
+                    return (
+                        <div key={key} className="tarjeta-expandible">
+                            <div
+                                className="tarjeta-cabecera"
+                                onClick={() => toggleExpand(key)}
                             >
-                                {proyecto.tareas.map((tarea) => (
-                                    <li
-                                        key={tarea.id}
-                                        style={{
-                                            margin: "0.5rem 0",
-                                            display: "flex",
-                                            justifyContent: "space-between",
-                                            alignItems: "center",
-                                        }}
-                                    >
-                                        <span>{tarea.nombre}</span>
-                                        <button
-                                            onClick={() =>
-                                                cancelarAsignacion(
-                                                    proyecto.id,
-                                                    tarea.id
-                                                )
-                                            }
-                                            style={{
-                                                backgroundColor: "#d9534f",
-                                                color: "white",
-                                                border: "none",
-                                                padding: "0.3rem 0.6rem",
-                                                cursor: "pointer",
-                                                borderRadius: "4px",
-                                            }}
+                                {proyecto.nombre} {expanded[key] ? "▲" : "▼"}
+                            </div>
+
+                            {expanded[key] && (
+                                <ul className="lista-tareas">
+                                    {proyecto.tareas.map((tarea) => (
+                                        <li
+                                            key={tarea.id}
+                                            className="tarjeta-tarea"
                                         >
-                                            Cancelar
-                                        </button>
-                                    </li>
-                                ))}
-                            </ul>
-                        )}
-                    </div>
-                ))
+                                            <span>{tarea.nombre}</span>
+                                            <button
+                                                className="btn-cancelar"
+                                                onClick={() =>
+                                                    cancelarAsignacion(
+                                                        key,
+                                                        tarea.id
+                                                    )
+                                                }
+                                            >
+                                                Cancelar
+                                            </button>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </div>
+                    );
+                })
             )}
         </div>
     );

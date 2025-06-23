@@ -1,51 +1,48 @@
-// src/services/authService.js
+import { API_URL } from "../utils/config";
 
 export const login = async (email, password) => {
-    return new Promise((resolve, reject) => {
-        setTimeout(() => {
-            const users = {
-                "admin@vic.com": {
-                    user: {
-                        id: 1,
-                        nombre: "Administrador VIC",
-                        email: "admin@vic.com",
-                    },
-                    token: "admin-token-123",
-                    role: "admin",
-                },
-                "manager@vic.com": {
-                    user: {
-                        id: 2,
-                        nombre: "Manager VIC",
-                        email: "manager@vic.com",
-                    },
-                    token: "manager-token-456",
-                    role: "manager",
-                },
-                "trabajador@vic.com": {
-                    user: {
-                        id: 3,
-                        nombre: "Trabajador VIC",
-                        email: "trabajador@vic.com",
-                    },
-                    token: "trabajador-token-789",
-                    role: "trabajador",
-                },
-            };
-
-            if (users[email] && password === "1234") {
-                resolve(users[email]);
-            } else {
-                reject("Credenciales inválidas");
-            }
-        }, 500);
+    const response = await fetch(`${API_URL}/users/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
     });
+
+    if (!response.ok) {
+        const { error } = await response.json();
+        throw new Error(error || "Credenciales incorrectas");
+    }
+
+    const { Token } = await response.json();
+
+    const resUser = await fetch(`${API_URL}/users`);
+    if (!resUser.ok) throw new Error("Error al obtener usuarios");
+
+    const allUsers = await resUser.json();
+    const matchedUser = allUsers.find((u) => u.email === email);
+
+    if (!matchedUser) throw new Error("Usuario no encontrado tras login");
+
+    localStorage.setItem("user", JSON.stringify(matchedUser));
+    localStorage.setItem("token", Token);
+
+    return {
+        user: {
+            ...matchedUser,
+            roles: Array.isArray(matchedUser.roles)
+                ? matchedUser.roles
+                : [matchedUser.roles],
+        },
+    };
 };
 
 export const logout = () => {
-    localStorage.clear();
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
 };
 
-export const getToken = () => {
-    return localStorage.getItem("token");
+export const getToken = () => localStorage.getItem("token");
+
+export const getUserData = () => {
+    const user = localStorage.getItem("user");
+    return user ? JSON.parse(user) : null;
 };

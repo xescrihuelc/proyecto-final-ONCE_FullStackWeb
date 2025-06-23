@@ -23,3 +23,9 @@
 **/*.sln
 **/*.sw?
 **/package-lock.json
+
+// Secrets
+**/.env
+
+# Ignorar archivo de configuración local con credenciales sensibles
+backend/config-local.js

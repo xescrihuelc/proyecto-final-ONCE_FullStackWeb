@@ -1,6 +1,6 @@
-// === AdminPage.jsx mejorado con campos 'esEuropeo' y 'activo' ===
+// === AdminPage.jsx actualizado ===
 
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import {
     BarChart,
     Bar,
@@ -11,14 +11,17 @@ import {
 } from "recharts";
 import "./AdminPage.css";
 import { ProyectoContext } from "../../context/ProyectoContext";
-
-const usuariosIniciales = [
-    { id: 1, nombre: "Juan Pérez", email: "juan@mail.com" },
-];
+import { createUser, getAllUsers } from "../../services/userService";
+import { createTask } from "../../services/taskService";
 
 const AdminPage = () => {
     const { proyectos, setProyectos } = useContext(ProyectoContext);
-    const [usuarios, setUsuarios] = useState(usuariosIniciales);
+    const [usuarios, setUsuarios] = useState([]);
+    const [nuevoUsuario, setNuevoUsuario] = useState({
+        email: "",
+        password: "",
+        roles: ["user"],
+    });
     const [nuevoProyecto, setNuevoProyecto] = useState({
         nombre: "",
         tareas: [],
@@ -26,90 +29,97 @@ const AdminPage = () => {
         activo: true,
     });
     const [nuevaTarea, setNuevaTarea] = useState({ nombre: "" });
-    const [nuevoUsuario, setNuevoUsuario] = useState({ nombre: "", email: "" });
-    const [proyectoEditado, setProyectoEditado] = useState(null);
 
-    const agregarTarea = (p, setP) => {
-        if (!nuevaTarea.nombre.trim())
-            return alert("La tarea debe tener un nombre");
-        setP({
-            ...p,
-            tareas: [...p.tareas, { ...nuevaTarea, id: Date.now() }],
-        });
+    useEffect(() => {
+        const cargarUsuarios = async () => {
+            try {
+                const data = await getAllUsers();
+                setUsuarios(data);
+            } catch (err) {
+                console.error("Error al cargar usuarios:", err);
+            }
+        };
+        cargarUsuarios();
+    }, []);
+
+    const agregarTarea = () => {
+        if (!nuevaTarea.nombre.trim()) return;
+        setNuevoProyecto((prev) => ({
+            ...prev,
+            tareas: [...prev.tareas, { ...nuevaTarea, id: Date.now() }],
+        }));
         setNuevaTarea({ nombre: "" });
     };
 
-    const guardarProyecto = (p, setP) => {
-        if (!p.nombre.trim()) return alert("El proyecto debe tener un nombre");
-        if (p.tareas.length === 0) return alert("Añade al menos una tarea");
+    const guardarProyecto = async () => {
+        if (!nuevoProyecto.nombre.trim() || nuevoProyecto.tareas.length === 0) {
+            return alert("Proyecto inválido");
+        }
 
-        if (proyectoEditado) {
-            setProyectos(proyectos.map((pr) => (pr.id === p.id ? p : pr)));
-            setProyectoEditado(null);
-        } else {
-            setProyectos([...proyectos, { ...p, id: Date.now() }]);
+        const body = {
+            estructura: nuevoProyecto.nombre,
+            lineaTrabajo: nuevoProyecto.esEuropeo ? "Europeo" : "Nacional",
+            subnivel: nuevoProyecto.activo ? "Activo" : "Inactivo",
+            subtarea: nuevoProyecto.tareas.map((t) => t.nombre).join(", "),
+        };
+
+        try {
+            const res = await createTask(body);
+            setProyectos((prev) => [...prev, res]);
             setNuevoProyecto({
                 nombre: "",
                 tareas: [],
                 esEuropeo: false,
                 activo: true,
             });
+        } catch (err) {
+            console.error("Error creando proyecto:", err);
         }
     };
 
-    const borrarProyecto = (id) => {
-        if (window.confirm("¿Seguro que quieres borrar este proyecto?")) {
-            setProyectos(proyectos.filter((p) => p.id !== id));
-            if (proyectoEditado?.id === id) setProyectoEditado(null);
+    const agregarUsuario = async () => {
+        if (!nuevoUsuario.email.trim() || !nuevoUsuario.password.trim()) {
+            return alert("Debes rellenar ambos campos");
+        }
+
+        try {
+            const sesameId = crypto.randomUUID();
+            await createUser({ ...nuevoUsuario, sesameEmployeeId: sesameId });
+            const updatedUsers = await getAllUsers();
+            setUsuarios(updatedUsers);
+            setNuevoUsuario({ email: "", password: "", roles: ["user"] });
+        } catch (err) {
+            alert("Error creando usuario: " + err.message);
         }
     };
 
-    const borrarTarea = (id, p, setP) =>
-        setP({ ...p, tareas: p.tareas.filter((t) => t.id !== id) });
-
-    const agregarUsuario = () => {
-        if (!nuevoUsuario.nombre.trim() || !nuevoUsuario.email.trim())
-            return alert("Completa nombre y email del usuario");
-        setUsuarios([...usuarios, { ...nuevoUsuario, id: Date.now() }]);
-        setNuevoUsuario({ nombre: "", email: "" });
+    const handleRoleChange = (role) => {
+        setNuevoUsuario((prev) => {
+            const roles = prev.roles.includes(role)
+                ? prev.roles.filter((r) => r !== role)
+                : [...prev.roles, role];
+            return { ...prev, roles };
+        });
     };
 
     const datosGrafico = proyectos.map((p) => ({
-        nombre: p.nombre,
-        tareas: p.tareas.length,
+        nombre: p.nombre || p.estructura,
+        tareas: p.tareas?.length || p.subtarea?.split(", ").length || 0,
     }));
-
-    const proyectoActual = {
-        nombre: "",
-        tareas: [],
-        esEuropeo: false,
-        activo: true,
-        ...(proyectoEditado || nuevoProyecto),
-    };
-
-    const setProyectoActual = proyectoEditado
-        ? setProyectoEditado
-        : setNuevoProyecto;
 
     return (
         <div className="container">
             <h2>Panel de Administración</h2>
 
-            <section
-                className={`section ${proyectoEditado ? "section--edit" : ""}`}
-            >
-                <h3>
-                    {proyectoEditado
-                        ? `Editar Proyecto: ${proyectoEditado.nombre}`
-                        : "Añadir Nuevo Proyecto"}
-                </h3>
+            <section className="section">
+                <h3>Añadir Nuevo Proyecto</h3>
                 <input
                     className="input-group"
                     placeholder="Nombre del proyecto"
-                    value={proyectoActual.nombre}
+                    value={nuevoProyecto.nombre}
                     onChange={(e) =>
-                        setProyectoActual({
-                            ...proyectoActual,
+                        setNuevoProyecto({
+                            ...nuevoProyecto,
                             nombre: e.target.value,
                         })
                     }
@@ -117,10 +127,10 @@ const AdminPage = () => {
                 <label>
                     <input
                         type="checkbox"
-                        checked={proyectoActual.esEuropeo}
+                        checked={nuevoProyecto.esEuropeo}
                         onChange={(e) =>
-                            setProyectoActual({
-                                ...proyectoActual,
+                            setNuevoProyecto({
+                                ...nuevoProyecto,
                                 esEuropeo: e.target.checked,
                             })
                         }
@@ -130,17 +140,16 @@ const AdminPage = () => {
                 <label style={{ marginLeft: "1rem" }}>
                     <input
                         type="checkbox"
-                        checked={proyectoActual.activo}
+                        checked={nuevoProyecto.activo}
                         onChange={(e) =>
-                            setProyectoActual({
-                                ...proyectoActual,
+                            setNuevoProyecto({
+                                ...nuevoProyecto,
                                 activo: e.target.checked,
                             })
                         }
                     />
                     Proyecto Activo
                 </label>
-
                 <div>
                     <input
                         className="input-inline"
@@ -153,48 +162,14 @@ const AdminPage = () => {
                             })
                         }
                     />
-                    <button
-                        onClick={() =>
-                            agregarTarea(proyectoActual, setProyectoActual)
-                        }
-                    >
-                        Añadir tarea
-                    </button>
+                    <button onClick={agregarTarea}>Añadir tarea</button>
                 </div>
                 <ul>
-                    {proyectoActual.tareas.map((t) => (
-                        <li key={t.id}>
-                            {t.nombre}
-                            {proyectoEditado && (
-                                <button
-                                    className="delete"
-                                    onClick={() =>
-                                        borrarTarea(
-                                            t.id,
-                                            proyectoActual,
-                                            setProyectoActual
-                                        )
-                                    }
-                                >
-                                    X
-                                </button>
-                            )}
-                        </li>
+                    {nuevoProyecto.tareas.map((t) => (
+                        <li key={t.id}>{t.nombre}</li>
                     ))}
                 </ul>
-                <button
-                    onClick={() =>
-                        guardarProyecto(proyectoActual, setProyectoActual)
-                    }
-                    style={{ marginRight: 10 }}
-                >
-                    {proyectoEditado ? "Guardar Cambios" : "Guardar Proyecto"}
-                </button>
-                {proyectoEditado && (
-                    <button onClick={() => setProyectoEditado(null)}>
-                        Cancelar
-                    </button>
-                )}
+                <button onClick={guardarProyecto}>Guardar Proyecto</button>
             </section>
 
             <section className="section">
@@ -203,30 +178,18 @@ const AdminPage = () => {
                     <p>No hay proyectos.</p>
                 ) : (
                     proyectos.map((p) => (
-                        <div key={p.id} className="proyecto-item">
-                            <strong>{p.nombre}</strong>{" "}
-                            {p.esEuropeo && <span>🌍</span>}{" "}
-                            {!p.activo && (
+                        <div key={p._id || p.id} className="proyecto-item">
+                            <strong>{p.nombre || p.estructura}</strong>{" "}
+                            {p.lineaTrabajo === "Europeo" && <span>🌍</span>}
+                            {p.subnivel === "Inactivo" && (
                                 <em style={{ color: "gray" }}>(Inactivo)</em>
                             )}
-                            <button
-                                className="edit"
-                                onClick={() => setProyectoEditado({ ...p })}
-                                style={{ marginLeft: 10 }}
-                            >
-                                Editar
-                            </button>
-                            <button
-                                className="delete"
-                                onClick={() => borrarProyecto(p.id)}
-                                style={{ marginLeft: 10 }}
-                            >
-                                Borrar
-                            </button>
                             <ul>
-                                {p.tareas.map((t) => (
-                                    <li key={t.id}>{t.nombre}</li>
-                                ))}
+                                {(p.tareas || p.subtarea?.split(", ")).map(
+                                    (t, i) => (
+                                        <li key={i}>{t.nombre || t}</li>
+                                    )
+                                )}
                             </ul>
                         </div>
                     ))
@@ -237,19 +200,7 @@ const AdminPage = () => {
                 <h3>Gestión de Usuarios</h3>
                 <input
                     className="input-inline"
-                    placeholder="Nombre del usuario"
-                    value={nuevoUsuario.nombre}
-                    onChange={(e) =>
-                        setNuevoUsuario({
-                            ...nuevoUsuario,
-                            nombre: e.target.value,
-                        })
-                    }
-                />
-                <input
-                    className="input-inline"
-                    placeholder="Email del usuario"
-                    type="email"
+                    placeholder="Email"
                     value={nuevoUsuario.email}
                     onChange={(e) =>
                         setNuevoUsuario({
@@ -258,33 +209,54 @@ const AdminPage = () => {
                         })
                     }
                 />
-                <button onClick={agregarUsuario}>Añadir Usuario</button>
-                <ul style={{ marginTop: 20 }}>
+                <input
+                    className="input-inline"
+                    placeholder="Contraseña"
+                    type="password"
+                    value={nuevoUsuario.password}
+                    onChange={(e) =>
+                        setNuevoUsuario({
+                            ...nuevoUsuario,
+                            password: e.target.value,
+                        })
+                    }
+                />
+                <div style={{ marginTop: "0.5rem" }}>
+                    <label>
+                        <input
+                            type="checkbox"
+                            checked={nuevoUsuario.roles.includes("user")}
+                            onChange={() => handleRoleChange("user")}
+                        />
+                        Rol: Usuario
+                    </label>
+                    <label style={{ marginLeft: "1rem" }}>
+                        <input
+                            type="checkbox"
+                            checked={nuevoUsuario.roles.includes("admin")}
+                            onChange={() => handleRoleChange("admin")}
+                        />
+                        Rol: Administrador
+                    </label>
+                </div>
+                <button onClick={agregarUsuario}>Crear Usuario</button>
+                <ul style={{ marginTop: "1rem" }}>
                     {usuarios.map((u) => (
-                        <li key={u.id}>
-                            {u.nombre} - {u.email}
-                        </li>
+                        <li key={u._id || u.id}>{u.email}</li>
                     ))}
                 </ul>
             </section>
 
-            <section className="section" style={{ marginTop: 40 }}>
-                <h3>Gráfico: Número de tareas por proyecto</h3>
-                {proyectos.length === 0 ? (
-                    <p>No hay proyectos para mostrar.</p>
-                ) : (
-                    <ResponsiveContainer width="100%" height={300}>
-                        <BarChart
-                            data={datosGrafico}
-                            margin={{ top: 20, bottom: 20 }}
-                        >
-                            <XAxis dataKey="nombre" />
-                            <YAxis allowDecimals={false} />
-                            <Tooltip />
-                            <Bar dataKey="tareas" fill="#f90" />
-                        </BarChart>
-                    </ResponsiveContainer>
-                )}
+            <section className="section">
+                <h3>Gráfico de tareas por proyecto</h3>
+                <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={datosGrafico}>
+                        <XAxis dataKey="nombre" />
+                        <YAxis />
+                        <Tooltip />
+                        <Bar dataKey="tareas" fill="#f90" />
+                    </BarChart>
+                </ResponsiveContainer>
             </section>
         </div>
     );
