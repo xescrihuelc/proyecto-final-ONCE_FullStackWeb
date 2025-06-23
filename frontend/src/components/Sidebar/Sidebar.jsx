@@ -1,5 +1,3 @@
-// components/Sidebar/Sidebar.jsx
-
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import "./Sidebar.css";
@@ -18,11 +16,14 @@ export default function Sidebar() {
                     <li>
                         <NavLink to="/imputacion">Imputación de Horas</NavLink>
                     </li>
-                    <li>
-                        <NavLink to="/AsignacionProyecto">Proyectos</NavLink>
-                    </li>
+
                     {role === "admin" && (
                         <>
+                            <li>
+                                <NavLink to="/AsignacionProyecto">
+                                    Proyectos
+                                </NavLink>
+                            </li>
                             <li>
                                 <NavLink to="/admin">Admin Proyectos</NavLink>
                             </li>

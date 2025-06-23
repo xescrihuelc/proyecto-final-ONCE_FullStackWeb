@@ -1,73 +1,90 @@
 // ===== Archivo: pages/Imputacion/ImputacionHoras.jsx =====
 
-import { useState } from "react";
-
-// Estos datos deberían venir del backend, aquí mock para ejemplo
-const proyectosMock = [
-    {
-        id: 1,
-        nombre: "Proyecto A",
-        tareas: [
-            { id: 1, nombre: "Diseño", maxHoras: 7.5 },
-            { id: 2, nombre: "Desarrollo", maxHoras: 7.5 },
-        ],
-    },
-    {
-        id: 2,
-        nombre: "Proyecto B",
-        tareas: [
-            { id: 3, nombre: "Testing", maxHoras: 7.5 },
-            { id: 4, nombre: "Gestión", maxHoras: 7.5 },
-        ],
-    },
-];
+import { useState, useEffect } from "react";
+import { useAuth } from "../../context/AuthContext";
+import { getAllTasks } from "../../services/taskService";
+import { createHourRecord } from "../../services/hourService";
+import { getDiasSesame } from "../../services/sesameService";
+import { getDateRangeForPeriod } from "../../utils/dateUtils";
+import "./ImputacionHoras.css";
 
 function ImputacionHoras() {
+    const { user } = useAuth();
+    const [proyectos, setProyectos] = useState([]);
     const [registroHoras, setRegistroHoras] = useState([]);
     const [nuevoRegistro, setNuevoRegistro] = useState({
         proyecto: "",
         tarea: "",
-        fecha: "",
-        horas: 0,
+        horas: "",
     });
+    const [diasTrabajados, setDiasTrabajados] = useState(0);
+    const [horasTotales, setHorasTotales] = useState(0);
+    const [horasImputadas, setHorasImputadas] = useState(0);
 
-    const agregarRegistro = () => {
-        const proyectoSeleccionado = proyectosMock.find(
-            (p) => p.id === Number(nuevoRegistro.proyecto)
-        );
-        if (!proyectoSeleccionado) {
-            alert("Selecciona un proyecto válido");
-            return;
-        }
+    useEffect(() => {
+        const fetchProyectosYTareas = async () => {
+            const data = await getAllTasks();
+            setProyectos(data);
+        };
+        fetchProyectosYTareas();
+    }, []);
 
-        const tareaSeleccionada = proyectoSeleccionado.tareas.find(
-            (t) => t.id === Number(nuevoRegistro.tarea)
-        );
-        if (!tareaSeleccionada) {
-            alert("Selecciona una tarea válida");
-            return;
-        }
+    useEffect(() => {
+        const cargarHorasYFechas = async () => {
+            const { from, to } = getDateRangeForPeriod("mes");
 
-        if (!nuevoRegistro.fecha || nuevoRegistro.horas <= 0) {
-            alert("Completa todos los campos correctamente.");
-            return;
-        }
+            const [diasData, horasData] = await Promise.all([
+                getDiasSesame(user.sesameEmployeeId, from, to),
+                fetch(
+                    `/api/hours?userId=${user.id}&from=${from}&to=${to}`
+                ).then((res) => res.json()),
+            ]);
 
-        // Sumar horas ya imputadas para esta tarea
-        const horasActuales = registroHoras
-            .filter((r) => r.tarea === nuevoRegistro.tarea)
-            .reduce((acc, r) => acc + r.horas, 0);
+            const dias =
+                diasData.data[0]?.days?.filter((d) => d.worked)?.length || 0;
+            const horas = horasData.reduce((sum, h) => sum + h.horas, 0);
 
-        if (horasActuales + nuevoRegistro.horas > tareaSeleccionada.maxHoras) {
-            alert(
-                `Excede el máximo de horas para esta tarea (${tareaSeleccionada.maxHoras}h). ` +
-                    `Horas ya registradas: ${horasActuales}h`
+            setDiasTrabajados(dias);
+            setHorasImputadas(horas);
+            setHorasTotales(dias * user.dailyHours);
+        };
+
+        if (user?.id && user?.sesameEmployeeId) cargarHorasYFechas();
+    }, [user]);
+
+    const handleChange = (e) => {
+        setNuevoRegistro({
+            ...nuevoRegistro,
+            [e.target.name]: e.target.value,
+        });
+    };
+
+    const parseHoras = (input) => {
+        if (input.includes("%")) {
+            const porcentaje = parseFloat(input.replace("%", ""));
+            return ((horasTotales * porcentaje) / 100 / diasTrabajados).toFixed(
+                2
             );
-            return;
+        }
+        return (parseFloat(input) / diasTrabajados).toFixed(2);
+    };
+
+    const agregarRegistro = async () => {
+        const horasPorDia = parseHoras(nuevoRegistro.horas);
+
+        for (let i = 0; i < diasTrabajados; i++) {
+            const nuevo = {
+                userId: user.id,
+                proyectoId: nuevoRegistro.proyecto,
+                tareaId: nuevoRegistro.tarea,
+                fecha: new Date().toISOString().split("T")[0], // mejorable con un calendario real
+                horas: horasPorDia,
+            };
+            await createHourRecord(nuevo);
         }
 
         setRegistroHoras([...registroHoras, nuevoRegistro]);
-        setNuevoRegistro({ proyecto: "", tarea: "", fecha: "", horas: 0 });
+        setNuevoRegistro({ proyecto: "", tarea: "", horas: "" });
     };
 
     return (
@@ -77,17 +94,12 @@ function ImputacionHoras() {
             <div>
                 <h3>Registrar horas</h3>
                 <select
+                    name="proyecto"
                     value={nuevoRegistro.proyecto}
-                    onChange={(e) =>
-                        setNuevoRegistro({
-                            ...nuevoRegistro,
-                            proyecto: e.target.value,
-                            tarea: "",
-                        })
-                    }
+                    onChange={handleChange}
                 >
                     <option value="">Selecciona proyecto</option>
-                    {proyectosMock.map((p) => (
+                    {proyectos.map((p) => (
                         <option key={p.id} value={p.id}>
                             {p.nombre}
                         </option>
@@ -95,95 +107,44 @@ function ImputacionHoras() {
                 </select>
 
                 <select
+                    name="tarea"
                     value={nuevoRegistro.tarea}
-                    onChange={(e) =>
-                        setNuevoRegistro({
-                            ...nuevoRegistro,
-                            tarea: e.target.value,
-                        })
-                    }
+                    onChange={handleChange}
                     disabled={!nuevoRegistro.proyecto}
                 >
                     <option value="">Selecciona tarea</option>
                     {nuevoRegistro.proyecto &&
-                        proyectosMock
+                        proyectos
                             .find(
                                 (p) => p.id === Number(nuevoRegistro.proyecto)
                             )
-                            .tareas.map((t) => (
+                            ?.tareas.map((t) => (
                                 <option key={t.id} value={t.id}>
-                                    {t.nombre} (máx {t.maxHoras} h)
+                                    {t.nombre}
                                 </option>
                             ))}
                 </select>
 
                 <input
-                    type="date"
-                    value={nuevoRegistro.fecha}
-                    onChange={(e) =>
-                        setNuevoRegistro({
-                            ...nuevoRegistro,
-                            fecha: e.target.value,
-                        })
-                    }
-                />
-
-                <input
-                    type="number"
-                    min="0"
-                    step="0.1"
+                    type="text"
+                    name="horas"
                     value={nuevoRegistro.horas}
-                    onChange={(e) =>
-                        setNuevoRegistro({
-                            ...nuevoRegistro,
-                            horas: Number(e.target.value),
-                        })
-                    }
-                    placeholder="Horas"
+                    onChange={handleChange}
+                    placeholder="Ej: 12 o 50%"
                 />
 
-                <button onClick={agregarRegistro}>Agregar</button>
-            </div>
+                <button
+                    onClick={agregarRegistro}
+                    disabled={horasTotales - horasImputadas <= 0}
+                >
+                    Imputar
+                </button>
 
-            <div>
-                <h3>Horas registradas</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Proyecto</th>
-                            <th>Tarea</th>
-                            <th>Fecha</th>
-                            <th>Horas</th>
-                            <th>Horas Máx</th>
-                            <th>Horas Registradas</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {registroHoras.map((r, idx) => {
-                            const proyecto = proyectosMock.find(
-                                (p) => p.id === Number(r.proyecto)
-                            );
-                            const tarea = proyecto?.tareas.find(
-                                (t) => t.id === Number(r.tarea)
-                            );
-                            // Horas ya imputadas para esa tarea
-                            const horasParaTarea = registroHoras
-                                .filter((x) => x.tarea === r.tarea)
-                                .reduce((acc, x) => acc + x.horas, 0);
-
-                            return (
-                                <tr key={idx}>
-                                    <td>{proyecto?.nombre}</td>
-                                    <td>{tarea?.nombre}</td>
-                                    <td>{r.fecha}</td>
-                                    <td>{r.horas}</td>
-                                    <td>{tarea?.maxHoras}</td>
-                                    <td>{horasParaTarea}</td>
-                                </tr>
-                            );
-                        })}
-                    </tbody>
-                </table>
+                <p>
+                    Total a imputar: {horasTotales}h / Imputadas:{" "}
+                    {horasImputadas}h / Restantes:{" "}
+                    {horasTotales - horasImputadas}h
+                </p>
             </div>
         </div>
     );

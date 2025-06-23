@@ -4,15 +4,17 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login/Login";
 import Dashboard from "./pages/Dashboard/Dashboard";
 import Imputacion from "./pages/Imputacion/Imputacion";
+import ImputacionHoras from "./pages/Imputacion/ImputacionHoras";
+import VistaImputacion from "./pages/Imputacion/VistaImputacion";
 import AsignacionProyecto from "./pages/AsignacionProyecto/AsignacionProyecto";
-import Header from "./components/Header/Header";
-import Sidebar from "./components/Sidebar/Sidebar";
-import { useAuth } from "./context/AuthContext";
 import GestionUsuarios from "./pages/GestionUsuarios/GestionUsuarios";
 import AdminPage from "./pages/AdminPage/AdminPage";
-import ImputacionHoras from "./pages/Imputacion/ImputacionHoras";
+
+import Header from "./components/Header/Header";
+import Sidebar from "./components/Sidebar/Sidebar";
 import ProtectedRoute from "./components/routing/ProtectedRoute";
 
+import { useAuth } from "./context/AuthContext";
 import "./App.css";
 
 function HomeRedirect() {
@@ -21,10 +23,8 @@ function HomeRedirect() {
     if (loading) return <p>Cargando...</p>;
 
     if (roles.includes("admin")) return <Navigate to="/admin" replace />;
-    if (roles.includes("manager"))
-        return <Navigate to="/AsignacionProyecto" replace />;
-    if (roles.includes("trabajador"))
-        return <Navigate to="/imputacion" replace />;
+    if (roles.includes("user"))
+        return <Navigate to="/panel-imputacion" replace />;
 
     return <Navigate to="/login" replace />;
 }
@@ -65,7 +65,7 @@ function App() {
                             <Route
                                 path="/AsignacionProyecto"
                                 element={
-                                    <ProtectedRoute>
+                                    <ProtectedRoute requiredRole="admin">
                                         <AsignacionProyecto />
                                     </ProtectedRoute>
                                 }
@@ -83,6 +83,14 @@ function App() {
                                 element={
                                     <ProtectedRoute>
                                         <ImputacionHoras />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="/panel-imputacion"
+                                element={
+                                    <ProtectedRoute>
+                                        <VistaImputacion />
                                     </ProtectedRoute>
                                 }
                             />
