@@ -10,52 +10,51 @@ const isDateFormat = async (dateStr) => {
   }
 };
 
-
 const checkImportantField = async (employeeIds, from, to) => {
-    let err_msg = new String();
+  let err_msg = new String();
 
-    if (!employeeIds) {
-        err_msg = "No 'employeeIds' (ObjectId) field recieved";
-        return [false, err_msg];
-    } else if (employeeIds.constructor !== Array) {
-        err_msg = "'employeeIds' must be an array";
-        return [false, err_msg];
+  if (!employeeIds) {
+    err_msg = "No 'employeeIds' (ObjectId) field recieved";
+    return [false, err_msg];
+  } else if (employeeIds.constructor !== Array) {
+    err_msg = "'employeeIds' must be an array";
+    return [false, err_msg];
+  }
+
+  if (from) {
+    const isValidDate = await isDateFormat(from);
+
+    if (!isValidDate) {
+      err_msg = "Invalid 'from' format field (Date 'YYYY-MM-DD') recieved";
+      return [false, err_msg];
     }
+  }
 
-    if (from) {
-      const isValidDate = await isDateFormat(from);
+  if (to) {
+    const isValidDate = await isDateFormat(to);
 
-      if (!isValidDate) {
-        err_msg = "Invalid 'from' format field (Date 'YYYY-MM-DD') recieved";
-        return [false, err_msg];
-      }
+    if (!isValidDate) {
+      err_msg = "Invalid 'to' format field (Date 'YYYY-MM-DD') recieved";
+      return [false, err_msg];
     }
+  }
 
-    if (to) {
-      const isValidDate = await isDateFormat(to);
-      
-      if (!isValidDate) {
-        err_msg = "Invalid 'to' format field (Date 'YYYY-MM-DD') recieved";
-        return [false, err_msg];
-      }
-    }
-
-    return [true];
+  return [true];
 };
 
 const getWorkedDays = async (req, res) => {
   try {
     const { employeeIds, from, to, limit = 10, page = 1 } = req.body;
 
-    const areImportantFieldsPresent = await checkImportantField(employeeIds, from, to);
-    
+    const areImportantFieldsPresent = await checkImportantField(
+      employeeIds,
+      from,
+      to
+    );
 
     if (areImportantFieldsPresent[0] == false) {
-        return res.status(406).json({ error: `${areImportantFieldsPresent[1]}` });
+      return res.status(406).json({ error: `${areImportantFieldsPresent[1]}` });
     }
-
-    const skip = (page - 1) * limit;
-    const paginatedIds = employeeIds.slice(skip, skip + limit);
 
     // Validate required inputs
     if (
