@@ -21,7 +21,7 @@ export const AuthProvider = ({ children }) => {
         if (storedUser && storedToken) {
             setUser(storedUser);
             setToken(storedToken);
-            setRoles(storedUser.roles || []); // Usar array
+            setRoles(storedUser.roles || []);
         }
 
         setLoading(false);
@@ -32,6 +32,10 @@ export const AuthProvider = ({ children }) => {
         setUser(data.user);
         setToken(data.token);
         setRoles(data.user.roles || []);
+
+        // ✅ Persistencia en localStorage
+        localStorage.setItem("user", JSON.stringify(data.user));
+        localStorage.setItem("token", data.token);
     };
 
     const logout = () => {
@@ -39,6 +43,10 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
         setToken(null);
         setRoles([]);
+
+        // ❌ Limpieza de localStorage
+        localStorage.removeItem("user");
+        localStorage.removeItem("token");
     };
 
     return (

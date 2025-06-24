@@ -17,8 +17,19 @@ export default function CalendarioResumen({ periodo = "mes" }) {
         const cargarDias = async () => {
             const { from, to } = getRangoDelPeriodo(periodo);
             try {
-                const dias = await getDiasSesame(user.id, from, to);
+                const respuesta = await getDiasSesame(
+                    user.sesameEmployeeId,
+                    from,
+                    to
+                );
+                const dias = await getDiasSesame(
+                    user.sesameEmployeeId,
+                    from,
+                    to
+                );
+
                 setDiasMes(dias);
+
                 const noTrabajados = dias
                     .filter((d) => d.tipo !== "WD")
                     .map((d) => d.date);
@@ -28,7 +39,7 @@ export default function CalendarioResumen({ periodo = "mes" }) {
             }
         };
 
-        if (user?.id) {
+        if (user?.sesameEmployeeId) {
             cargarDias();
         }
     }, [periodo, user]);

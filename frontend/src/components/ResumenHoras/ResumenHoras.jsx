@@ -1,5 +1,3 @@
-// src/components/ResumenHoras/ResumenHoras.jsx
-
 import { useEffect, useState } from "react";
 import { getDiasSesame } from "../../services/sesameService";
 import { getImputacionesPorRango } from "../../services/imputacionService";
@@ -7,7 +5,7 @@ import { useAuth } from "../../context/AuthContext";
 import { getRangoDelPeriodo } from "../../utils/dateUtils";
 
 export default function ResumenHoras({ periodo = "mes", onResumenCalculado }) {
-    const { user } = useAuth();
+    const { user, loading: authLoading } = useAuth();
     const [diasTrabajados, setDiasTrabajados] = useState(0);
     const [horasImputadas, setHorasImputadas] = useState(0);
     const [loading, setLoading] = useState(true);
@@ -16,28 +14,37 @@ export default function ResumenHoras({ periodo = "mes", onResumenCalculado }) {
         const cargarDatos = async () => {
             try {
                 setLoading(true);
-
                 const { from, to } = getRangoDelPeriodo(periodo);
-                const [dias, imputaciones] = await Promise.all([
-                    getDiasSesame(user.id, from, to),
+
+                const [diasResponse, imputaciones] = await Promise.all([
+                    getDiasSesame(user.sesameEmployeeId, from, to),
                     getImputacionesPorRango(user.id, from, to),
                 ]);
 
-                const diasHabiles = dias.filter((d) => d.tipo === "WD"); // solo días trabajados
-                const horasTotales = diasHabiles.length * user.dailyHours;
-                const horasImputadas = imputaciones.reduce(
+                console.log("DIAS RAW:", diasResponse);
+
+                const dias = diasResponse || [];
+
+                // ✅ Si tiene segundos trabajados, lo contamos como día hábil
+                const diasHabiles = dias.filter((d) => d.secondsWorked > 0);
+
+                // ✅ Usamos fallback si no viene dailyHours
+                const dailyHours = user?.dailyHours ?? 7.5;
+
+                const horasTotales = diasHabiles.length * dailyHours;
+                const totalImputadas = imputaciones.reduce(
                     (acc, imp) => acc + imp.horas,
                     0
                 );
 
                 setDiasTrabajados(diasHabiles.length);
-                setHorasImputadas(horasImputadas);
+                setHorasImputadas(totalImputadas);
 
                 onResumenCalculado?.({
                     diasTrabajados: diasHabiles.length,
                     horasTotales,
-                    horasImputadas,
-                    horasRestantes: horasTotales - horasImputadas,
+                    horasImputadas: totalImputadas,
+                    horasRestantes: horasTotales - totalImputadas,
                 });
             } catch (err) {
                 console.error("Error al cargar resumen:", err);
@@ -46,14 +53,16 @@ export default function ResumenHoras({ periodo = "mes", onResumenCalculado }) {
             }
         };
 
-        if (user?.id) {
+        if (!authLoading && user?.id && user?.sesameEmployeeId) {
+            console.log("USER EN RESUMEN:", user);
             cargarDatos();
         }
-    }, [periodo, user]);
+    }, [periodo, user, authLoading]);
 
-    if (loading) return <p>Cargando resumen...</p>;
+    if (loading || authLoading) return <p>Cargando resumen...</p>;
 
-    const horasTotales = diasTrabajados * user.dailyHours;
+    const dailyHours = user?.dailyHours ?? 7.5;
+    const horasTotales = diasTrabajados * dailyHours;
     const horasRestantes = horasTotales - horasImputadas;
 
     return (
