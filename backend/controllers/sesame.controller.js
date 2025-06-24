@@ -1,75 +1,54 @@
 const mongoose = require("mongoose");
 const { Sesame } = require("../models/sesame.model");
 
-const isDateFormat = async (dateStr) => {
-  const regex = /^\d{4}-\d{2}-\d{2}$/;
-  if (!regex.test(dateStr)) {
-    return false;
-  } else {
-    return true;
-  }
+// Utility to check if a string is in YYYY-MM-DD format
+const isDateFormat = (dateStr) => {
+  return /^\d{4}-\d{2}-\d{2}$/.test(dateStr);
 };
 
-const checkImportantField = async (employeeIds, from, to) => {
-  let err_msg = new String();
+// Validation helper for required fields
+const checkImportantField = (employeeIds, from, to) => {
+  if (!employeeIds)
+    return [false, "No 'employeeIds' (ObjectId) field received"];
+  if (!Array.isArray(employeeIds))
+    return [false, "'employeeIds' must be an array"];
 
-  if (!employeeIds) {
-    err_msg = "No 'employeeIds' (ObjectId) field recieved";
-    return [false, err_msg];
-  } else if (employeeIds.constructor !== Array) {
-    err_msg = "'employeeIds' must be an array";
-    return [false, err_msg];
+  if (from && !isDateFormat(from)) {
+    return [false, "Invalid 'from' format field (Date 'YYYY-MM-DD') received"];
   }
 
-  if (from) {
-    const isValidDate = await isDateFormat(from);
-
-    if (!isValidDate) {
-      err_msg = "Invalid 'from' format field (Date 'YYYY-MM-DD') recieved";
-      return [false, err_msg];
-    }
-  }
-
-  if (to) {
-    const isValidDate = await isDateFormat(to);
-
-    if (!isValidDate) {
-      err_msg = "Invalid 'to' format field (Date 'YYYY-MM-DD') recieved";
-      return [false, err_msg];
-    }
+  if (to && !isDateFormat(to)) {
+    return [false, "Invalid 'to' format field (Date 'YYYY-MM-DD') received"];
   }
 
   return [true];
 };
 
+// Normalize a date to 'YYYY-MM-DD'
+const getDateString = (date) => new Date(date).toISOString().split("T")[0];
+
+// Generate an array of date strings between two dates
+const getDateRangeStrings = (from, to) => {
+  const dates = [];
+  const current = new Date(from);
+  const end = new Date(to);
+
+  while (current <= end) {
+    dates.push(getDateString(current));
+    current.setDate(current.getDate() + 1);
+  }
+
+  return dates;
+};
+
+// Main controller
 const getWorkedDays = async (req, res) => {
   try {
     const { employeeIds, from, to, limit = 10, page = 1 } = req.body;
 
-    const areImportantFieldsPresent = await checkImportantField(
-      employeeIds,
-      from,
-      to
-    );
-
-    if (areImportantFieldsPresent[0] == false) {
-      return res.status(406).json({ error: `${areImportantFieldsPresent[1]}` });
-    }
-
-    // Validate required inputs
-    if (
-      !employeeIds ||
-      !Array.isArray(employeeIds) ||
-      employeeIds.length === 0
-    ) {
-      return res
-        .status(400)
-        .json({ error: "employeeIds must be a non-empty array." });
-    }
-    if (!from || !to) {
-      return res
-        .status(400)
-        .json({ error: "Both 'from' and 'to' dates are required." });
+    const [isValid, errorMsg] = checkImportantField(employeeIds, from, to);
+    if (!isValid) {
+      return res.status(406).json({ error: errorMsg });
     }
 
     const fromDate = new Date(from);
@@ -80,55 +59,44 @@ const getWorkedDays = async (req, res) => {
         .json({ error: "Invalid date format. Use YYYY-MM-DD." });
     }
 
-    // Paginate employee IDs
+    // Pagination logic
     const total = employeeIds.length;
     const skip = (page - 1) * limit;
     const paginatedIds = employeeIds.slice(skip, skip + limit);
     const lastPage = Math.ceil(total / limit);
 
-    // Generate list of date strings in the range
-    const daysInRange = [];
-    for (let d = new Date(fromDate); d <= toDate; d.setDate(d.getDate() + 1)) {
-      daysInRange.push(new Date(d).toISOString().split("T")[0]);
-    }
+    const dateStrings = getDateRangeStrings(fromDate, toDate);
 
-    // Fetch and format data
+    // Fetch and format worked day data
     const data = await Promise.all(
       paginatedIds.map(async (employeeId) => {
-        const sesameDoc = await Sesame.findOne({ employeeId });
+        const sesameDoc = await Sesame.findOne({
+          employeeId: { $regex: `^${employeeId}$`, $options: "i" },
+        }).lean();
 
-        // Build a lookup map for quick access
-        const dayMap = {};
-        if (sesameDoc?.days?.length) {
+        const workedDaysMap = {};
+        if (sesameDoc && Array.isArray(sesameDoc.days)) {
           for (const entry of sesameDoc.days) {
-            const dateStr =
-              typeof entry.date === "string"
-                ? entry.date
-                : new Date(entry.date).toISOString().split("T")[0];
-            dayMap[dateStr] = entry.secondsWorked;
+            const dateKey = getDateString(entry.date);
+            workedDaysMap[dateKey] = entry.secondsWorked;
           }
         }
 
-        // Create the final `days` array for this employee
-        const days = daysInRange.map((date) => ({
-          date,
-          secondsWorked: dayMap[date] || 0,
+        const days = dateStrings.map((dateStr) => ({
+          date: dateStr,
+          secondsWorked: workedDaysMap[dateStr] || 0,
         }));
 
-        return {
-          employeeId,
-          days,
-        };
+        return { employeeId, days };
       })
     );
 
-    // Return the response
     return res.json({
       data,
       meta: {
         currentPage: page,
-        lastPage: lastPage,
-        total: total,
+        lastPage,
+        total,
         perPage: limit,
       },
     });
