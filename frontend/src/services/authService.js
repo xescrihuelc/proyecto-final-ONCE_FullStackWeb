@@ -1,3 +1,5 @@
+// src/services/authService.js
+
 import { API_URL } from "../utils/config";
 
 export const login = async (email, password) => {
@@ -12,14 +14,15 @@ export const login = async (email, password) => {
         throw new Error(error || "Credenciales incorrectas");
     }
 
-    const { Token } = await response.json();
+    // ⚠️ Asegúrate de usar "token" tal como lo devuelve tu API
+    const { token } = await response.json();
 
+    // Ahora obtenemos la lista de usuarios para extraer sus datos
     const resUser = await fetch(`${API_URL}/users`);
     if (!resUser.ok) throw new Error("Error al obtener usuarios");
 
     const allUsers = await resUser.json();
     const matchedUser = allUsers.find((u) => u.email === email);
-
     if (!matchedUser) throw new Error("Usuario no encontrado tras login");
 
     const fullUser = {
@@ -30,8 +33,9 @@ export const login = async (email, password) => {
             matchedUser.sesameEmployeeId ?? matchedUser.id ?? null,
     };
 
+    // Almacenar correctamente
     localStorage.setItem("user", JSON.stringify(fullUser));
-    localStorage.setItem("token", Token);
+    localStorage.setItem("token", token);
 
     return {
         user: {
@@ -40,7 +44,7 @@ export const login = async (email, password) => {
                 ? fullUser.roles
                 : [fullUser.roles],
         },
-        token: Token,
+        token,
     };
 };
 
