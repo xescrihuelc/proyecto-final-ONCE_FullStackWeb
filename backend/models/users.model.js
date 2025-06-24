@@ -21,6 +21,10 @@ const usersSchema = new mongoose.Schema({
     type: Boolean,
     default: true,
   },
+  sesameEmployeeId: {
+    type: String,
+    required: true,
+  },
 });
 
 const Users = mongoose.model("Users", usersSchema);

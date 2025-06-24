@@ -1,3 +1,5 @@
+// src/context/AuthContext.jsx
+
 import { createContext, useContext, useEffect, useState } from "react";
 import {
     login as apiLogin,
@@ -21,7 +23,7 @@ export const AuthProvider = ({ children }) => {
         if (storedUser && storedToken) {
             setUser(storedUser);
             setToken(storedToken);
-            setRoles(storedUser.roles || []); // Usar array
+            setRoles(storedUser.roles || []);
         }
 
         setLoading(false);
@@ -29,9 +31,18 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (email, password) => {
         const data = await apiLogin(email, password);
-        setUser(data.user);
+        const fullUser = {
+            ...data.user,
+            dailyHours: data.user.dailyHours ?? 7.5,
+            sesameEmployeeId: data.user.sesameEmployeeId ?? null,
+        };
+
+        setUser(fullUser);
         setToken(data.token);
-        setRoles(data.user.roles || []);
+        setRoles(fullUser.roles || []);
+
+        localStorage.setItem("user", JSON.stringify(fullUser));
+        localStorage.setItem("token", data.token);
     };
 
     const logout = () => {
@@ -39,6 +50,9 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
         setToken(null);
         setRoles([]);
+
+        localStorage.removeItem("user");
+        localStorage.removeItem("token");
     };
 
     return (

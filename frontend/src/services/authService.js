@@ -1,3 +1,5 @@
+// src/services/authService.js
+
 import { API_URL } from "../utils/config";
 
 export const login = async (email, password) => {
@@ -12,26 +14,37 @@ export const login = async (email, password) => {
         throw new Error(error || "Credenciales incorrectas");
     }
 
-    const { Token } = await response.json();
+    // ⚠️ Asegúrate de usar "token" tal como lo devuelve tu API
+    const { token } = await response.json();
 
+    // Ahora obtenemos la lista de usuarios para extraer sus datos
     const resUser = await fetch(`${API_URL}/users`);
     if (!resUser.ok) throw new Error("Error al obtener usuarios");
 
     const allUsers = await resUser.json();
     const matchedUser = allUsers.find((u) => u.email === email);
-
     if (!matchedUser) throw new Error("Usuario no encontrado tras login");
 
-    localStorage.setItem("user", JSON.stringify(matchedUser));
-    localStorage.setItem("token", Token);
+    const fullUser = {
+        ...matchedUser,
+        id: matchedUser._id,
+        dailyHours: matchedUser.dailyHours ?? 7.5,
+        sesameEmployeeId:
+            matchedUser.sesameEmployeeId ?? matchedUser.id ?? null,
+    };
+
+    // Almacenar correctamente
+    localStorage.setItem("user", JSON.stringify(fullUser));
+    localStorage.setItem("token", token);
 
     return {
         user: {
-            ...matchedUser,
-            roles: Array.isArray(matchedUser.roles)
-                ? matchedUser.roles
-                : [matchedUser.roles],
+            ...fullUser,
+            roles: Array.isArray(fullUser.roles)
+                ? fullUser.roles
+                : [fullUser.roles],
         },
+        token,
     };
 };
 

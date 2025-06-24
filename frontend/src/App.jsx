@@ -1,32 +1,20 @@
-// ===== Archivo: App.jsx =====
+// src/App.jsx
 
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useAuth } from "./context/AuthContext";
+
 import Login from "./pages/Login/Login";
 import Dashboard from "./pages/Dashboard/Dashboard";
-/* import Imputacion from "./pages/Imputacion/Imputacion"; */
-import ImputacionHoras from "./pages/Imputacion/ImputacionHoras";
 import VistaImputacion from "./pages/Imputacion/VistaImputacion";
 import AsignacionProyecto from "./pages/AsignacionProyecto/AsignacionProyecto";
 import GestionUsuarios from "./pages/GestionUsuarios/GestionUsuarios";
 import AdminPage from "./pages/AdminPage/AdminPage";
-import Header from "./components/Header/Header";
+
 import Sidebar from "./components/Sidebar/Sidebar";
+import Header from "./components/Header/Header";
 import ProtectedRoute from "./components/routing/ProtectedRoute";
 
-import { useAuth } from "./context/AuthContext";
 import "./App.css";
-
-function HomeRedirect() {
-    const { roles, loading } = useAuth();
-
-    if (loading) return <p>Cargando...</p>;
-
-    if (roles.includes("admin")) return <Navigate to="/admin" replace />;
-    if (roles.includes("user"))
-        return <Navigate to="/panel-imputacion" replace />;
-
-    return <Navigate to="/login" replace />;
-}
 
 function App() {
     const { token, logout, loading } = useAuth();
@@ -41,15 +29,20 @@ function App() {
                     <div className="main-content">
                         <Header onLogout={logout} />
                         <Routes>
+                            {/* Intentar acceder a /login redirige al panel */}
                             <Route
                                 path="/login"
-                                element={<Navigate to="/" replace />}
+                                element={
+                                    <Navigate to="/panel-imputacion" replace />
+                                }
                             />
+
+                            {/* Rutas protegidas */}
                             <Route
-                                path="/"
+                                path="/panel-imputacion"
                                 element={
                                     <ProtectedRoute>
-                                        <HomeRedirect />
+                                        <VistaImputacion />
                                     </ProtectedRoute>
                                 }
                             />
@@ -62,23 +55,7 @@ function App() {
                                 }
                             />
                             <Route
-                                path="/AsignacionProyecto"
-                                element={
-                                    <ProtectedRoute requiredRole="admin">
-                                        <AsignacionProyecto />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
                                 path="/imputacion-horas"
-                                element={
-                                    <ProtectedRoute>
-                                        <ImputacionHoras />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/panel-imputacion"
                                 element={
                                     <ProtectedRoute>
                                         <VistaImputacion />
@@ -86,10 +63,10 @@ function App() {
                                 }
                             />
                             <Route
-                                path="/admin"
+                                path="/AsignacionProyecto"
                                 element={
                                     <ProtectedRoute requiredRole="admin">
-                                        <AdminPage />
+                                        <AsignacionProyecto />
                                     </ProtectedRoute>
                                 }
                             />
@@ -102,15 +79,29 @@ function App() {
                                 }
                             />
                             <Route
+                                path="/admin"
+                                element={
+                                    <ProtectedRoute requiredRole="admin">
+                                        <AdminPage />
+                                    </ProtectedRoute>
+                                }
+                            />
+
+                            {/* Cualquier otra ruta en sesión autenticada vuelve al panel */}
+                            <Route
                                 path="*"
-                                element={<Navigate to="/" replace />}
+                                element={
+                                    <Navigate to="/panel-imputacion" replace />
+                                }
                             />
                         </Routes>
                     </div>
                 </div>
             ) : (
                 <Routes>
+                    {/* Ruta pública de login */}
                     <Route path="/login" element={<Login />} />
+                    {/* Si no está autenticado, cualquier otra URL va a login */}
                     <Route
                         path="*"
                         element={<Navigate to="/login" replace />}

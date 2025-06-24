@@ -22,9 +22,7 @@ const Login = () => {
         setError(null);
         try {
             await login(credentials.email, credentials.password);
-            navigate("/");
-        } catch (err) {
-            setError(err.message || "Correo o contraseña inválidos");
+            navigate("/panel-imputacion", { replace: true });
         } finally {
             setLoading(false);
         }
