@@ -22,16 +22,25 @@ export const login = async (email, password) => {
 
     if (!matchedUser) throw new Error("Usuario no encontrado tras login");
 
-    localStorage.setItem("user", JSON.stringify(matchedUser));
+    const fullUser = {
+        ...matchedUser,
+        id: matchedUser._id,
+        dailyHours: matchedUser.dailyHours ?? 7.5,
+        sesameEmployeeId:
+            matchedUser.sesameEmployeeId ?? matchedUser.id ?? null,
+    };
+
+    localStorage.setItem("user", JSON.stringify(fullUser));
     localStorage.setItem("token", Token);
 
     return {
         user: {
-            ...matchedUser,
-            roles: Array.isArray(matchedUser.roles)
-                ? matchedUser.roles
-                : [matchedUser.roles],
+            ...fullUser,
+            roles: Array.isArray(fullUser.roles)
+                ? fullUser.roles
+                : [fullUser.roles],
         },
+        token: Token,
     };
 };
 

@@ -13,8 +13,13 @@ export default function FormularioImputacionConReparto({ resumen, tareas }) {
     const [inputs, setInputs] = useState([]);
     const [loading, setLoading] = useState(false);
 
+    // 🔐 Prevención si resumen o tareas no están cargados aún
+    if (!resumen || !Array.isArray(tareas)) {
+        return <p>Cargando tareas y resumen de horas...</p>;
+    }
+
     useEffect(() => {
-        if (tareas.length > 0) {
+        if (Array.isArray(tareas) && tareas.length > 0) {
             setInputs(tareas.map((t) => ({ tareaId: t.id, valor: "" })));
         }
     }, [tareas]);
@@ -108,35 +113,43 @@ export default function FormularioImputacionConReparto({ resumen, tareas }) {
                 entre los días trabajados.
             </p>
 
-            <table>
-                <thead>
-                    <tr>
-                        <th>Tarea</th>
-                        <th>Horas o %</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {tareas.map((tarea, i) => (
-                        <tr key={tarea.id}>
-                            <td>{tarea.nombre}</td>
-                            <td>
-                                <input
-                                    type="text"
-                                    value={inputs[i]?.valor || ""}
-                                    onChange={(e) =>
-                                        handleChange(i, e.target.value)
-                                    }
-                                    placeholder="Ej: 6 o 25%"
-                                />
-                            </td>
+            {tareas.length === 0 ? (
+                <p>No tienes tareas asignadas para imputar este mes.</p>
+            ) : (
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tarea</th>
+                            <th>Horas o %</th>
                         </tr>
-                    ))}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {tareas.map((tarea, i) => (
+                            <tr key={tarea.id}>
+                                <td>{tarea.nombre}</td>
+                                <td>
+                                    <input
+                                        type="text"
+                                        value={inputs[i]?.valor || ""}
+                                        onChange={(e) =>
+                                            handleChange(i, e.target.value)
+                                        }
+                                        placeholder="Ej: 6 o 25%"
+                                    />
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            )}
 
             <button
                 onClick={handleGuardar}
-                disabled={resumen.horasRestantes <= 0 || loading}
+                disabled={
+                    resumen.horasRestantes <= 0 ||
+                    loading ||
+                    tareas.length === 0
+                }
                 className="btn-imputar"
             >
                 {loading ? "Guardando..." : "Guardar imputación"}

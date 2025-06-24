@@ -16,21 +16,22 @@ export default function ResumenHoras({ periodo = "mes", onResumenCalculado }) {
                 setLoading(true);
                 const { from, to } = getRangoDelPeriodo(periodo);
 
-                const [diasResponse, imputaciones] = await Promise.all([
-                    getDiasSesame(user.sesameEmployeeId, from, to),
-                    getImputacionesPorRango(user.id, from, to),
-                ]);
+                const dias = await getDiasSesame(
+                    user.sesameEmployeeId,
+                    from,
+                    to
+                );
+                const imputaciones = await getImputacionesPorRango(
+                    user.id,
+                    from,
+                    to
+                );
 
-                console.log("DIAS RAW:", diasResponse);
+                console.log("✅ Dias Sesame:", dias);
+                console.log("✅ Imputaciones:", imputaciones);
 
-                const dias = diasResponse || [];
-
-                // ✅ Si tiene segundos trabajados, lo contamos como día hábil
                 const diasHabiles = dias.filter((d) => d.secondsWorked > 0);
-
-                // ✅ Usamos fallback si no viene dailyHours
                 const dailyHours = user?.dailyHours ?? 7.5;
-
                 const horasTotales = diasHabiles.length * dailyHours;
                 const totalImputadas = imputaciones.reduce(
                     (acc, imp) => acc + imp.horas,
@@ -46,24 +47,39 @@ export default function ResumenHoras({ periodo = "mes", onResumenCalculado }) {
                     horasImputadas: totalImputadas,
                     horasRestantes: horasTotales - totalImputadas,
                 });
+
+                console.log("✅ Resumen calculado con éxito");
             } catch (err) {
-                console.error("Error al cargar resumen:", err);
+                console.error("❌ Error al cargar resumen:", err);
             } finally {
                 setLoading(false);
             }
         };
 
-        if (!authLoading && user?.id && user?.sesameEmployeeId) {
-            console.log("USER EN RESUMEN:", user);
-            cargarDatos();
+        // 🛡️ Validaciones clave
+        if (authLoading) return;
+        if (!user) {
+            console.warn("⛔ No hay usuario cargado aún");
+            return;
         }
-    }, [periodo, user, authLoading]);
+        if (!user.id) {
+            console.warn("⛔ El usuario no tiene 'id'", user);
+            return;
+        }
+        if (!user.sesameEmployeeId) {
+            console.warn("⛔ El usuario no tiene 'sesameEmployeeId'", user);
+            return;
+        }
 
-    if (loading || authLoading) return <p>Cargando resumen...</p>;
+        console.log("🧩 Usuario listo en resumen:", user);
+        cargarDatos();
+    }, [periodo, user, authLoading]);
 
     const dailyHours = user?.dailyHours ?? 7.5;
     const horasTotales = diasTrabajados * dailyHours;
     const horasRestantes = horasTotales - horasImputadas;
+
+    if (loading || authLoading) return <p>Cargando resumen...</p>;
 
     return (
         <div className="resumen-horas">

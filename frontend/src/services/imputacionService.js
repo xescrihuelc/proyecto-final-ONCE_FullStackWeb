@@ -1,41 +1,26 @@
-// src/services/imputacionService.js
-
 import { API_URL } from "../utils/config";
 
-// Obtener días trabajados desde Sesame
-export const getDiasSesame = async (
-    sesameEmployeeId,
-    fechaInicio,
-    fechaFin
-) => {
-    const res = await fetch(
-        `${API_URL}/sesame/simulacion?employeeId=${sesameEmployeeId}&from=${fechaInicio}&to=${fechaFin}`
-    );
-
-    if (!res.ok) {
-        const { error } = await res.json();
-        throw new Error(error || "Error al consultar días trabajados");
-    }
-
-    return await res.json();
-};
-
-// Obtener imputaciones del backend por usuario y rango
+// ✅ Obtener imputaciones
 export const getImputacionesPorRango = async (userId, from, to) => {
-    const res = await fetch(
-        `${API_URL}/hours?userId=${userId}&from=${from}&to=${to}`
-    );
-    if (!res.ok) throw new Error("Error al obtener imputaciones");
-    return await res.json();
+    const url = `${API_URL}/tasks/hours?userId=${userId}&from=${from}&to=${to}`;
+    try {
+        const res = await fetch(url);
+        if (!res.ok) {
+            const msg = await res.text();
+            throw new Error(`Error ${res.status}: ${msg}`);
+        }
+        return await res.json();
+    } catch (err) {
+        console.error("❌ Fallo en fetch de imputaciones:", url, err);
+        return [];
+    }
 };
 
-// POST: Guardar varias imputaciones distribuidas
+// ✅ Crear imputaciones distribuidas
 export const postImputacionesDistribuidas = async (imputaciones) => {
     const res = await fetch(`${API_URL}/hours`, {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(imputaciones),
     });
 
@@ -44,5 +29,5 @@ export const postImputacionesDistribuidas = async (imputaciones) => {
         throw new Error(error || "Error al guardar imputaciones");
     }
 
-    return await res.json(); // devuelve las imputaciones guardadas
+    return await res.json();
 };

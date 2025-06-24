@@ -1,3 +1,5 @@
+// src/context/AuthContext.jsx
+
 import { createContext, useContext, useEffect, useState } from "react";
 import {
     login as apiLogin,
@@ -29,12 +31,17 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (email, password) => {
         const data = await apiLogin(email, password);
-        setUser(data.user);
-        setToken(data.token);
-        setRoles(data.user.roles || []);
+        const fullUser = {
+            ...data.user,
+            dailyHours: data.user.dailyHours ?? 7.5,
+            sesameEmployeeId: data.user.sesameEmployeeId ?? null,
+        };
 
-        // ✅ Persistencia en localStorage
-        localStorage.setItem("user", JSON.stringify(data.user));
+        setUser(fullUser);
+        setToken(data.token);
+        setRoles(fullUser.roles || []);
+
+        localStorage.setItem("user", JSON.stringify(fullUser));
         localStorage.setItem("token", data.token);
     };
 
@@ -44,7 +51,6 @@ export const AuthProvider = ({ children }) => {
         setToken(null);
         setRoles([]);
 
-        // ❌ Limpieza de localStorage
         localStorage.removeItem("user");
         localStorage.removeItem("token");
     };

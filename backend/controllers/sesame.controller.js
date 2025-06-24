@@ -1,4 +1,3 @@
-const mongoose = require("mongoose");
 const { Sesame } = require("../models/sesame.model");
 
 const getWorkedDays = async (req, res) => {
@@ -18,30 +17,11 @@ const getWorkedDays = async (req, res) => {
             paginatedIds.map(async (employeeId) => {
                 const sesameDoc = await Sesame.findOne({ employeeId });
 
-                const days = [];
-
-                for (
-                    let date = new Date(fromDate);
-                    date <= toDate;
-                    date.setDate(date.getDate() + 1)
-                ) {
-                    const currentDate = new Date(date);
-
-                    // Comparación robusta por año, mes y día
-                    const matchedDay = sesameDoc?.days.find((d) => {
+                const days =
+                    sesameDoc?.days.filter((d) => {
                         const dDate = new Date(d.date);
-                        return (
-                            dDate.getFullYear() === currentDate.getFullYear() &&
-                            dDate.getMonth() === currentDate.getMonth() &&
-                            dDate.getDate() === currentDate.getDate()
-                        );
-                    });
-
-                    days.push({
-                        date: currentDate.toISOString().split("T")[0],
-                        secondsWorked: matchedDay?.secondsWorked || 0,
-                    });
-                }
+                        return dDate >= fromDate && dDate <= toDate;
+                    }) || [];
 
                 return {
                     employeeId,

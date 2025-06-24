@@ -10,18 +10,13 @@ const diasSemana = ["D", "L", "M", "X", "J", "V", "S"];
 
 export default function CalendarioResumen({ periodo = "mes" }) {
     const { user } = useAuth();
-    const [diasMes, setDiasMes] = useState([]);
-    const [diasNoTrabajados, setDiasNoTrabajados] = useState([]);
+    const [diasMes, setDiasMes] = useState([]); // Array completo de días
+    const [diasNoTrabajados, setDiasNoTrabajados] = useState(new Set()); // Set de fechas no trabajadas
 
     useEffect(() => {
         const cargarDias = async () => {
             const { from, to } = getRangoDelPeriodo(periodo);
             try {
-                const respuesta = await getDiasSesame(
-                    user.sesameEmployeeId,
-                    from,
-                    to
-                );
                 const dias = await getDiasSesame(
                     user.sesameEmployeeId,
                     from,
@@ -30,9 +25,12 @@ export default function CalendarioResumen({ periodo = "mes" }) {
 
                 setDiasMes(dias);
 
-                const noTrabajados = dias
-                    .filter((d) => d.tipo !== "WD")
-                    .map((d) => d.date);
+                // Filtramos y guardamos en un Set para búsquedas O(1)
+                const noTrabajados = new Set(
+                    dias
+                        .filter((d) => d.secondsWorked === 0)
+                        .map((d) => d.date.split("T")[0]) // normaliza fecha a "YYYY-MM-DD"
+                );
                 setDiasNoTrabajados(noTrabajados);
             } catch (err) {
                 console.error("Error al cargar calendario:", err);
@@ -55,9 +53,9 @@ export default function CalendarioResumen({ periodo = "mes" }) {
             </div>
             <div className="grilla">
                 {diasMes.map((dia) => {
-                    const fecha = new Date(dia.date);
-                    const numero = fecha.getDate();
-                    const esNoTrabajado = !dia.tipo || dia.tipo !== "WD";
+                    const fechaISO = dia.date.split("T")[0]; // "YYYY-MM-DD"
+                    const numero = new Date(dia.date).getDate();
+                    const esNoTrabajado = diasNoTrabajados.has(fechaISO);
 
                     return (
                         <div
@@ -65,7 +63,11 @@ export default function CalendarioResumen({ periodo = "mes" }) {
                             className={`dia ${
                                 esNoTrabajado ? "no-trabajado" : "trabajado"
                             }`}
-                            title={dia.tipo}
+                            title={
+                                esNoTrabajado
+                                    ? "No trabajado"
+                                    : `Trabajado: ${dia.secondsWorked / 3600}h`
+                            }
                         >
                             {numero}
                         </div>

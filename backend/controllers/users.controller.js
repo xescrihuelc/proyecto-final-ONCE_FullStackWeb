@@ -55,7 +55,19 @@ const login = async (req, res) => {
 
     // Generar token con el userId en el payload .sign() y un JWT secret
     const accessToken = jwt.sign({ userId: user._id }, JWT_SECRET);
-    res.send({ Token: accessToken });
+    res.json({
+        token: accessToken,
+        user: {
+            id: user._id,
+            name: user.name,
+            surnames: user.surnames,
+            email: user.email,
+            roles: user.roles,
+            dailyHours: user.dailyHours,
+            sesameEmployeeId: user.sesameEmployeeId, // 👈 CLAVE PARA EL SESAME
+            assignedTasks: user.assignedTasks,
+        },
+    });
 };
 
 const createUser = async (req, res) => {
