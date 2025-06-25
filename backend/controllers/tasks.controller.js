@@ -114,28 +114,6 @@ const deleteTask = async (req, res) => {
     }
 };
 
-const getImputacionesPorUsuarioYRango = async (req, res) => {
-    try {
-        const { userId, from, to } = req.query;
-        if (!userId || !from || !to) {
-            return res.status(400).json({ error: "Faltan parámetros" });
-        }
-
-        const fromDate = new Date(from);
-        const toDate = new Date(to);
-
-        // 👇 Usa los nombres EXACTOS del esquema definido en hoursSchema
-        const imputaciones = await Hours.find({
-            userId: userId,
-            date: { $gte: fromDate, $lte: toDate },
-        });
-
-        res.json(imputaciones);
-    } catch (error) {
-        console.error("Error en getImputacionesPorUsuarioYRango:", error);
-        res.status(500).json({ error: "Error interno del servidor" });
-    }
-};
 
 module.exports = {
     getAllTasks,
@@ -143,5 +121,4 @@ module.exports = {
     createTask,
     updateTask,
     deleteTask,
-    getImputacionesPorUsuarioYRango,
 };
