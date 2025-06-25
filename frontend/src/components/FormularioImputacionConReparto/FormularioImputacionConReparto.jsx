@@ -3,10 +3,11 @@ import { useAuth } from "../../context/AuthContext";
 import SignaturePad from "../SignaturePad/SignaturePad";
 import { postImputacionesDistribuidas } from "../../services/imputacionService";
 
-// IMPORTS CORRECTOS PARA PDF/CSV (Opción A)
+// IMPORTS PDF/CSV
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import Papa from "papaparse";
+
 import "./FormularioImputacionConReparto.css";
 
 function roundToNearest15Minutes(hours) {
@@ -20,12 +21,10 @@ export default function FormularioImputacionConReparto({ resumen, tareas }) {
     const [loading, setLoading] = useState(false);
     const [firmaImg, setFirmaImg] = useState(null);
 
-    if (!resumen || !Array.isArray(tareas)) {
-        return <p>Cargando tareas y resumen de horas...</p>;
-    }
-
     useEffect(() => {
-        setInputs(tareas.map((t) => ({ tareaId: t.id, valor: "" })));
+        if (Array.isArray(tareas)) {
+            setInputs(tareas.map((t) => ({ tareaId: t.id, valor: "" })));
+        }
     }, [tareas]);
 
     const handleChange = (index, nuevoValor) => {
@@ -90,6 +89,7 @@ export default function FormularioImputacionConReparto({ resumen, tareas }) {
             const distribucion = calcularDistribucion();
             if (distribucion.length === 0) {
                 alert("No hay imputaciones válidas.");
+                setLoading(false);
                 return;
             }
             await postImputacionesDistribuidas(distribucion);
@@ -106,24 +106,13 @@ export default function FormularioImputacionConReparto({ resumen, tareas }) {
     const exportPDF = () => {
         const doc = new jsPDF({ unit: "pt", format: "letter" });
         doc.text("Imputación de Horas", 40, 40);
-
-        // Preparamos head y body
         const head = [["Tarea", "Horas/%"]];
         const body = tareas.map((t, i) => [t.nombre, inputs[i]?.valor || ""]);
-
-        // Llamada al helper autoTable
-        autoTable(doc, {
-            head,
-            body,
-            startY: 60,
-        });
-
-        // Añadimos la firma si existe
+        autoTable(doc, { head, body, startY: 60 });
         if (firmaImg) {
             const y = (doc.lastAutoTable?.finalY || 60) + 20;
             doc.addImage(firmaImg, "PNG", 40, y, 200, 100);
         }
-
         doc.save("imputacion.pdf");
     };
 
@@ -143,87 +132,108 @@ export default function FormularioImputacionConReparto({ resumen, tareas }) {
         document.body.removeChild(link);
     };
 
+    if (!resumen || !Array.isArray(tareas)) {
+        return <p>Cargando tareas y resumen de horas...</p>;
+    }
+
     return (
-        <div className="formulario-imputacion-reparto">
-            <h3>
-                Asignar horas a tareas ({resumen.diasTrabajados} días
-                trabajados)
-            </h3>
-            <p>
-                Puedes poner horas totales (ej. <code>6</code>) o porcentaje
-                (ej. <code>20%</code>). Las horas se repartirán automáticamente.
-            </p>
+        <>
+            {/* Sección superior */}
+            <section id="start">
+                <div className="formulario-imputacion-reparto">
+                    <h3>
+                        Asignar horas a tareas ({resumen.diasTrabajados} días
+                        trabajados)
+                    </h3>
+                    <p>
+                        Puedes poner horas totales (<code>6</code>) o porcentaje
+                        (<code>20%</code>). Las horas se repartirán
+                        automáticamente.
+                    </p>
 
-            {tareas.length === 0 ? (
-                <p>No tienes tareas asignadas este mes.</p>
-            ) : (
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Tarea</th>
-                            <th>Horas o %</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {tareas.map((tarea, i) => (
-                            <tr key={tarea.id}>
-                                <td>{tarea.nombre}</td>
-                                <td>
-                                    <input
-                                        type="text"
-                                        value={inputs[i]?.valor || ""}
-                                        onChange={(e) =>
-                                            handleChange(i, e.target.value)
-                                        }
-                                        placeholder="Ej: 6 o 25%"
-                                    />
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            )}
+                    {tareas.length === 0 ? (
+                        <p>No tienes tareas asignadas este mes.</p>
+                    ) : (
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Tarea</th>
+                                    <th>Horas o %</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {tareas.map((tarea, i) => (
+                                    <tr key={tarea.id}>
+                                        <td>{tarea.nombre}</td>
+                                        <td>
+                                            <input
+                                                type="text"
+                                                value={inputs[i]?.valor || ""}
+                                                onChange={(e) =>
+                                                    handleChange(
+                                                        i,
+                                                        e.target.value
+                                                    )
+                                                }
+                                                placeholder="Ej: 6 o 25%"
+                                            />
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
 
-            <div className="botones-imputacion">
-                <button
-                    onClick={handleGuardar}
-                    disabled={
-                        resumen.horasRestantes <= 0 ||
-                        loading ||
-                        tareas.length === 0
-                    }
-                    className="btn-imputar"
-                >
-                    {loading ? "Guardando..." : "Guardar imputación"}
-                </button>
-                <button
-                    type="button"
-                    onClick={exportPDF}
-                    className="btn-export"
-                >
-                    Descargar PDF
-                </button>
-                <button
-                    type="button"
-                    onClick={exportCSV}
-                    className="btn-export"
-                >
-                    Descargar CSV
-                </button>
+                    <div className="botones-imputacion">
+                        <button
+                            onClick={handleGuardar}
+                            disabled={
+                                resumen.horasRestantes <= 0 ||
+                                loading ||
+                                tareas.length === 0
+                            }
+                            className="btn-imputar"
+                        >
+                            {loading ? "Guardando..." : "Guardar imputación"}
+                        </button>
+                        <button onClick={exportPDF} className="btn-export">
+                            Descargar PDF
+                        </button>
+                        <button onClick={exportCSV} className="btn-export">
+                            Descargar CSV
+                        </button>
+                    </div>
+
+                    <h4>Firma electrónica</h4>
+                    <SignaturePad
+                        options={{ canvasProps: { touchAction: "none" } }}
+                        onEnd={setFirmaImg}
+                    />
+                    {firmaImg && (
+                        <img
+                            src={firmaImg}
+                            alt="Firma capturada"
+                            style={{
+                                border: "1px solid #000",
+                                marginTop: "10px",
+                            }}
+                        />
+                    )}
+                </div>
+            </section>
+
+            {/* Sección inferior */}
+            <section id="end" style={{ height: "1px" }} />
+
+            {/* Botones de ancla */}
+            <div className="scroll-buttons">
+                <a href="#start" className="scroll-btn" title="Ir arriba">
+                    ↑
+                </a>
+                <a href="#end" className="scroll-btn" title="Ir abajo">
+                    ↓
+                </a>
             </div>
-
-            <h4>Firma electrónica</h4>
-            <SignaturePad
-                options={{ canvasProps: { touchAction: "none" } }}
-                onEnd={setFirmaImg}
-            />
-            {firmaImg && (
-                <img
-                    src={firmaImg}
-                    alt="Firma capturada"
-                    style={{ border: "1px solid #000", marginTop: "10px" }}
-                />
-            )}
-        </div>
+        </>
     );
 }

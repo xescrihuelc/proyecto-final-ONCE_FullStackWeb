@@ -27,19 +27,31 @@ h3 {
 }
 
 /* Botones de navegación ← Hoy → */
-.controls {
-    display: flex;
-    gap: 0.3rem;
-}
+/* Botones de navegación ← Hoy → */
 .controls button {
     border: none;
     font-size: 1.2rem;
     padding: 0.2rem 0.5rem;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: background 0.2s, color 0.2s;
+    background: #00a3e0; /* fondo azul por defecto */
+    color: #fff; /* texto/flecha en blanco */
+    border-radius: 4px;
 }
+.controls button + button {
+    margin-left: 0.3rem;
+}
+
+/* Hover con un azul más oscuro, para que siga viéndose bien */
 .controls button:hover {
-    background: rgba(0, 0, 0, 0.05);
+    background: #0288b0;
+    color: #fff;
+}
+
+/* Botón “Hoy” activo (opcional) */
+.controls button.active {
+    background: #0288b0;
+    color: #fff;
 }
 
 /* Título de fecha (día/semana/mes) */
