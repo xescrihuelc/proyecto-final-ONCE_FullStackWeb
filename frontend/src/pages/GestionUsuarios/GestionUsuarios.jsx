@@ -114,7 +114,7 @@ export default function GestionUsuarios() {
     return (
         <div className="gestion-usuarios">
             {impersonateId && (
-                <div className="impersonation-banner">
+                <div id="visible" className="impersonation-banner">
                     👤 Impersonando a <strong>{impersonateName}</strong>
                     <button onClick={handleStopImpersonate}>Salir</button>
                 </div>
@@ -126,6 +126,14 @@ export default function GestionUsuarios() {
                     <div className="usuario-card" key={usuario._id}>
                         {editando === usuario._id ? (
                             <>
+                                {/* Mostrar ID en modo edición (solo lectura) */}
+                                <p>
+                                    <strong>ID:</strong> {usuario._id}
+                                </p>
+                                <p>
+                                    <strong>Sesame Employee ID:</strong>{" "}
+                                    {usuario.sesameEmployeeId}
+                                </p>
                                 <input
                                     value={valoresEditados.name || usuario.name}
                                     onChange={(e) =>
@@ -173,6 +181,14 @@ export default function GestionUsuarios() {
                             </>
                         ) : (
                             <>
+                                {/* Mostrar ID y UID en vista normal */}
+                                <p>
+                                    <strong>ID:</strong> {usuario._id}
+                                </p>
+                                <p>
+                                    <strong>Sesame Employee ID:</strong>{" "}
+                                    {usuario.sesameEmployeeId}
+                                </p>
                                 <p>
                                     <strong>Nombre:</strong> {usuario.name}
                                 </p>
@@ -192,7 +208,6 @@ export default function GestionUsuarios() {
                                                 name: usuario.name,
                                                 surnames: usuario.surnames,
                                                 email: usuario.email,
-                                                // Inicializa otros campos si los agregas
                                             });
                                         }}
                                     >
