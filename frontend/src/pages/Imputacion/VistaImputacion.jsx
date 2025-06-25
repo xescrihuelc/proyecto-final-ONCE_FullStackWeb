@@ -1,6 +1,6 @@
 // src/pages/Imputacion/VistaImputacion.jsx
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { getAllTasks } from "../../services/taskService";
 import CalendarioResumen from "../../components/CalendarioResumen/CalendarioResumen";
@@ -12,15 +12,18 @@ export default function VistaImputacion() {
     const { user, loading } = useAuth();
     const [resumen, setResumen] = useState(null);
     const [tareas, setTareas] = useState([]);
+    const [periodo, setPeriodo] = useState("mes"); // "dia" | "semana" | "mes"
 
-    // Carga todas las tareas planas
+    const handleResumen = useCallback((data) => {
+        setResumen(data);
+    }, []);
+
     useEffect(() => {
         async function fetchTareas() {
             try {
-                const projects = await getAllTasks();
-                // Cada proyecto tiene un array `tareas`; aplanamos todos en uno
-                const allTasks = projects.flatMap((p) => p.tareas);
-                setTareas(allTasks);
+                const tareasFromApi = await getAllTasks();
+                console.log("Tareas recibidas:", tareasFromApi);
+                setTareas(tareasFromApi);
             } catch (err) {
                 console.error("Error al cargar tareas:", err);
             }
@@ -28,27 +31,64 @@ export default function VistaImputacion() {
         fetchTareas();
     }, []);
 
-    if (loading || !user) {
-        return <p>Cargando datos de usuario...</p>;
-    }
+    if (loading || !user) return <p>Cargando datos de usuario...</p>;
 
     return (
-        <div className="vista-imputacion-container">
-            <h2>Panel de Imputación de Horas</h2>
+        <>
+            {/* Punto de anclaje superior */}
+            <div id="top"></div>
 
-            <CalendarioResumen periodo="mes" />
+            <div className="vista-imputacion-container">
+                <h2>Panel de Imputación de Horas</h2>
 
-            <ResumenHoras
-                periodo="mes"
-                onResumenCalculado={(resumenData) => setResumen(resumenData)}
-            />
+                {/* Selector de periodo */}
+                <div className="periodo-selector">
+                    <button
+                        className={periodo === "dia" ? "active" : ""}
+                        onClick={() => setPeriodo("dia")}
+                    >
+                        Día
+                    </button>
+                    <button
+                        className={periodo === "semana" ? "active" : ""}
+                        onClick={() => setPeriodo("semana")}
+                    >
+                        Semana
+                    </button>
+                    <button
+                        className={periodo === "mes" ? "active" : ""}
+                        onClick={() => setPeriodo("mes")}
+                    >
+                        Mes
+                    </button>
+                </div>
 
-            {resumen && (
-                <FormularioImputacionConReparto
-                    resumen={resumen}
-                    tareas={tareas}
+                {/* Calendario y resumen */}
+                <CalendarioResumen periodo={periodo} />
+                <ResumenHoras
+                    periodo={periodo}
+                    onResumenCalculado={handleResumen}
                 />
-            )}
-        </div>
+
+                {/* Formulario con tareas */}
+                {resumen && (
+                    <FormularioImputacionConReparto
+                        resumen={resumen}
+                        tareas={tareas}
+                    />
+                )}
+            </div>
+
+            {/* Anclas de navegación inferior */}
+            <div className="scroll-buttons">
+                <a href="#top" className="scroll-btn" title="Ir arriba">
+                    ↑
+                </a>
+                <a href="#bottom" className="scroll-btn" title="Ir abajo">
+                    ↓
+                </a>
+            </div>
+            <div id="bottom"></div>
+        </>
     );
 }
