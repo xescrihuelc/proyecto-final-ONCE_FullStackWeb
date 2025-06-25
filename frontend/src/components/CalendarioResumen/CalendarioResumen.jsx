@@ -16,6 +16,7 @@ import {
     addMonths,
     subMonths,
     format,
+    getDay,
 } from "date-fns";
 import "./CalendarioResumen.css";
 
@@ -70,7 +71,23 @@ export default function CalendarioResumen({ initialView = "month" }) {
         );
     const goToday = () => setCurrentDate(new Date());
 
+    // Para month view, insertamos días en blanco antes del día 1
     const diasParaRender = useMemo(() => {
+        if (view === "month") {
+            const start = startOfMonth(currentDate);
+            const end = endOfMonth(currentDate);
+            // getDay: 0=Dom,1=Lun,...6=Sáb -> queremos lunes=0
+            const shift = (getDay(start) + 6) % 7;
+            const blanks = Array.from({ length: shift }).map((_, i) => null);
+            const monthDays = [];
+            let cursor = start;
+            while (cursor <= end) {
+                monthDays.push(new Date(cursor));
+                cursor = addDays(cursor, 1);
+            }
+            return [...blanks, ...monthDays];
+        }
+        // para semana o día, igual que antes
         const days = [];
         let cursor = new Date(rango.from);
         while (cursor <= rango.to) {
@@ -78,7 +95,7 @@ export default function CalendarioResumen({ initialView = "month" }) {
             cursor = addDays(cursor, 1);
         }
         return days;
-    }, [rango]);
+    }, [rango, currentDate, view]);
 
     return (
         <div className="calendario-resumen">
@@ -122,8 +139,18 @@ export default function CalendarioResumen({ initialView = "month" }) {
                 </div>
             )}
 
-            <div className="grilla">
-                {diasParaRender.map((day) => {
+            <div
+                className={`grilla ${
+                    view === "month" ? "grilla-mes" : "grilla-semana"
+                }`}
+            >
+                {diasParaRender.map((day, idx) => {
+                    if (!day) {
+                        // casillas en blanco para mes
+                        return (
+                            <div key={`blank-${idx}`} className="dia blank" />
+                        );
+                    }
                     const iso = day.toISOString().split("T")[0];
                     const entry = diasMes.find((d) => d.date.startsWith(iso));
                     const trabajado = entry && entry.secondsWorked > 0;
@@ -135,7 +162,9 @@ export default function CalendarioResumen({ initialView = "month" }) {
                             }`}
                             title={
                                 trabajado
-                                    ? `${entry.secondsWorked / 3600}h`
+                                    ? `${(entry.secondsWorked / 3600).toFixed(
+                                          2
+                                      )}h`
                                     : "No trabajado"
                             }
                         >
