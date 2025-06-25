@@ -1,6 +1,12 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
+import SignaturePad from "../SignaturePad/SignaturePad";
 import { postImputacionesDistribuidas } from "../../services/imputacionService";
+
+// IMPORTS CORRECTOS PARA PDF/CSV (Opción A)
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
+import Papa from "papaparse";
 import "./FormularioImputacionConReparto.css";
 
 function roundToNearest15Minutes(hours) {
@@ -12,22 +18,26 @@ export default function FormularioImputacionConReparto({ resumen, tareas }) {
     const { user } = useAuth();
     const [inputs, setInputs] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [firmaImg, setFirmaImg] = useState(null);
 
-    // 🔐 Prevención si resumen o tareas no están cargados aún
     if (!resumen || !Array.isArray(tareas)) {
         return <p>Cargando tareas y resumen de horas...</p>;
     }
 
     useEffect(() => {
-        if (Array.isArray(tareas) && tareas.length > 0) {
-            setInputs(tareas.map((t) => ({ tareaId: t.id, valor: "" })));
-        }
+        setInputs(tareas.map((t) => ({ tareaId: t.id, valor: "" })));
     }, [tareas]);
 
     const handleChange = (index, nuevoValor) => {
         const actualizados = [...inputs];
         actualizados[index].valor = nuevoValor;
         setInputs(actualizados);
+    };
+
+    const generarFechaDelDia = (i) => {
+        const hoy = new Date();
+        const fecha = new Date(hoy.getFullYear(), hoy.getMonth(), 1 + i);
+        return fecha.toISOString().split("T")[0];
     };
 
     const calcularDistribucion = () => {
@@ -37,7 +47,6 @@ export default function FormularioImputacionConReparto({ resumen, tareas }) {
 
         for (const input of inputs) {
             if (!input.valor) continue;
-
             const porcentaje = input.valor.trim().endsWith("%");
             let totalHoras = 0;
 
@@ -51,14 +60,14 @@ export default function FormularioImputacionConReparto({ resumen, tareas }) {
                 totalHoras = num;
             }
 
-            let horasPorDia = totalHoras / dias;
+            const horasPorDia = totalHoras / dias;
             const redondeado = roundToNearest15Minutes(horasPorDia);
 
             if (horasPorDia !== redondeado) {
                 alert(
                     `El valor por día (${horasPorDia.toFixed(
                         4
-                    )}) se ha redondeado a ${redondeado} (intervalos de 15 minutos).`
+                    )}) se ha redondeado a ${redondeado}h.`
                 );
             }
 
@@ -66,19 +75,13 @@ export default function FormularioImputacionConReparto({ resumen, tareas }) {
                 asignaciones.push({
                     userId: user.id,
                     tareaId: input.tareaId,
-                    horas: redondeado,
-                    fecha: generarFechaDelDia(i),
+                    hours: redondeado,
+                    date: generarFechaDelDia(i),
                 });
             }
         }
 
         return asignaciones;
-    };
-
-    const generarFechaDelDia = (i) => {
-        const hoy = new Date();
-        const fecha = new Date(hoy.getFullYear(), hoy.getMonth(), 1 + i);
-        return fecha.toISOString().split("T")[0];
     };
 
     const handleGuardar = async () => {
@@ -89,7 +92,6 @@ export default function FormularioImputacionConReparto({ resumen, tareas }) {
                 alert("No hay imputaciones válidas.");
                 return;
             }
-
             await postImputacionesDistribuidas(distribucion);
             alert("Imputaciones guardadas correctamente ✅");
             setInputs(tareas.map((t) => ({ tareaId: t.id, valor: "" })));
@@ -101,6 +103,46 @@ export default function FormularioImputacionConReparto({ resumen, tareas }) {
         }
     };
 
+    const exportPDF = () => {
+        const doc = new jsPDF({ unit: "pt", format: "letter" });
+        doc.text("Imputación de Horas", 40, 40);
+
+        // Preparamos head y body
+        const head = [["Tarea", "Horas/%"]];
+        const body = tareas.map((t, i) => [t.nombre, inputs[i]?.valor || ""]);
+
+        // Llamada al helper autoTable
+        autoTable(doc, {
+            head,
+            body,
+            startY: 60,
+        });
+
+        // Añadimos la firma si existe
+        if (firmaImg) {
+            const y = (doc.lastAutoTable?.finalY || 60) + 20;
+            doc.addImage(firmaImg, "PNG", 40, y, 200, 100);
+        }
+
+        doc.save("imputacion.pdf");
+    };
+
+    const exportCSV = () => {
+        const data = tareas.map((t, i) => ({
+            tarea: t.nombre,
+            valor: inputs[i]?.valor || "",
+        }));
+        const csv = Papa.unparse(data);
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", "imputacion.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     return (
         <div className="formulario-imputacion-reparto">
             <h3>
@@ -109,12 +151,11 @@ export default function FormularioImputacionConReparto({ resumen, tareas }) {
             </h3>
             <p>
                 Puedes poner horas totales (ej. <code>6</code>) o porcentaje
-                (ej. <code>20%</code>). Las horas se repartirán automáticamente
-                entre los días trabajados.
+                (ej. <code>20%</code>). Las horas se repartirán automáticamente.
             </p>
 
             {tareas.length === 0 ? (
-                <p>No tienes tareas asignadas para imputar este mes.</p>
+                <p>No tienes tareas asignadas este mes.</p>
             ) : (
                 <table>
                     <thead>
@@ -143,17 +184,46 @@ export default function FormularioImputacionConReparto({ resumen, tareas }) {
                 </table>
             )}
 
-            <button
-                onClick={handleGuardar}
-                disabled={
-                    resumen.horasRestantes <= 0 ||
-                    loading ||
-                    tareas.length === 0
-                }
-                className="btn-imputar"
-            >
-                {loading ? "Guardando..." : "Guardar imputación"}
-            </button>
+            <div className="botones-imputacion">
+                <button
+                    onClick={handleGuardar}
+                    disabled={
+                        resumen.horasRestantes <= 0 ||
+                        loading ||
+                        tareas.length === 0
+                    }
+                    className="btn-imputar"
+                >
+                    {loading ? "Guardando..." : "Guardar imputación"}
+                </button>
+                <button
+                    type="button"
+                    onClick={exportPDF}
+                    className="btn-export"
+                >
+                    Descargar PDF
+                </button>
+                <button
+                    type="button"
+                    onClick={exportCSV}
+                    className="btn-export"
+                >
+                    Descargar CSV
+                </button>
+            </div>
+
+            <h4>Firma electrónica</h4>
+            <SignaturePad
+                options={{ canvasProps: { touchAction: "none" } }}
+                onEnd={setFirmaImg}
+            />
+            {firmaImg && (
+                <img
+                    src={firmaImg}
+                    alt="Firma capturada"
+                    style={{ border: "1px solid #000", marginTop: "10px" }}
+                />
+            )}
         </div>
     );
 }

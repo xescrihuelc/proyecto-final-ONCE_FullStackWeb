@@ -1,17 +1,85 @@
+/* src/components/CalendarioResumen/CalendarioResumen.css */
+
+/* Contenedor general */
 .calendario-resumen {
     display: flex;
     flex-direction: column;
-    gap: 0.4rem;
+    gap: 0.5rem;
     margin-bottom: 1rem;
+    font-family: sans-serif;
 }
 
-.cabecera {
+.calendario-header .titulo {
+    text-align: center;
+}
+
+h3 {
+    text-align: center;
+}
+
+/* Header: navegación y título */
+.calendario-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap; /* permite que los items envuelvan en móvil */
+    gap: 0.5rem;
+}
+
+/* Botones de navegación ← Hoy → */
+.controls {
+    display: flex;
+    gap: 0.3rem;
+}
+.controls button {
+    border: none;
+    font-size: 1.2rem;
+    padding: 0.2rem 0.5rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.controls button:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+/* Título de fecha (día/semana/mes) */
+.calendario-header .titulo {
+    flex: 1 1 auto;
+    text-align: center;
+    margin: 0;
+    font-size: 1rem;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+/* Switch de vistas Día/Semana/Mes */
+.view-switch {
+    display: flex;
+    gap: 0.3rem;
+}
+.view-switch button {
+    border: none;
+    padding: 0.3rem 0.6rem;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background 0.2s, color 0.2s;
+}
+.view-switch button.active,
+.view-switch button:hover {
+    background: #00a3e0;
+    color: #fff;
+}
+
+/* Cabecera de días de la semana */
+.dias-semana {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     font-weight: bold;
     text-align: center;
+    font-size: 0.85rem;
 }
 
+/* Rejilla de días */
 .grilla {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
@@ -19,20 +87,53 @@
     text-align: center;
 }
 
+/* Cada celda día */
 .dia {
     padding: 0.5rem;
     border-radius: 4px;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+    transition: transform 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.dia:hover {
+    transform: scale(1.05);
 }
 
+/* Días trabajados */
 .trabajado {
     background-color: #d4edda;
     color: #155724;
 }
 
+/* Días no trabajados */
 .no-trabajado {
     background-color: #f8d7da;
     color: #721c24;
     text-decoration: line-through;
     opacity: 0.6;
+}
+
+/* Media queries para responsividad */
+@media (max-width: 600px) {
+    .calendario-header {
+        flex-direction: column;
+        align-items: center;
+    }
+    .controls button {
+        font-size: 1rem;
+        padding: 0.3rem 0.6rem;
+    }
+    .view-switch button {
+        font-size: 0.9rem;
+        padding: 0.3rem 0.5rem;
+    }
+    .dias-semana,
+    .grilla {
+        grid-template-columns: repeat(auto-fill, minmax(32px, 1fr));
+    }
+    .titulo {
+        font-size: 0.95rem;
+    }
 }

@@ -16,9 +16,10 @@ export default function GestionUsuarios() {
         surnames: "",
         email: "",
         password: "",
-        role: "trabajador",
+        roles: ["user"],
         dailyHours: 8,
         isActive: true,
+        sesameEmployeeId: "",
     });
 
     const cargarUsuarios = async () => {
@@ -56,11 +57,19 @@ export default function GestionUsuarios() {
     };
 
     const handleCrearUsuario = async () => {
-        const { name, surnames, email, password, role, dailyHours, isActive } =
-            nuevoUsuario;
-        if (!name || !email || !password) {
+        const {
+            name,
+            surnames,
+            email,
+            password,
+            roles,
+            dailyHours,
+            isActive,
+            sesameEmployeeId,
+        } = nuevoUsuario;
+        if (!name || !email || !password || !sesameEmployeeId) {
             return alert(
-                "Los campos nombre, email y contraseña son obligatorios."
+                "Los campos Nombre, Email, Contraseña y Sesame Employee ID son obligatorios."
             );
         }
 
@@ -70,18 +79,20 @@ export default function GestionUsuarios() {
                 surnames,
                 email,
                 password,
-                roles: [role === "trabajador" ? "user" : role],
+                roles,
                 dailyHours,
                 isActive,
+                sesameEmployeeId,
             });
             setNuevoUsuario({
                 name: "",
                 surnames: "",
                 email: "",
                 password: "",
-                role: "trabajador",
+                roles: ["user"],
                 dailyHours: 8,
                 isActive: true,
+                sesameEmployeeId: "",
             });
             cargarUsuarios();
         } catch (err) {
@@ -140,7 +151,8 @@ export default function GestionUsuarios() {
                                     <strong>Email:</strong> {usuario.email}
                                 </p>
                                 <p>
-                                    <strong>Rol:</strong> {usuario.roles?.[0]}
+                                    <strong>Roles:</strong>{" "}
+                                    {usuario.roles.join(", ")}
                                 </p>
                                 <p>
                                     <strong>Horas/día:</strong>{" "}
@@ -149,6 +161,10 @@ export default function GestionUsuarios() {
                                 <p>
                                     <strong>Activo:</strong>{" "}
                                     {usuario.isActive ? "Sí" : "No"}
+                                </p>
+                                <p>
+                                    <strong>Sesame Employee ID:</strong>{" "}
+                                    {usuario.sesameEmployeeId || "-"}
                                 </p>
                                 <div className="acciones">
                                     <button
@@ -223,30 +239,29 @@ export default function GestionUsuarios() {
                     }
                 />
                 <select
-                    value={nuevoUsuario.role}
+                    value={nuevoUsuario.roles[0]}
                     onChange={(e) =>
                         setNuevoUsuario({
                             ...nuevoUsuario,
-                            role: e.target.value,
+                            roles: [e.target.value],
                         })
                     }
                 >
                     <option value="admin">Admin</option>
-                    <option value="manager">Manager</option>
-                    <option value="trabajador">Trabajador</option>
+                    <option value="user">User</option>
                 </select>
                 <input
                     type="number"
                     placeholder="Horas por día"
                     min={0}
-                    max={7.5}
+                    max={24}
                     step={0.25}
                     value={nuevoUsuario.dailyHours}
                     onChange={(e) => {
                         let valor = parseFloat(e.target.value);
                         if (isNaN(valor)) valor = 0;
                         if (valor < 0) valor = 0;
-                        if (valor > 7.5) valor = 7.5;
+                        if (valor > 24) valor = 24;
                         setNuevoUsuario({ ...nuevoUsuario, dailyHours: valor });
                     }}
                 />
@@ -263,6 +278,16 @@ export default function GestionUsuarios() {
                     />
                     Activo
                 </label>
+                <input
+                    placeholder="Sesame Employee ID"
+                    value={nuevoUsuario.sesameEmployeeId}
+                    onChange={(e) =>
+                        setNuevoUsuario({
+                            ...nuevoUsuario,
+                            sesameEmployeeId: e.target.value,
+                        })
+                    }
+                />
                 <button onClick={handleCrearUsuario}>Crear usuario</button>
             </div>
         </div>

@@ -83,16 +83,31 @@
 }
 
 /* Responsive */
+
+/* 📱 Móviles – SOLO para Gestión de Usuarios */
 @media (max-width: 768px) {
-    .dashboard-header h1 {
-        font-size: 1.5rem;
+    .gestion-usuarios .usuario-card {
+        width: 90%;
+        margin: 0.5rem auto;
+        font-size: 0.9rem;
     }
 
-    .dashboard-card p {
-        font-size: 1.5rem;
+    .gestion-usuarios .usuario-card .acciones {
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: center;
     }
 
-    .dashboard-message {
-        font-size: 0.95rem;
+    .gestion-usuarios .usuario-card button,
+    .gestion-usuarios .usuario-card .delete {
+        width: 80%;
+        max-width: 200px;
+        margin: 0 auto;
+        padding: 0.6rem;
+        font-size: 0.9rem;
+    }
+
+    .gestion-usuarios .nuevo-usuario-form {
+        padding: 1.2rem;
     }
 }

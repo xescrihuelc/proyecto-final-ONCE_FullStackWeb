@@ -38,22 +38,31 @@
     margin-top: 0.5rem;
 }
 
+/* Botones base */
 .usuario-card button,
 .usuario-card .delete {
-    padding: 0.15rem 0.35rem;
+    padding: 0.4rem 0.8rem;
     font-size: 0.85rem;
     border-radius: 6px;
     border: none;
     cursor: pointer;
     color: white;
+    transition: background 0.2s;
 }
 
+/* Colores */
 .usuario-card button {
     background-color: #3498db;
+}
+.usuario-card button:hover {
+    background-color: #2980b9;
 }
 
 .usuario-card .delete {
     background-color: #e74c3c;
+}
+.usuario-card .delete:hover {
+    background-color: #c0392b;
 }
 
 /* Formulario añadir usuario */
@@ -87,29 +96,39 @@
     color: white;
     border: none;
     cursor: pointer;
+    transition: background 0.2s;
 }
 
 .nuevo-usuario-form button:hover {
     background-color: #c94e24;
 }
 
+/* Dashboard.css */
+.calendario-wrapper {
+    margin-bottom: 2rem;
+}
+
 /* 📱 Móviles */
 @media (max-width: 768px) {
     .usuario-card {
-        width: 100%;
+        width: 90%;
+        margin: 0.5rem auto;
         font-size: 0.9rem;
     }
 
     .usuario-card .acciones {
         flex-direction: column;
-        gap: 0.3rem;
+        gap: 0.5rem;
+        align-items: center; /* centra los botones en la columna */
     }
 
     .usuario-card button,
     .usuario-card .delete {
-        width: 100%;
-        font-size: 0.85rem;
-        padding: 0.45rem;
+        width: 80%; /* todos del mismo ancho */
+        max-width: 200px; /* evita que sean excesivamente grandes */
+        margin: 0 auto; /* centrar horizontalmente */
+        padding: 0.6rem;
+        font-size: 0.9rem;
     }
 
     .nuevo-usuario-form {

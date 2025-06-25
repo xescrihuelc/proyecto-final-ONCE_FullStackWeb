@@ -83,3 +83,20 @@
     background-color: #ccc;
     cursor: not-allowed;
 }
+/* FormularioImputacionConReparto.css */
+.botones-imputacion {
+    display: flex;
+    gap: 12px;
+    margin: 16px 0;
+}
+.btn-export {
+    background: #27ae60;
+    color: #fff;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.btn-export:hover {
+    background: #1e8449;
+}

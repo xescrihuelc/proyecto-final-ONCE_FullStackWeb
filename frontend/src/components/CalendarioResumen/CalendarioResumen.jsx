@@ -1,75 +1,145 @@
 // src/components/CalendarioResumen/CalendarioResumen.jsx
-
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { getDiasSesame } from "../../services/sesameService";
-import { getRangoDelPeriodo } from "../../utils/dateUtils";
+import {
+    startOfDay,
+    endOfDay,
+    startOfWeek,
+    endOfWeek,
+    startOfMonth,
+    endOfMonth,
+    addDays,
+    subDays,
+    addWeeks,
+    subWeeks,
+    addMonths,
+    subMonths,
+    format,
+} from "date-fns";
 import "./CalendarioResumen.css";
 
-const diasSemana = ["D", "L", "M", "X", "J", "V", "S"];
+const diasSemana = ["L", "M", "X", "J", "V", "S", "D"];
 
-export default function CalendarioResumen({ periodo = "mes" }) {
+export default function CalendarioResumen({ initialView = "month" }) {
     const { user } = useAuth();
-    const [diasMes, setDiasMes] = useState([]); // Array completo de días
-    const [diasNoTrabajados, setDiasNoTrabajados] = useState(new Set()); // Set de fechas no trabajadas
+    const [currentDate, setCurrentDate] = useState(new Date());
+    const [view, setView] = useState(initialView);
+    const [diasMes, setDiasMes] = useState([]);
+
+    const rango = useMemo(() => {
+        if (view === "day")
+            return { from: startOfDay(currentDate), to: endOfDay(currentDate) };
+        if (view === "week")
+            return {
+                from: startOfWeek(currentDate, { weekStartsOn: 1 }),
+                to: endOfWeek(currentDate, { weekStartsOn: 1 }),
+            };
+        return { from: startOfMonth(currentDate), to: endOfMonth(currentDate) };
+    }, [currentDate, view]);
 
     useEffect(() => {
-        const cargarDias = async () => {
-            const { from, to } = getRangoDelPeriodo(periodo);
-            try {
-                const dias = await getDiasSesame(
-                    user.sesameEmployeeId,
-                    from,
-                    to
-                );
+        if (!user?.sesameEmployeeId) return;
+        (async () => {
+            const fromISO = rango.from.toISOString().split("T")[0];
+            const toISO = rango.to.toISOString().split("T")[0];
+            const dias = await getDiasSesame(
+                user.sesameEmployeeId,
+                fromISO,
+                toISO
+            );
+            setDiasMes(dias);
+        })();
+    }, [rango, user]);
 
-                setDiasMes(dias);
+    const goPrev = () =>
+        setCurrentDate((d) =>
+            view === "day"
+                ? subDays(d, 1)
+                : view === "week"
+                ? subWeeks(d, 1)
+                : subMonths(d, 1)
+        );
+    const goNext = () =>
+        setCurrentDate((d) =>
+            view === "day"
+                ? addDays(d, 1)
+                : view === "week"
+                ? addWeeks(d, 1)
+                : addMonths(d, 1)
+        );
+    const goToday = () => setCurrentDate(new Date());
 
-                // Filtramos y guardamos en un Set para búsquedas O(1)
-                const noTrabajados = new Set(
-                    dias
-                        .filter((d) => d.secondsWorked === 0)
-                        .map((d) => d.date.split("T")[0]) // normaliza fecha a "YYYY-MM-DD"
-                );
-                setDiasNoTrabajados(noTrabajados);
-            } catch (err) {
-                console.error("Error al cargar calendario:", err);
-            }
-        };
-
-        if (user?.sesameEmployeeId) {
-            cargarDias();
+    const diasParaRender = useMemo(() => {
+        const days = [];
+        let cursor = new Date(rango.from);
+        while (cursor <= rango.to) {
+            days.push(new Date(cursor));
+            cursor = addDays(cursor, 1);
         }
-    }, [periodo, user]);
+        return days;
+    }, [rango]);
 
     return (
         <div className="calendario-resumen">
-            <div className="cabecera">
-                {diasSemana.map((d) => (
-                    <span key={d} className="dia-semana">
-                        {d}
-                    </span>
-                ))}
+            <div className="calendario-header">
+                <div className="controls">
+                    <button onClick={goPrev}>←</button>
+                    <button onClick={goToday}>Hoy</button>
+                    <button onClick={goNext}>→</button>
+                </div>
+                <h3 className="titulo">
+                    {view === "day" && format(currentDate, "EEEE, d MMM yyyy")}
+                    {view === "week" &&
+                        `${format(rango.from, "d MMM")} – ${format(
+                            rango.to,
+                            "d MMM yyyy"
+                        )}`}
+                    {view === "month" && format(currentDate, "MMMM yyyy")}
+                </h3>
+                <div className="view-switch">
+                    {["day", "week", "month"].map((v) => (
+                        <button
+                            key={v}
+                            className={view === v ? "active" : ""}
+                            onClick={() => setView(v)}
+                        >
+                            {v === "day"
+                                ? "Día"
+                                : v === "week"
+                                ? "Semana"
+                                : "Mes"}
+                        </button>
+                    ))}
+                </div>
             </div>
-            <div className="grilla">
-                {diasMes.map((dia) => {
-                    const fechaISO = dia.date.split("T")[0]; // "YYYY-MM-DD"
-                    const numero = new Date(dia.date).getDate();
-                    const esNoTrabajado = diasNoTrabajados.has(fechaISO);
 
+            {view !== "day" && (
+                <div className="dias-semana">
+                    {diasSemana.map((d, i) => (
+                        <span key={i}>{d}</span>
+                    ))}
+                </div>
+            )}
+
+            <div className="grilla">
+                {diasParaRender.map((day) => {
+                    const iso = day.toISOString().split("T")[0];
+                    const entry = diasMes.find((d) => d.date.startsWith(iso));
+                    const trabajado = entry && entry.secondsWorked > 0;
                     return (
                         <div
-                            key={dia.date}
+                            key={iso}
                             className={`dia ${
-                                esNoTrabajado ? "no-trabajado" : "trabajado"
+                                trabajado ? "trabajado" : "no-trabajado"
                             }`}
                             title={
-                                esNoTrabajado
-                                    ? "No trabajado"
-                                    : `Trabajado: ${dia.secondsWorked / 3600}h`
+                                trabajado
+                                    ? `${entry.secondsWorked / 3600}h`
+                                    : "No trabajado"
                             }
                         >
-                            {numero}
+                            {format(day, "d")}
                         </div>
                     );
                 })}

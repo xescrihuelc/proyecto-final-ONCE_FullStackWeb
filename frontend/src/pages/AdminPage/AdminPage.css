@@ -194,7 +194,9 @@ ul li:last-child {
     }
 
     button {
-        width: 100%;
+        display: block;
+        width: 50%;
+        margin: 0.5rem auto;
     }
 
     .proyecto-item {
