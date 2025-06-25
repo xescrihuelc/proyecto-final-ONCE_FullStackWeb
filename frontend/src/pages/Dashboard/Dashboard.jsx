@@ -1,7 +1,6 @@
-// ===== Dashboard.jsx corregido y seguro =====
-
+// src/pages/Dashboard/Dashboard.jsx
+import React, { useContext } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { useContext } from "react";
 import { ProyectoContext } from "../../context/ProyectoContext";
 import {
     BarChart,
@@ -11,6 +10,7 @@ import {
     Tooltip,
     ResponsiveContainer,
 } from "recharts";
+import CalendarResumen from "../../components/CalendarioResumen/CalendarioResumen";
 import "./Dashboard.css";
 
 const Dashboard = () => {
@@ -42,10 +42,13 @@ const Dashboard = () => {
 
     return (
         <div className="dashboard-container">
-            <h2 className="dashboard-title">Bienvenido, {user?.nombre}</h2>
-            <p className="dashboard-subtitle">
-                Rol: <strong>{roles?.join(", ")}</strong>
-            </p>
+            <h2 className="dashboard-title">Bienvenido, {user?.name}</h2>
+            <p className="dashboard-subtitle"></p>
+
+            <section className="dashboard-section">
+                <h3>Resumen de calendario</h3>
+                <CalendarResumen initialView="week" />
+            </section>
 
             {roles?.includes("admin") && (
                 <section className="dashboard-section">
@@ -76,7 +79,6 @@ const Dashboard = () => {
                             <p>{horasTotales.toFixed(1)} h</p>
                         </div>
                     </div>
-
                     <div className="dashboard-graph-container">
                         <h3>Gráfico: Tareas por Proyecto</h3>
                         <ResponsiveContainer width="100%" height={300}>

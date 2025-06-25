@@ -14,7 +14,9 @@ export default function Sidebar() {
                         <NavLink to="/dashboard">Dashboard</NavLink>
                     </li>
                     <li>
-                        <NavLink to="/panel-imputacion">Imputación de Horas</NavLink>
+                        <NavLink to="/panel-imputacion">
+                            Imputación de Horas
+                        </NavLink>
                     </li>
 
                     {roles?.includes("admin") && (
@@ -46,16 +48,6 @@ export default function Sidebar() {
                     </button>
                 </div>
             </nav>
-
-            {/* Solo visible en móvil */}
-            <div className="sidebar-footer sidebar-mobile-only">
-                <small>
-                    {user?.name} ({roles?.join(", ")})
-                </small>
-                <button onClick={logout} className="sidebar-logout">
-                    Cerrar sesión
-                </button>
-            </div>
         </>
     );
 }

@@ -1,5 +1,3 @@
-// === AdminPage.jsx actualizado ===
-
 import { useState, useContext, useEffect } from "react";
 import {
     BarChart,
@@ -108,7 +106,7 @@ const AdminPage = () => {
     }));
 
     return (
-        <div className="container">
+        <div className="container" id="start">
             <h2>Panel de Administración</h2>
 
             <section className="section">
@@ -196,65 +194,23 @@ const AdminPage = () => {
                 )}
             </section>
 
-            <section className="section">
-                <h3>Gestión de Usuarios</h3>
-                <input
-                    className="input-inline"
-                    placeholder="Email"
-                    value={nuevoUsuario.email}
-                    onChange={(e) =>
-                        setNuevoUsuario({
-                            ...nuevoUsuario,
-                            email: e.target.value,
-                        })
-                    }
-                />
-                <input
-                    className="input-inline"
-                    placeholder="Contraseña"
-                    type="password"
-                    value={nuevoUsuario.password}
-                    onChange={(e) =>
-                        setNuevoUsuario({
-                            ...nuevoUsuario,
-                            password: e.target.value,
-                        })
-                    }
-                />
-                <div style={{ marginTop: "0.5rem" }}>
-                    <label>
-                        <input
-                            type="checkbox"
-                            checked={nuevoUsuario.roles.includes("user")}
-                            onChange={() => handleRoleChange("user")}
-                        />
-                        Rol: Usuario
-                    </label>
-                    <label style={{ marginLeft: "1rem" }}>
-                        <input
-                            type="checkbox"
-                            checked={nuevoUsuario.roles.includes("admin")}
-                            onChange={() => handleRoleChange("admin")}
-                        />
-                        Rol: Administrador
-                    </label>
-                </div>
-                <button onClick={agregarUsuario}>Crear Usuario</button>
-                <ul style={{ marginTop: "1rem" }}>
-                    {usuarios.map((u) => (
-                        <li key={u._id || u.id}>{u.email}</li>
-                    ))}
-                </ul>
-            </section>
+            <div className="scroll-buttons">
+                <a href="#start" className="scroll-btn" title="Ir arriba">
+                    ↑
+                </a>
+                <a href="#end" className="scroll-btn" title="Ir abajo">
+                    ↓
+                </a>
+            </div>
 
-            <section className="section">
+            <section className="section" id="end">
                 <h3>Gráfico de tareas por proyecto</h3>
                 <ResponsiveContainer width="100%" height={300}>
                     <BarChart data={datosGrafico}>
                         <XAxis dataKey="nombre" />
                         <YAxis />
                         <Tooltip />
-                        <Bar dataKey="tareas" fill="#f90" />
+                        <Bar dataKey="tareas" fill="#00a3e0" />
                     </BarChart>
                 </ResponsiveContainer>
             </section>

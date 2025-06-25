@@ -1,0 +1,27 @@
+/* SignaturePad.css */
+.signature-pad {
+    border: 2px dashed #007acc;
+    display: inline-block;
+    padding: 8px;
+    border-radius: 8px;
+    background: #fafafa;
+}
+.sigCanvas {
+    width: 100%;
+    max-width: 400px;
+    height: 200px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+.btn-clear {
+    margin-top: 8px;
+    padding: 6px 12px;
+    background: #e74c3c;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.btn-clear:hover {
+    background: #c0392b;
+}

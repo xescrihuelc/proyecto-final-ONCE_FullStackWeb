@@ -1,4 +1,6 @@
-/* Estilo base del sidebar */
+/* ===== Archivo: Sidebar.css ===== */
+
+/* Contenedor general del sidebar */
 .sidebar {
     background: #002e5d;
     color: #f0f0f0;
@@ -10,17 +12,16 @@
     flex-shrink: 0;
     box-sizing: border-box;
     width: 100%;
-    max-width: none;
 }
 
-/* Solo aplica ancho fijo en pantallas grandes */
+/* Ancho fijo en pantallas grandes */
 @media (min-width: 769px) {
     .sidebar {
         max-width: 250px;
     }
 }
 
-/* Título del menú */
+/* Título */
 .sidebar h2 {
     font-weight: 700;
     font-size: 1.5rem;
@@ -29,19 +30,15 @@
     white-space: nowrap;
 }
 
-/* Lista de enlaces */
+/* Enlaces */
 .sidebar ul {
     list-style: none;
     padding: 0;
     margin: 0;
-    width: 100%;
 }
-
 .sidebar li {
     margin-bottom: 1rem;
 }
-
-/* Enlaces */
 .sidebar a {
     color: #f0f0f0;
     text-decoration: none;
@@ -53,51 +50,41 @@
     transition: background-color 0.3s ease;
     white-space: nowrap;
 }
-
 .sidebar a.active,
 .sidebar a:hover {
     background-color: #00a3e0;
     color: #002e5d;
 }
 
-/* Botón de cerrar sesión */
+/* Pie de sidebar: empuja contenido arriba y centra el botón */
+.sidebar-footer {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding-top: 1rem;
+}
+
+/* Botón Cerrar sesión */
 .sidebar-logout {
     background-color: #d9534f;
     color: white;
     border: none;
-    width: 215px;
-    padding: 0.4rem 0.8rem;
+    padding: 0.35rem 0.8rem;
     border-radius: 4px;
     font-size: 0.9rem;
     cursor: pointer;
+    white-space: nowrap;
     transition: background-color 0.3s ease;
 }
-
 .sidebar-logout:hover {
     background-color: #c9302c;
 }
 
-/* Footer base */
-.sidebar-footer {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    margin-top: auto;
-}
-
-/* Condicional por dispositivo */
-.sidebar-mobile-only {
-    display: none;
-}
-
-.sidebar-desktop-only {
-    display: flex;
-}
-
-/* Estilo responsive */
+/* En móvil hacemos el sidebar horizontal pero dejamos el mismo footer dentro */
 @media (max-width: 768px) {
     .sidebar {
-        max-width: 100% !important;
         flex-direction: row;
         flex-wrap: wrap;
         align-items: center;
@@ -113,7 +100,6 @@
 
     .sidebar ul {
         display: flex;
-        flex-wrap: nowrap;
         gap: 1rem;
         margin: 0 1rem;
     }
@@ -122,16 +108,12 @@
         margin-bottom: 0;
     }
 
-    .sidebar-desktop-only {
-        display: none;
-    }
-
-    .sidebar-mobile-only {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-        padding: 1rem;
-        background-color: #002e5d;
-        color: #f0f0f0;
+    /* Centramos el footer en la barra de móvil */
+    .sidebar-footer {
+        flex-direction: row;
+        width: 100%;
+        justify-content: center;
+        padding-top: 0.5rem;
+        gap: 1rem;
     }
 }

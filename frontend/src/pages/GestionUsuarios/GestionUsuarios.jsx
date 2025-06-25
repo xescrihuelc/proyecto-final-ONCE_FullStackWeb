@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
     getAllUsers,
     deleteUser,
@@ -16,23 +16,31 @@ export default function GestionUsuarios() {
         surnames: "",
         email: "",
         password: "",
-        role: "trabajador",
+        roles: ["user"],
         dailyHours: 8,
         isActive: true,
+        sesameEmployeeId: "",
     });
+    const [impersonateId, setImpersonateId] = useState(
+        localStorage.getItem("impersonateUserId") || ""
+    );
+    const [impersonateName, setImpersonateName] = useState(
+        localStorage.getItem("impersonateUserName") || ""
+    );
 
+    // Función para cargar usuarios desde el servicio
     const cargarUsuarios = async () => {
         try {
             const data = await getAllUsers();
             setUsuarios(data);
         } catch (err) {
-            console.error("Error al obtener usuarios:", err);
+            alert("Error cargando usuarios: " + err.message);
         }
     };
 
     useEffect(() => {
         cargarUsuarios();
-    }, []);
+    }, [impersonateId]);
 
     const handleEliminar = async (id) => {
         if (!window.confirm("¿Eliminar este usuario?")) return;
@@ -55,33 +63,47 @@ export default function GestionUsuarios() {
         }
     };
 
+    const handleStartImpersonate = (id, name) => {
+        localStorage.setItem("impersonateUserId", id);
+        localStorage.setItem("impersonateUserName", name);
+        setImpersonateId(id);
+        setImpersonateName(name);
+    };
+
+    const handleStopImpersonate = () => {
+        localStorage.removeItem("impersonateUserId");
+        localStorage.removeItem("impersonateUserName");
+        setImpersonateId("");
+        setImpersonateName("");
+    };
+
     const handleCrearUsuario = async () => {
-        const { name, surnames, email, password, role, dailyHours, isActive } =
-            nuevoUsuario;
-        if (!name || !email || !password) {
+        const {
+            name,
+            surnames,
+            email,
+            password,
+            roles,
+            dailyHours,
+            isActive,
+            sesameEmployeeId,
+        } = nuevoUsuario;
+        if (!name || !email || !password || !sesameEmployeeId) {
             return alert(
-                "Los campos nombre, email y contraseña son obligatorios."
+                "Los campos Nombre, Email, Contraseña y Sesame Employee ID son obligatorios."
             );
         }
-
         try {
-            await createUser({
-                name,
-                surnames,
-                email,
-                password,
-                roles: [role === "trabajador" ? "user" : role],
-                dailyHours,
-                isActive,
-            });
+            await createUser(nuevoUsuario);
             setNuevoUsuario({
                 name: "",
                 surnames: "",
                 email: "",
                 password: "",
-                role: "trabajador",
+                roles: ["user"],
                 dailyHours: 8,
                 isActive: true,
+                sesameEmployeeId: "",
             });
             cargarUsuarios();
         } catch (err) {
@@ -91,6 +113,12 @@ export default function GestionUsuarios() {
 
     return (
         <div className="gestion-usuarios">
+            {impersonateId && (
+                <div id="visible" className="impersonation-banner">
+                    👤 Impersonando a <strong>{impersonateName}</strong>
+                    <button onClick={handleStopImpersonate}>Salir</button>
+                </div>
+            )}
             <h1>Gestión de Usuarios</h1>
 
             <div className="usuario-cards">
@@ -98,8 +126,16 @@ export default function GestionUsuarios() {
                     <div className="usuario-card" key={usuario._id}>
                         {editando === usuario._id ? (
                             <>
+                                {/* Mostrar ID en modo edición (solo lectura) */}
+                                <p>
+                                    <strong>ID:</strong> {usuario._id}
+                                </p>
+                                <p>
+                                    <strong>Sesame Employee ID:</strong>{" "}
+                                    {usuario.sesameEmployeeId}
+                                </p>
                                 <input
-                                    value={valoresEditados.name || ""}
+                                    value={valoresEditados.name || usuario.name}
                                     onChange={(e) =>
                                         setValoresEditados((prev) => ({
                                             ...prev,
@@ -109,7 +145,10 @@ export default function GestionUsuarios() {
                                     placeholder="Nombre"
                                 />
                                 <input
-                                    value={valoresEditados.surnames || ""}
+                                    value={
+                                        valoresEditados.surnames ||
+                                        usuario.surnames
+                                    }
                                     onChange={(e) =>
                                         setValoresEditados((prev) => ({
                                             ...prev,
@@ -118,6 +157,19 @@ export default function GestionUsuarios() {
                                     }
                                     placeholder="Apellidos"
                                 />
+                                <input
+                                    value={
+                                        valoresEditados.email || usuario.email
+                                    }
+                                    onChange={(e) =>
+                                        setValoresEditados((prev) => ({
+                                            ...prev,
+                                            email: e.target.value,
+                                        }))
+                                    }
+                                    placeholder="Email"
+                                />
+                                {/* Agrega más campos editables si es necesario */}
                                 <button
                                     onClick={() => handleGuardar(usuario._id)}
                                 >
@@ -129,35 +181,33 @@ export default function GestionUsuarios() {
                             </>
                         ) : (
                             <>
+                                {/* Mostrar ID y UID en vista normal */}
+                                <p>
+                                    <strong>ID:</strong> {usuario._id}
+                                </p>
+                                <p>
+                                    <strong>Sesame Employee ID:</strong>{" "}
+                                    {usuario.sesameEmployeeId}
+                                </p>
                                 <p>
                                     <strong>Nombre:</strong> {usuario.name}
                                 </p>
                                 <p>
                                     <strong>Apellidos:</strong>{" "}
-                                    {usuario.surnames || "-"}
+                                    {usuario.surnames}
                                 </p>
                                 <p>
                                     <strong>Email:</strong> {usuario.email}
                                 </p>
-                                <p>
-                                    <strong>Rol:</strong> {usuario.roles?.[0]}
-                                </p>
-                                <p>
-                                    <strong>Horas/día:</strong>{" "}
-                                    {usuario.dailyHours || "-"}
-                                </p>
-                                <p>
-                                    <strong>Activo:</strong>{" "}
-                                    {usuario.isActive ? "Sí" : "No"}
-                                </p>
+                                {/* ...más datos si los necesitas... */}
                                 <div className="acciones">
                                     <button
                                         onClick={() => {
                                             setEditando(usuario._id);
                                             setValoresEditados({
                                                 name: usuario.name,
-                                                surnames:
-                                                    usuario.surnames || "",
+                                                surnames: usuario.surnames,
+                                                email: usuario.email,
                                             });
                                         }}
                                     >
@@ -170,6 +220,17 @@ export default function GestionUsuarios() {
                                         }
                                     >
                                         Eliminar
+                                    </button>
+                                    <button
+                                        className="impersonate"
+                                        onClick={() =>
+                                            handleStartImpersonate(
+                                                usuario._id,
+                                                usuario.name
+                                            )
+                                        }
+                                    >
+                                        Entrar como usuario
                                     </button>
                                 </div>
                             </>
@@ -223,32 +284,40 @@ export default function GestionUsuarios() {
                     }
                 />
                 <select
-                    value={nuevoUsuario.role}
+                    value={nuevoUsuario.roles[0]}
                     onChange={(e) =>
                         setNuevoUsuario({
                             ...nuevoUsuario,
-                            role: e.target.value,
+                            roles: [e.target.value],
                         })
                     }
                 >
                     <option value="admin">Admin</option>
-                    <option value="manager">Manager</option>
-                    <option value="trabajador">Trabajador</option>
+                    <option value="user">User</option>
                 </select>
                 <input
                     type="number"
-                    placeholder="Horas por día"
                     min={0}
-                    max={7.5}
+                    max={24}
                     step={0.25}
+                    placeholder="Horas por día"
                     value={nuevoUsuario.dailyHours}
-                    onChange={(e) => {
-                        let valor = parseFloat(e.target.value);
-                        if (isNaN(valor)) valor = 0;
-                        if (valor < 0) valor = 0;
-                        if (valor > 7.5) valor = 7.5;
-                        setNuevoUsuario({ ...nuevoUsuario, dailyHours: valor });
-                    }}
+                    onChange={(e) =>
+                        setNuevoUsuario({
+                            ...nuevoUsuario,
+                            dailyHours: parseFloat(e.target.value) || 0,
+                        })
+                    }
+                />
+                <input
+                    placeholder="Sesame Employee ID"
+                    value={nuevoUsuario.sesameEmployeeId}
+                    onChange={(e) =>
+                        setNuevoUsuario({
+                            ...nuevoUsuario,
+                            sesameEmployeeId: e.target.value,
+                        })
+                    }
                 />
                 <label>
                     <input

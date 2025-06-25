@@ -66,12 +66,12 @@
     margin: 0 auto;
     background-color: #004080;
     color: #fff;
-    padding: 0.9rem 2rem;
+    padding: 0.45rem 1rem;
     border: none;
     border-radius: 6px;
     cursor: pointer;
     font-weight: 600;
-    font-size: 1rem;
+    font-size: 0.9rem;
     transition: background-color 0.2s ease;
 }
 
@@ -82,4 +82,71 @@
 .btn-imputar:disabled {
     background-color: #ccc;
     cursor: not-allowed;
+}
+/* FormularioImputacionConReparto.css */
+.botones-imputacion {
+    display: flex;
+    gap: 8px;
+    margin: 16px 0;
+}
+.btn-export {
+    background: #27ae60;
+    color: #fff;
+    padding: 4px 8px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.btn-export:hover {
+    background: #1e8449;
+}
+
+/* Botones flotantes para ir arriba/abajo */
+.scroll-buttons {
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    z-index: 1000;
+}
+
+.scroll-btn {
+    background-color: #00a3e0;
+    color: #fff;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+    border-radius: 50%;
+    width: 3rem;
+    height: 3rem;
+    font-size: 1.2rem;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.scroll-btn:hover {
+    background-color: #0288b0;
+    transform: translateY(-2px);
+}
+
+.scroll-btn:active {
+    transform: translateY(0);
+}
+
+/* Si quieres iconos más pequeños en móvil */
+@media (max-width: 600px) {
+    .scroll-buttons {
+        right: 0.5rem;
+        bottom: 0.5rem;
+    }
+    .scroll-btn {
+        width: 2.5rem;
+        height: 2.5rem;
+        font-size: 1rem;
+    }
 }

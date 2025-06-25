@@ -46,7 +46,7 @@ h2 {
 
 .section--edit {
     background: #fff7e6;
-    border-color: #f5a623;
+    border-color: #2385f5;
     box-shadow: 0 0 15px rgba(245, 166, 35, 0.3);
 }
 
@@ -56,7 +56,7 @@ h2 {
     font-weight: 600;
     margin-bottom: 1rem;
     color: #333;
-    border-bottom: 2px solid #f5a623;
+    border-bottom: 2px solid #2366f5;
     padding-bottom: 0.3rem;
 }
 
@@ -73,8 +73,8 @@ h2 {
 }
 
 .input-group:focus {
-    border-color: #f5a623;
-    box-shadow: 0 0 6px #f5a623aa;
+    border-color: #236df5;
+    box-shadow: 0 0 6px #23d6f5aa;
 }
 
 /* Inputs inline para tareas y usuarios */
@@ -95,8 +95,8 @@ h2 {
 }
 
 .input-inline:focus {
-    border-color: #f5a623;
-    box-shadow: 0 0 6px #f5a623aa;
+    border-color: #236df5;
+    box-shadow: 0 0 6px #23f5ebaa;
 }
 
 /* Botones */
@@ -123,8 +123,8 @@ button.edit {
 } */
 
 button:active:not(.delete) {
-    background-color: #b37404;
-    box-shadow: 0 2px 4px rgba(179, 116, 4, 0.7);
+    background-color: #041eb3;
+    box-shadow: 0 2px 4px rgba(4, 12, 133, 0.7);
 }
 
 /* Botón delete, rojo para borrar */
@@ -194,7 +194,9 @@ ul li:last-child {
     }
 
     button {
-        width: 100%;
+        display: block;
+        width: 50%;
+        margin: 0.5rem auto;
     }
 
     .proyecto-item {
@@ -214,4 +216,54 @@ ul::-webkit-scrollbar-thumb {
 
 ul::-webkit-scrollbar-track {
     background: #f9f9f9;
+}
+
+/* Botones flotantes para ir arriba/abajo */
+.scroll-buttons {
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    z-index: 1000;
+}
+
+.scroll-btn {
+    background-color: #00a3e0;
+    color: #fff;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+    border-radius: 50%;
+    width: 3rem;
+    height: 3rem;
+    font-size: 1.2rem;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.scroll-btn:hover {
+    background-color: #0288b0;
+    transform: translateY(-2px);
+}
+
+.scroll-btn:active {
+    transform: translateY(0);
+}
+
+/* Si quieres iconos más pequeños en móvil */
+@media (max-width: 600px) {
+    .scroll-buttons {
+        right: 0.5rem;
+        bottom: 0.5rem;
+    }
+    .scroll-btn {
+        width: 2.5rem;
+        height: 2.5rem;
+        font-size: 1rem;
+    }
 }
