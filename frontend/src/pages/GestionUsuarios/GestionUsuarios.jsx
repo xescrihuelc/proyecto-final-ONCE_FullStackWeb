@@ -265,6 +265,16 @@ export default function GestionUsuarios() {
                         setNuevoUsuario({ ...nuevoUsuario, dailyHours: valor });
                     }}
                 />
+                <input
+                    placeholder="Sesame Employee ID"
+                    value={nuevoUsuario.sesameEmployeeId}
+                    onChange={(e) =>
+                        setNuevoUsuario({
+                            ...nuevoUsuario,
+                            sesameEmployeeId: e.target.value,
+                        })
+                    }
+                />
                 <label>
                     <input
                         type="checkbox"
@@ -278,16 +288,6 @@ export default function GestionUsuarios() {
                     />
                     Activo
                 </label>
-                <input
-                    placeholder="Sesame Employee ID"
-                    value={nuevoUsuario.sesameEmployeeId}
-                    onChange={(e) =>
-                        setNuevoUsuario({
-                            ...nuevoUsuario,
-                            sesameEmployeeId: e.target.value,
-                        })
-                    }
-                />
                 <button onClick={handleCrearUsuario}>Crear usuario</button>
             </div>
         </div>
