@@ -254,7 +254,7 @@ const AdminPage = () => {
                         <XAxis dataKey="nombre" />
                         <YAxis />
                         <Tooltip />
-                        <Bar dataKey="tareas" fill="#f90" />
+                        <Bar dataKey="tareas" fill="#00a3e0" />
                     </BarChart>
                 </ResponsiveContainer>
             </section>
