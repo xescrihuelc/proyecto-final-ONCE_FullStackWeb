@@ -1,5 +1,7 @@
 // src/components/CalendarioResumen/CalendarioResumen.jsx
+
 import React, { useEffect, useState, useMemo } from "react";
+import PropTypes from "prop-types";
 import { useAuth } from "../../context/AuthContext";
 import { getDiasSesame } from "../../services/sesameService";
 import {
@@ -21,24 +23,33 @@ import {
 import "./CalendarioResumen.css";
 
 const diasSemana = ["L", "M", "X", "J", "V", "S", "D"];
+const viewMap = { dia: "day", semana: "week", mes: "month" };
+const buttonLabels = { dia: "Día", semana: "Semana", mes: "Mes" };
 
-export default function CalendarioResumen({ initialView = "month" }) {
+export default function CalendarioResumen({ periodo = "mes" }) {
     const { user } = useAuth();
     const [currentDate, setCurrentDate] = useState(new Date());
-    const [view, setView] = useState(initialView);
+    const [view, setView] = useState(periodo);
     const [diasMes, setDiasMes] = useState([]);
 
+    const engView = viewMap[view] || "month";
+
+    // Calcula rango de fechas
     const rango = useMemo(() => {
-        if (view === "day")
+        if (engView === "day")
             return { from: startOfDay(currentDate), to: endOfDay(currentDate) };
-        if (view === "week")
+        if (engView === "week")
             return {
                 from: startOfWeek(currentDate, { weekStartsOn: 1 }),
                 to: endOfWeek(currentDate, { weekStartsOn: 1 }),
             };
-        return { from: startOfMonth(currentDate), to: endOfMonth(currentDate) };
-    }, [currentDate, view]);
+        return {
+            from: startOfMonth(currentDate),
+            to: endOfMonth(currentDate),
+        };
+    }, [currentDate, engView]);
 
+    // Trae días trabajados de Sesame
     useEffect(() => {
         if (!user?.sesameEmployeeId) return;
         (async () => {
@@ -55,30 +66,29 @@ export default function CalendarioResumen({ initialView = "month" }) {
 
     const goPrev = () =>
         setCurrentDate((d) =>
-            view === "day"
+            engView === "day"
                 ? subDays(d, 1)
-                : view === "week"
+                : engView === "week"
                 ? subWeeks(d, 1)
                 : subMonths(d, 1)
         );
     const goNext = () =>
         setCurrentDate((d) =>
-            view === "day"
+            engView === "day"
                 ? addDays(d, 1)
-                : view === "week"
+                : engView === "week"
                 ? addWeeks(d, 1)
                 : addMonths(d, 1)
         );
     const goToday = () => setCurrentDate(new Date());
 
-    // Para month view, insertamos días en blanco antes del día 1
+    // Prepara array de casillas
     const diasParaRender = useMemo(() => {
-        if (view === "month") {
+        if (engView === "month") {
             const start = startOfMonth(currentDate);
             const end = endOfMonth(currentDate);
-            // getDay: 0=Dom,1=Lun,...6=Sáb -> queremos lunes=0
             const shift = (getDay(start) + 6) % 7;
-            const blanks = Array.from({ length: shift }).map((_, i) => null);
+            const blanks = Array.from({ length: shift }).map(() => null);
             const monthDays = [];
             let cursor = start;
             while (cursor <= end) {
@@ -87,7 +97,6 @@ export default function CalendarioResumen({ initialView = "month" }) {
             }
             return [...blanks, ...monthDays];
         }
-        // para semana o día, igual que antes
         const days = [];
         let cursor = new Date(rango.from);
         while (cursor <= rango.to) {
@@ -95,7 +104,7 @@ export default function CalendarioResumen({ initialView = "month" }) {
             cursor = addDays(cursor, 1);
         }
         return days;
-    }, [rango, currentDate, view]);
+    }, [rango, currentDate, engView]);
 
     return (
         <div className="calendario-resumen">
@@ -106,32 +115,29 @@ export default function CalendarioResumen({ initialView = "month" }) {
                     <button onClick={goNext}>→</button>
                 </div>
                 <h3 className="titulo">
-                    {view === "day" && format(currentDate, "EEEE, d MMM yyyy")}
-                    {view === "week" &&
+                    {engView === "day" &&
+                        format(currentDate, "EEEE, d MMM yyyy")}
+                    {engView === "week" &&
                         `${format(rango.from, "d MMM")} – ${format(
                             rango.to,
                             "d MMM yyyy"
                         )}`}
-                    {view === "month" && format(currentDate, "MMMM yyyy")}
+                    {engView === "month" && format(currentDate, "MMMM yyyy")}
                 </h3>
                 <div className="view-switch">
-                    {["day", "week", "month"].map((v) => (
+                    {Object.keys(viewMap).map((key) => (
                         <button
-                            key={v}
-                            className={view === v ? "active" : ""}
-                            onClick={() => setView(v)}
+                            key={key}
+                            className={view === key ? "active" : ""}
+                            onClick={() => setView(key)}
                         >
-                            {v === "day"
-                                ? "Día"
-                                : v === "week"
-                                ? "Semana"
-                                : "Mes"}
+                            {buttonLabels[key]}
                         </button>
                     ))}
                 </div>
             </div>
 
-            {view !== "day" && (
+            {engView !== "day" && (
                 <div className="dias-semana">
                     {diasSemana.map((d, i) => (
                         <span key={i}>{d}</span>
@@ -141,16 +147,11 @@ export default function CalendarioResumen({ initialView = "month" }) {
 
             <div
                 className={`grilla ${
-                    view === "month" ? "grilla-mes" : "grilla-semana"
+                    engView === "month" ? "grilla-mes" : "grilla-semana"
                 }`}
             >
                 {diasParaRender.map((day, idx) => {
-                    if (!day) {
-                        // casillas en blanco para mes
-                        return (
-                            <div key={`blank-${idx}`} className="dia blank" />
-                        );
-                    }
+                    if (!day) return <div key={idx} className="dia blank" />;
                     const iso = day.toISOString().split("T")[0];
                     const entry = diasMes.find((d) => d.date.startsWith(iso));
                     const trabajado = entry && entry.secondsWorked > 0;
@@ -176,3 +177,7 @@ export default function CalendarioResumen({ initialView = "month" }) {
         </div>
     );
 }
+
+CalendarioResumen.propTypes = {
+    periodo: PropTypes.oneOf(["dia", "semana", "mes"]),
+};
