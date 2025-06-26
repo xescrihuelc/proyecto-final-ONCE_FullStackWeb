@@ -138,7 +138,7 @@ const imputeHours = async (req, res) => {
     try {
         const { date, userId, tasks } = req.body;
 
-        const [ok, errMsg] = validateFields(req.body, [
+        const [ok, errMsg] = validateFields(req.query, [
             { name: "userId", required: true },
             { name: "date", required: true, type: "date" },
             { name: "tasks", required: true, type: "nonEmptyArray" },
