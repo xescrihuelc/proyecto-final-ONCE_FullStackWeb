@@ -18,7 +18,7 @@ export default function FormularioImputacionConReparto({
     tareas = [],
     onSaved,
 }) {
-    // 1) Desestructuramos el resumen
+
     const {
         userId,
         diasTrabajados = 0,
@@ -26,25 +26,22 @@ export default function FormularioImputacionConReparto({
         fechasTrabajadas = [],
     } = resumen;
 
-    // 2) Estado local
     const [items, setItems] = useState([]);
     const [inputs, setInputs] = useState([]);
     const [loading, setLoading] = useState(false);
     const [firmaImg, setFirmaImg] = useState(null);
 
-    // 3) Aplanamos la lista de tareas y preparamos la matriz de inputs
     useEffect(() => {
         if (!Array.isArray(tareas)) return;
 
         const flat = tareas.flatMap((proyecto) => {
-            // si no hay subtareas, creamos una entrada "(Sin subtarea)"
             const subs =
                 Array.isArray(proyecto.tareas) && proyecto.tareas.length
                     ? proyecto.tareas
                     : [{ id: proyecto.id, nombre: "(Sin subtarea)" }];
 
             return subs.map((sub) => ({
-                tareaId: sub._id ?? sub.id, // el identificador verdadero
+                tareaId: sub._id ?? sub.id, 
                 nombre: `${proyecto.estructura} / ${proyecto.subnivel} / ${sub.nombre}`,
             }));
         });
@@ -53,7 +50,6 @@ export default function FormularioImputacionConReparto({
         setInputs(Array(flat.length).fill(""));
     }, [tareas]);
 
-    // 4) Preparamos un array de payloads, uno por cada fecha trabajada
     const prepararPayloads = () =>
         fechasTrabajadas.map((date) => {
             const tasks = items
@@ -86,7 +82,6 @@ export default function FormularioImputacionConReparto({
             };
         });
 
-    // 5) Mensajes de bloqueo / carga
     if (!userId) {
         return (
             <p className="aviso">
@@ -99,11 +94,9 @@ export default function FormularioImputacionConReparto({
         return <p className="aviso">Cargando fechas de imputación…</p>;
     }
 
-    // 6) Envío de los PATCH al backend
     const handleGuardar = async () => {
         setLoading(true);
         try {
-            // filtramos payloads con tareas
             const payloads = prepararPayloads().filter(
                 (p) => p.tasks.length > 0
             );
@@ -130,7 +123,6 @@ export default function FormularioImputacionConReparto({
         }
     };
 
-    // 7) Función para exportar a PDF
     const exportPDF = () => {
         const doc = new jsPDF();
         doc.text("Imputación de Horas", 20, 20);
@@ -152,7 +144,6 @@ export default function FormularioImputacionConReparto({
         doc.save("imputacion.pdf");
     };
 
-    // 8) Función para exportar a CSV
     const exportCSV = () => {
         const data = items.map((it, i) => ({
             tarea: it.nombre,
@@ -169,7 +160,6 @@ export default function FormularioImputacionConReparto({
         document.body.removeChild(a);
     };
 
-    // 9) Renderizado final
     return (
         <div className="formulario-imputacion-reparto">
             <h3>Asignar horas a tareas ({diasTrabajados} días trabajados)</h3>

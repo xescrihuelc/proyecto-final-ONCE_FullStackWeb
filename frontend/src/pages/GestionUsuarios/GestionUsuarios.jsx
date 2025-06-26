@@ -126,7 +126,6 @@ export default function GestionUsuarios() {
                     <div className="usuario-card" key={usuario._id}>
                         {editando === usuario._id ? (
                             <>
-                                {/* Mostrar ID en modo edición (solo lectura) */}
                                 <p>
                                     <strong>ID:</strong> {usuario._id}
                                 </p>
@@ -169,7 +168,6 @@ export default function GestionUsuarios() {
                                     }
                                     placeholder="Email"
                                 />
-                                {/* Agrega más campos editables si es necesario */}
                                 <button
                                     onClick={() => handleGuardar(usuario._id)}
                                 >
@@ -181,7 +179,6 @@ export default function GestionUsuarios() {
                             </>
                         ) : (
                             <>
-                                {/* Mostrar ID y UID en vista normal */}
                                 <p>
                                     <strong>ID:</strong> {usuario._id}
                                 </p>
@@ -199,7 +196,6 @@ export default function GestionUsuarios() {
                                 <p>
                                     <strong>Email:</strong> {usuario.email}
                                 </p>
-                                {/* ...más datos si los necesitas... */}
                                 <div className="acciones">
                                     <button
                                         onClick={() => {

@@ -18,10 +18,8 @@ const Dashboard = () => {
     const { roles, user } = useAuth();
     const { proyectos } = useContext(ProyectoContext);
 
-    // Estado para horas reales del usuario en el mes actual
     const [horasReales, setHorasReales] = useState(0);
 
-    // Calculamos mes actual y cargamos imputaciones SOLO del usuario logado
     useEffect(() => {
         const hoy = new Date();
         const from = new Date(hoy.getFullYear(), hoy.getMonth(), 1)
@@ -42,7 +40,6 @@ const Dashboard = () => {
             .catch((err) => console.error("Error cargando horas reales:", err));
     }, [user.id]);
 
-    // Filtrados para el dashboard
     const proyectosActivos = proyectos.filter((p) => p.activo);
     const proyectosInactivos = proyectos.filter((p) => !p.activo);
     const tareasPorProyecto = proyectos.map((p) => ({

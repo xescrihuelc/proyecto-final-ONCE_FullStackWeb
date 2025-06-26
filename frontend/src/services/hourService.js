@@ -24,7 +24,6 @@ export const patchHourRecord = async (payload) => {
     }
 
     if (!res.ok) {
-        // Asumimos que la API responde `{ error: "mensaje" }`
         const message = data?.error || `Error ${res.status}`;
         console.error("💥 [hourService] lanza error:", message);
         throw new Error(message);

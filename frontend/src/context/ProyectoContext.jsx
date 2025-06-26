@@ -1,7 +1,7 @@
 // src/context/ProyectoContext.jsx
 import React, { createContext, useState, useEffect, useContext } from "react";
 import { getAllTasks } from "../services/taskService";
-import { AuthContext } from "./AuthContext"; // ✅ importante
+import { AuthContext } from "./AuthContext";
 
 export const ProyectoContext = createContext();
 
@@ -9,14 +9,14 @@ export const ProyectoProvider = ({ children }) => {
     const [proyectos, setProyectos] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    const { token } = useContext(AuthContext); // ✅ forma correcta
+    const { token } = useContext(AuthContext); 
 
     useEffect(() => {
         const fetchProyectos = async () => {
             try {
                 if (!token) return;
 
-                const tareasBD = await getAllTasks(token); // ✅ token pasado correctamente
+                const tareasBD = await getAllTasks(token); 
                 setProyectos(tareasBD);
             } catch (err) {
                 console.error("Error al cargar proyectos:", err);

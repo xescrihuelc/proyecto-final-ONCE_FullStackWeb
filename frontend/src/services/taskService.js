@@ -3,18 +3,8 @@
 import { API_URL } from "../utils/config";
 import { getToken } from "./authService";
 
-/**
- * Toma el objeto tal cual viene desde el backend y
- * devuelve la forma que necesita el Front:
- * - id
- * - estructura
- * - subnivel
- * - tareas: array de { id, nombre, asignados }
- * - activo: boolean (viene de task.isActive)
- * - lineaTrabajo: string (si lo necesitas más adelante)
- */
 export const parseTasksFromBackend = (task) => {
-    // Aseguramos que siempre haya al menos "(Sin subtarea)"
+
     const rawSubs =
         task.subtarea && task.subtarea.trim().length > 0
             ? task.subtarea.split(",")
@@ -23,7 +13,7 @@ export const parseTasksFromBackend = (task) => {
     const tareas = rawSubs.map((nombre, i) => ({
         id: `${task._id}-${i}`,
         nombre: nombre.trim(),
-        asignados: [], // si luego aplicas asignaciones
+        asignados: [], 
     }));
 
     return {
@@ -32,14 +22,10 @@ export const parseTasksFromBackend = (task) => {
         lineaTrabajo: task.lineaTrabajo,
         subnivel: task.subnivel,
         tareas,
-        activo: task.isActive, // ← aquí la marca de activo/inactivo
+        activo: task.isActive, 
     };
 };
 
-/**
- * Llama al endpoint /tasks, imprime el RAW (opcional) y
- * lo mapea con parseTasksFromBackend.
- */
 export const getAllTasks = async () => {
     const token = getToken();
     const res = await fetch(`${API_URL}/tasks`, {
@@ -52,15 +38,10 @@ export const getAllTasks = async () => {
 
     const raw = await res.json();
 
-    // Para depuración: ver el array completo que viene del backend
     console.log("RAW TASKS FROM API:", raw);
 
     return raw.map(parseTasksFromBackend);
 };
-
-/**
- * Resto de funciones (POST, PATCH) quedan igual:
- */
 
 export const createTask = async (task) => {
     const res = await fetch(`${API_URL}/tasks`, {

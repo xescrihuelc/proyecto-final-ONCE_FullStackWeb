@@ -14,10 +14,8 @@ export const login = async (email, password) => {
         throw new Error(error || "Credenciales incorrectas");
     }
 
-    // ⚠️ Asegúrate de usar "token" tal como lo devuelve tu API
     const { token } = await response.json();
 
-    // Ahora obtenemos la lista de usuarios para extraer sus datos
     const resUser = await fetch(`${API_URL}/users`);
     if (!resUser.ok) throw new Error("Error al obtener usuarios");
 
@@ -33,7 +31,6 @@ export const login = async (email, password) => {
             matchedUser.sesameEmployeeId ?? matchedUser.id ?? null,
     };
 
-    // Almacenar correctamente
     localStorage.setItem("user", JSON.stringify(fullUser));
     localStorage.setItem("token", token);
 

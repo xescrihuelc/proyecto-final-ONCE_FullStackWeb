@@ -15,12 +15,12 @@ export function getRangoDelPeriodo(periodo = "mes") {
             break;
 
         case "semana":
-            const diaSemana = hoy.getDay(); // 0 (Domingo) - 6 (Sábado)
+            const diaSemana = hoy.getDay();
             const lunes = new Date(hoy);
-            lunes.setDate(hoy.getDate() - ((diaSemana + 6) % 7)); // lunes de esta semana
+            lunes.setDate(hoy.getDate() - ((diaSemana + 6) % 7)); 
             from = new Date(lunes);
             to = new Date(lunes);
-            to.setDate(from.getDate() + 6); // domingo siguiente
+            to.setDate(from.getDate() + 6); 
             break;
 
         case "mes":
