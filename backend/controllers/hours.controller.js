@@ -112,7 +112,7 @@ const getImputacionesPorUsuarioYRango = async (req, res) => {
     try {
         const { userId, from, to } = req.query;
 
-        const [ok, errMsg] = validateFields(req.query, [
+        const [ok, errMsg] = validateFields(req.body, [
             { name: "userId", required: true, type: "string" },
             { name: "from", required: true, type: "date" },
             { name: "to", required: true, type: "date" },
@@ -138,7 +138,7 @@ const imputeHours = async (req, res) => {
     try {
         const { date, userId, tasks } = req.body;
 
-        const [ok, errMsg] = validateFields(req.query, [
+        const [ok, errMsg] = validateFields(req.body, [
             { name: "userId", required: true },
             { name: "date", required: true, type: "date" },
             { name: "tasks", required: true, type: "nonEmptyArray" },
