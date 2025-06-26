@@ -25,33 +25,42 @@ const diasSemana = ["L", "M", "X", "J", "V", "S", "D"];
 const viewMap = { dia: "day", semana: "week", mes: "month" };
 const buttonLabels = { dia: "Día", semana: "Semana", mes: "Mes" };
 
-export default function CalendarioResumen({ periodo = "mes" }) {
+export default function CalendarioResumen({ periodo = "mes", onRangoChange }) {
     const { user } = useAuth();
     const [view, setView] = useState(periodo);
+    const [currentDate, setCurrentDate] = useState(new Date());
+    const [diasSesame, setDiasSesame] = useState([]);
+
+    // Cuando cambia el prop `periodo`, sincronizamos la vista interna
     useEffect(() => {
         setView(periodo);
     }, [periodo]);
 
     const engView = viewMap[view] || "month";
-    const [currentDate, setCurrentDate] = useState(new Date());
-    const [diasMes, setDiasMes] = useState([]);
 
+    // Calcula from/to según view y currentDate
     const rango = useMemo(() => {
+        let from, to;
         if (engView === "day") {
-            return { from: startOfDay(currentDate), to: endOfDay(currentDate) };
+            from = startOfDay(currentDate);
+            to = endOfDay(currentDate);
+        } else if (engView === "week") {
+            from = startOfWeek(currentDate, { weekStartsOn: 1 });
+            to = endOfWeek(currentDate, { weekStartsOn: 1 });
+        } else {
+            from = startOfMonth(currentDate);
+            to = endOfMonth(currentDate);
         }
-        if (engView === "week") {
-            return {
-                from: startOfWeek(currentDate, { weekStartsOn: 1 }),
-                to: endOfWeek(currentDate, { weekStartsOn: 1 }),
-            };
-        }
-        return {
-            from: startOfMonth(currentDate),
-            to: endOfMonth(currentDate),
-        };
-    }, [currentDate, engView]);
+        // avisamos al padre
+        onRangoChange &&
+            onRangoChange({
+                from: format(from, "yyyy-MM-dd"),
+                to: format(to, "yyyy-MM-dd"),
+            });
+        return { from, to };
+    }, [currentDate, engView, onRangoChange]);
 
+    // Traer datos de Sesame para colorear la vista
     useEffect(() => {
         if (!user?.sesameEmployeeId) return;
         (async () => {
@@ -62,10 +71,11 @@ export default function CalendarioResumen({ periodo = "mes" }) {
                 fromISO,
                 toISO
             );
-            setDiasMes(dias);
+            setDiasSesame(dias);
         })();
     }, [rango, user]);
 
+    // Navegación
     const goPrev = () =>
         setCurrentDate((d) =>
             engView === "day"
@@ -84,6 +94,7 @@ export default function CalendarioResumen({ periodo = "mes" }) {
         );
     const goToday = () => setCurrentDate(new Date());
 
+    // Generar array de celdas
     const diasParaRender = useMemo(() => {
         if (engView === "month") {
             const start = startOfMonth(currentDate);
@@ -97,15 +108,16 @@ export default function CalendarioResumen({ periodo = "mes" }) {
                 cursor = addDays(cursor, 1);
             }
             return [...blanks, ...monthDays];
+        } else {
+            const days = [];
+            let cursor = rango.from;
+            while (cursor <= rango.to) {
+                days.push(new Date(cursor));
+                cursor = addDays(cursor, 1);
+            }
+            return days;
         }
-        const days = [];
-        let cursor = rango.from;
-        while (cursor <= rango.to) {
-            days.push(new Date(cursor));
-            cursor = addDays(cursor, 1);
-        }
-        return days;
-    }, [rango, currentDate, engView]);
+    }, [currentDate, engView, rango]);
 
     return (
         <div className="calendario-resumen">
@@ -154,7 +166,9 @@ export default function CalendarioResumen({ periodo = "mes" }) {
                 {diasParaRender.map((day, idx) => {
                     if (!day) return <div key={idx} className="dia blank" />;
                     const iso = format(day, "yyyy-MM-dd");
-                    const entry = diasMes.find((d) => d.date.startsWith(iso));
+                    const entry = diasSesame.find((d) =>
+                        d.date.startsWith(iso)
+                    );
                     const worked = entry && entry.secondsWorked > 0;
                     return (
                         <div
@@ -181,4 +195,5 @@ export default function CalendarioResumen({ periodo = "mes" }) {
 
 CalendarioResumen.propTypes = {
     periodo: PropTypes.oneOf(["dia", "semana", "mes"]),
+    onRangoChange: PropTypes.func,
 };
