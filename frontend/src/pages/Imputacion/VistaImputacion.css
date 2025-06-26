@@ -17,3 +17,55 @@
 .vista-imputacion-container > *:not(:last-child) {
     margin-bottom: 2.5rem;
 }
+.vista-imputacion-container {
+    max-width: 900px;
+    margin: 2rem auto;
+    padding: 1rem;
+}
+
+.user-filter {
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.user-filter label {
+    font-weight: bold;
+}
+
+.user-filter select {
+    flex: 1;
+    padding: 0.5rem;
+}
+
+.resumen-horas {
+    margin: 1.5rem 0;
+    padding: 1rem;
+    background: #f5faff;
+    border-radius: 8px;
+}
+
+.resumen-horas p {
+    margin: 0.5rem 0;
+}
+
+.informe-tareas {
+    margin: 1.5rem 0;
+}
+
+.informe-tareas table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.informe-tareas th,
+.informe-tareas td {
+    border: 1px solid #ddd;
+    padding: 0.5rem;
+    text-align: left;
+}
+
+.informe-tareas th {
+    background: #eef6ff;
+}
