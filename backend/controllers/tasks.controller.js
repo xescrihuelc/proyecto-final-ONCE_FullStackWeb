@@ -136,7 +136,32 @@ const getImputacionesPorUsuarioYRango = async (req, res) => {
         res.status(500).json({ error: "Error interno del servidor" });
     }
 };
+const assignUserToTask = async (req, res) => {
+    const { userId } = req.body;
+    const { id: taskId } = req.params;
 
+    if (!userId) {
+        return res.status(400).json({ error: "Falta userId en el body" });
+    }
+
+    try {
+        // $addToSet evita duplicados
+        const updatedTask = await Tasks.findByIdAndUpdate(
+            taskId,
+            { $addToSet: { assignedUsers: userId } },
+            { new: true }
+        );
+
+        if (!updatedTask) {
+            return res.status(404).json({ error: "Task not found" });
+        }
+
+        res.json(updatedTask);
+    } catch (error) {
+        console.error("Error al asignar usuario a tarea:", error);
+        res.status(500).json({ error: "Error interno al asignar usuario" });
+    }
+};
 module.exports = {
     getAllTasks,
     getTaskById,
@@ -144,4 +169,5 @@ module.exports = {
     updateTask,
     deleteTask,
     getImputacionesPorUsuarioYRango,
+    assignUserToTask,
 };
