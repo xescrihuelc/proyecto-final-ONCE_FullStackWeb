@@ -21,12 +21,6 @@ export default function GestionUsuarios() {
         isActive: true,
         sesameEmployeeId: "",
     });
-    const [impersonateId, setImpersonateId] = useState(
-        localStorage.getItem("impersonateUserId") || ""
-    );
-    const [impersonateName, setImpersonateName] = useState(
-        localStorage.getItem("impersonateUserName") || ""
-    );
 
     // Función para cargar usuarios desde el servicio
     const cargarUsuarios = async () => {
@@ -40,7 +34,7 @@ export default function GestionUsuarios() {
 
     useEffect(() => {
         cargarUsuarios();
-    }, [impersonateId]);
+    }, []);
 
     const handleEliminar = async (id) => {
         if (!window.confirm("¿Eliminar este usuario?")) return;
@@ -61,20 +55,6 @@ export default function GestionUsuarios() {
         } catch (err) {
             alert("Error actualizando: " + err.message);
         }
-    };
-
-    const handleStartImpersonate = (id, name) => {
-        localStorage.setItem("impersonateUserId", id);
-        localStorage.setItem("impersonateUserName", name);
-        setImpersonateId(id);
-        setImpersonateName(name);
-    };
-
-    const handleStopImpersonate = () => {
-        localStorage.removeItem("impersonateUserId");
-        localStorage.removeItem("impersonateUserName");
-        setImpersonateId("");
-        setImpersonateName("");
     };
 
     const handleCrearUsuario = async () => {
@@ -113,12 +93,6 @@ export default function GestionUsuarios() {
 
     return (
         <div className="gestion-usuarios">
-            {impersonateId && (
-                <div id="visible" className="impersonation-banner">
-                    👤 Impersonando a <strong>{impersonateName}</strong>
-                    <button onClick={handleStopImpersonate}>Salir</button>
-                </div>
-            )}
             <h1>Gestión de Usuarios</h1>
 
             <div className="usuario-cards">
@@ -216,17 +190,6 @@ export default function GestionUsuarios() {
                                         }
                                     >
                                         Eliminar
-                                    </button>
-                                    <button
-                                        className="impersonate"
-                                        onClick={() =>
-                                            handleStartImpersonate(
-                                                usuario._id,
-                                                usuario.name
-                                            )
-                                        }
-                                    >
-                                        Entrar como usuario
                                     </button>
                                 </div>
                             </>

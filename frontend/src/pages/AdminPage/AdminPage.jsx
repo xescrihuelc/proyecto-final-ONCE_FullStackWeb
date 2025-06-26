@@ -1,5 +1,3 @@
-// src/components/AdminPage/AdminPage.jsx
-
 import { useState, useContext, useEffect } from "react";
 import {
     BarChart,
@@ -31,6 +29,9 @@ const AdminPage = () => {
         activo: true,
     });
     const [nuevaTarea, setNuevaTarea] = useState({ nombre: "" });
+
+    // Nuevo estado para búsqueda de proyectos
+    const [busqueda, setBusqueda] = useState("");
 
     useEffect(() => {
         const cargarUsuarios = async () => {
@@ -84,6 +85,12 @@ const AdminPage = () => {
         nombre: p.nombre || p.estructura,
         tareas: Array.isArray(p.tareas) ? p.tareas.length : 0,
     }));
+
+    // Filtrar proyectos según término de búsqueda (insensible a mayúsculas)
+    const proyectosFiltrados = proyectos.filter((p) => {
+        const nombreProyecto = (p.nombre || p.estructura).toLowerCase();
+        return nombreProyecto.includes(busqueda.toLowerCase().trim());
+    });
 
     return (
         <div className="container" id="start">
@@ -162,13 +169,20 @@ const AdminPage = () => {
                 </button>
             </section>
 
-            {/* Listado de Proyectos existentes */}
+            {/* Buscador de Proyectos existentes */}
             <section className="section">
                 <h3>Proyectos existentes</h3>
-                {proyectos.length === 0 ? (
-                    <p>No hay proyectos.</p>
+                <input
+                    type="text"
+                    className="input-group search-input"
+                    placeholder="Buscar proyectos..."
+                    value={busqueda}
+                    onChange={(e) => setBusqueda(e.target.value)}
+                />
+                {proyectosFiltrados.length === 0 ? (
+                    <p>No hay proyectos que coincidan.</p>
                 ) : (
-                    proyectos.map((p) => {
+                    proyectosFiltrados.map((p) => {
                         const subs =
                             Array.isArray(p.tareas) && p.tareas.length > 0
                                 ? p.tareas.map((t) => t.nombre)
