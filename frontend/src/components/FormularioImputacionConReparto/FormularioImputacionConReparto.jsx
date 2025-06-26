@@ -1,10 +1,9 @@
 // src/components/FormularioImputacionConReparto/FormularioImputacionConReparto.jsx
-
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { useAuth } from "../../context/AuthContext";
 import SignaturePad from "../SignaturePad/SignaturePad";
-import { postImputacionesDistribuidas } from "../../services/imputacionService";
+import { patchImputeHours } from "../../services/hourService";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import Papa from "papaparse";
@@ -15,92 +14,115 @@ function roundToNearest15(hours) {
     return Math.round(hours / interval) * interval;
 }
 
-export default function FormularioImputacionConReparto({ resumen, tareas }) {
+export default function FormularioImputacionConReparto({
+    resumen,
+    tareas,
+    onSaved,
+}) {
     const { user } = useAuth();
-    const [items, setItems] = useState([]); // Lista de subtareas a imputar
-    const [inputs, setInputs] = useState([]); // Horas o % por subtarea
+    const [items, setItems] = useState([]);
+    const [inputs, setInputs] = useState([]);
     const [loading, setLoading] = useState(false);
     const [firmaImg, setFirmaImg] = useState(null);
 
-    // Aplanamos proyectos y sus subtareas tal como viene desde parseTasksFromBackend
     useEffect(() => {
         if (!Array.isArray(tareas)) {
             setItems([]);
             setInputs([]);
             return;
         }
-        const flat = tareas.flatMap((project) =>
-            Array.isArray(project.tareas)
-                ? project.tareas.map((sub) => ({
-                      tareaId: sub.id,
-                      nombre: `${project.nombre} / ${sub.nombre}`,
-                  }))
-                : []
-        );
+        const flat = tareas.flatMap((p) => {
+            const subs = p.tareas?.length
+                ? p.tareas
+                : [{ id: p.id, nombre: "(Sin subtarea)" }];
+            return subs.map((sub) => ({
+                tareaId: sub.id,
+                nombre: `${p.estructura} / ${p.subnivel} / ${sub.nombre}`,
+            }));
+        });
         setItems(flat);
-        setInputs(flat.map(() => ""));
+        setInputs(Array(flat.length).fill(""));
     }, [tareas]);
 
-    const handleChange = (index, value) => {
-        const arr = [...inputs];
-        arr[index] = value;
-        setInputs(arr);
+    const handleChange = (idx, val) => {
+        const copia = [...inputs];
+        copia[idx] = val;
+        setInputs(copia);
     };
 
-    const calcularDistribucion = () => {
-        const diasCount = resumen.diasTrabajados;
-        const totales = resumen.horasTotales;
-        const asigns = [];
+    const prepararPayloads = () => {
+        const dias = resumen.diasTrabajados;
+        const tot = resumen.horasTotales;
 
-        items.forEach((item, i) => {
-            const val = inputs[i]?.trim();
-            if (!val) return;
-            const isPct = val.endsWith("%");
-            const num = parseFloat(val.replace("%", ""));
-            if (isNaN(num) || num < 0) return;
-            const totalHoras = isPct ? (num / 100) * totales : num;
-
-            const porDia = totalHoras / diasCount;
-            const redondeado = roundToNearest15(porDia);
-            if (Math.abs(porDia - redondeado) > 1e-3) {
-                alert(
-                    `Valor por día (${porDia.toFixed(
-                        4
-                    )}) redondeado a ${redondeado}h`
-                );
-            }
-
-            for (let d = 0; d < diasCount; d++) {
-                const date = new Date();
-                date.setDate(date.getDate() - (diasCount - 1 - d));
-                const iso = date.toISOString().split("T")[0];
-                asigns.push({
-                    userId: user.id,
-                    taskId: item.tareaId,
-                    hours: redondeado,
-                    date: iso,
-                });
-            }
+        const fechas = Array.from({ length: dias }, (_, i) => {
+            const d = new Date();
+            d.setDate(d.getDate() - (dias - 1 - i));
+            return d.toISOString().slice(0, 10);
         });
 
-        return asigns;
+        return fechas
+            .map((fecha) => {
+                const tasks = items
+                    .map((it, i) => {
+                        const v = inputs[i]?.trim();
+                        if (!v) return null;
+                        const isPct = v.endsWith("%");
+                        const num = parseFloat(v.replace("%", ""));
+                        if (isNaN(num) || num < 0) return null;
+                        const totalHoras = isPct ? (num / 100) * tot : num;
+                        const porDia = totalHoras / dias;
+                        return {
+                            taskId: it.tareaId,
+                            hours: roundToNearest15(porDia),
+                        };
+                    })
+                    .filter(Boolean);
+                return { userId: user.id, date: fecha, tasks };
+            })
+            .filter((p) => p.tasks.length > 0);
     };
 
     const handleGuardar = async () => {
         setLoading(true);
-        const distrib = calcularDistribucion();
-        if (distrib.length === 0) {
-            alert("No hay imputaciones válidas.");
-            setLoading(false);
-            return;
-        }
         try {
-            await postImputacionesDistribuidas(distrib);
+            const payloads = prepararPayloads();
+            if (payloads.length === 0) {
+                alert("No hay nada que guardar.");
+                setLoading(false);
+                return;
+            }
+
+            for (const pl of payloads) {
+                try {
+                    // 🔍 Log de cada payload individual
+                    console.log(
+                        `✏️ [Form] Enviando PATCH para ${pl.date} — body:\n`,
+                        JSON.stringify(pl, null, 2)
+                    );
+                    const resp = await patchImputeHours(pl);
+                    // 🔍 Log de la respuesta JSON
+                    console.log(
+                        `✅ [Form] Respuesta OK para ${pl.date}:\n`,
+                        JSON.stringify(resp, null, 2)
+                    );
+                } catch (e) {
+                    console.error(
+                        `❌ [Form] Error en PATCH ${pl.date}:`,
+                        e.message
+                    );
+                    throw e;
+                }
+            }
+
             alert("Imputaciones guardadas ✅");
-            setInputs(items.map(() => ""));
+            setInputs(Array(items.length).fill(""));
+            onSaved?.();
         } catch (err) {
-            console.error("Error al guardar imputaciones:", err);
-            alert("Error al guardar imputaciones.");
+            console.error(
+                "❌ [Form] Error al guardar imputaciones:",
+                err.message
+            );
+            alert("Error al guardar imputaciones: " + err.message);
         } finally {
             setLoading(false);
         }
@@ -109,9 +131,11 @@ export default function FormularioImputacionConReparto({ resumen, tareas }) {
     const exportPDF = () => {
         const doc = new jsPDF();
         doc.text("Imputación de Horas", 20, 20);
-        const head = [["Tarea", "Valor"]];
-        const body = items.map((it, i) => [it.nombre, inputs[i] || ""]);
-        autoTable(doc, { head, body, startY: 30 });
+        autoTable(doc, {
+            head: [["Tarea", "Valor"]],
+            body: items.map((it, i) => [it.nombre, inputs[i] || ""]),
+            startY: 30,
+        });
         if (firmaImg) {
             doc.addImage(
                 firmaImg,
@@ -141,9 +165,7 @@ export default function FormularioImputacionConReparto({ resumen, tareas }) {
         document.body.removeChild(a);
     };
 
-    if (!resumen || items.length === 0) {
-        return <p>Cargando formulario…</p>;
-    }
+    if (!resumen || items.length === 0) return <p>Cargando formulario…</p>;
 
     return (
         <div className="formulario-imputacion-reparto">
@@ -165,11 +187,12 @@ export default function FormularioImputacionConReparto({ resumen, tareas }) {
                             <td>
                                 <input
                                     type="text"
+                                    placeholder="Ej: 6 o 25%"
                                     value={inputs[i]}
                                     onChange={(e) =>
                                         handleChange(i, e.target.value)
                                     }
-                                    placeholder="Ej: 6 o 25%"
+                                    disabled={loading}
                                 />
                             </td>
                         </tr>
@@ -183,12 +206,8 @@ export default function FormularioImputacionConReparto({ resumen, tareas }) {
                 <button onClick={exportPDF}>Descargar PDF</button>
                 <button onClick={exportCSV}>Descargar CSV</button>
             </div>
-
             <h4>Firma electrónica</h4>
-            <SignaturePad
-                options={{ canvasProps: { touchAction: "none" } }}
-                onEnd={setFirmaImg}
-            />
+            <SignaturePad onEnd={setFirmaImg} />
             {firmaImg && (
                 <img
                     src={firmaImg}
@@ -202,10 +221,9 @@ export default function FormularioImputacionConReparto({ resumen, tareas }) {
 
 FormularioImputacionConReparto.propTypes = {
     resumen: PropTypes.shape({
-        diasTrabajados: PropTypes.number,
-        horasTotales: PropTypes.number,
-        horasImputadas: PropTypes.number,
-        horasRestantes: PropTypes.number,
+        diasTrabajados: PropTypes.number.isRequired,
+        horasTotales: PropTypes.number.isRequired,
     }).isRequired,
     tareas: PropTypes.array.isRequired,
+    onSaved: PropTypes.func,
 };

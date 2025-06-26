@@ -27,11 +27,21 @@ const getHours = async (req, res) => {
     try {
         const { userIds, date } = req.body;
         const dateProper = new Date(date);
+<<<<<<< ruben
+        const normalizedDate = new Date(
+            Date.UTC(
+                dateProper.getUTCFullYear(),
+                dateProper.getUTCMonth(),
+                dateProper.getUTCDate()
+            )
+        );
+=======
         const normalizedDate = new Date(Date.UTC(
             dateProper.getUTCFullYear(),
             dateProper.getUTCMonth(),
             dateProper.getUTCDate()
         ));
+>>>>>>> main
 
         const [ok, errMsg] = checkImportantField(userIds, date);
         if (!ok) {
@@ -43,7 +53,13 @@ const getHours = async (req, res) => {
         };
 
         if (userIds.length > 0) {
+<<<<<<< ruben
+            const objectUserIds = userIds.map(
+                (id) => new mongoose.Types.ObjectId(id)
+            );
+=======
             const objectUserIds = userIds.map(id => new mongoose.Types.ObjectId(id));
+>>>>>>> main
             filter.userId = { $in: objectUserIds };
         }
 
@@ -65,7 +81,6 @@ const getHours = async (req, res) => {
         }
 
         return res.json({ data: Object.values(result) });
-
     } catch (err) {
         console.error(err);
         return res.status(500).json({ error: "Internal server error" });
@@ -77,12 +92,16 @@ const getImputacionesPorUsuarioYRango = async (req, res) => {
         const { userId, from, to } = req.query;
 
         if (!userId || !isDateFormat(from) || !isDateFormat(to)) {
-            return res.status(400).json({ error: "Missing or invalid parameters: userId, from, to" });
+            return res
+                .status(400)
+                .json({
+                    error: "Missing or invalid parameters: userId, from, to",
+                });
         }
 
         const records = await Hours.find({
             userId,
-            date: { $gte: new Date(from), $lte: new Date(to) }
+            date: { $gte: new Date(from), $lte: new Date(to) },
         }).lean();
 
         return res.json({ data: records });
@@ -96,22 +115,45 @@ const imputeHours = async (req, res) => {
     try {
         const { date, userId, tasks } = req.body;
 
-        if (!userId || !isDateFormat(date) || !Array.isArray(tasks) || tasks.length === 0) {
-            return res.status(400).json({ error: "Invalid input. 'userId', valid 'date', and non-empty 'tasks' array are required." });
+        if (
+            !userId ||
+            !isDateFormat(date) ||
+            !Array.isArray(tasks) ||
+            tasks.length === 0
+        ) {
+            return res
+                .status(400)
+                .json({
+                    error: "Invalid input. 'userId', valid 'date', and non-empty 'tasks' array are required.",
+                });
         }
 
         const dateProper = new Date(date);
+<<<<<<< ruben
+        const normalizedDate = new Date(
+            Date.UTC(
+                dateProper.getUTCFullYear(),
+                dateProper.getUTCMonth(),
+                dateProper.getUTCDate()
+            )
+        );
+=======
         const normalizedDate = new Date(Date.UTC(
             dateProper.getUTCFullYear(),
             dateProper.getUTCMonth(),
             dateProper.getUTCDate()
         ));
+>>>>>>> main
 
         for (const task of tasks) {
             const { taskId, hours } = task;
 
-            if (!taskId || typeof hours !== 'number' || hours < 0) {
-                return res.status(400).json({ error: "Each task must have a valid 'taskId' and non-negative 'hours'" });
+            if (!taskId || typeof hours !== "number" || hours < 0) {
+                return res
+                    .status(400)
+                    .json({
+                        error: "Each task must have a valid 'taskId' and non-negative 'hours'",
+                    });
             }
 
             await Hours.updateOne(

@@ -1,5 +1,3 @@
-// src/pages/Imputacion/VistaImputacion.jsx
-
 import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { getAllTasks } from "../../services/taskService";
@@ -12,83 +10,72 @@ export default function VistaImputacion() {
     const { user, loading } = useAuth();
     const [resumen, setResumen] = useState(null);
     const [tareas, setTareas] = useState([]);
-    const [periodo, setPeriodo] = useState("mes"); // "dia" | "semana" | "mes"
+    const [periodo, setPeriodo] = useState("mes");
+    const [reloadKey, setReloadKey] = useState(0);
 
-    const handleResumen = useCallback((data) => {
-        setResumen(data);
+    const handleResumen = useCallback((data) => setResumen(data), []);
+
+    const triggerReload = useCallback(() => {
+        setReloadKey((n) => n + 1);
     }, []);
 
     useEffect(() => {
-        async function fetchTareas() {
+        (async () => {
             try {
-                const tareasFromApi = await getAllTasks();
-                console.log("Tareas recibidas:", tareasFromApi);
-                setTareas(tareasFromApi);
+                const all = await getAllTasks();
+                setTareas(all);
             } catch (err) {
-                console.error("Error al cargar tareas:", err);
+                console.error(err);
             }
-        }
-        fetchTareas();
+        })();
     }, []);
 
-    if (loading || !user) return <p>Cargando datos de usuario...</p>;
+    if (loading || !user) return <p>Cargando usuario…</p>;
 
     return (
         <>
-            {/* Punto de anclaje superior */}
-            <div id="top"></div>
-
+            <div id="top" />
             <div className="vista-imputacion-container">
                 <h2>Panel de Imputación de Horas</h2>
 
-                {/* Selector de periodo */}
                 <div className="periodo-selector">
-                    <button
-                        className={periodo === "dia" ? "active" : ""}
-                        onClick={() => setPeriodo("dia")}
-                    >
-                        Día
-                    </button>
-                    <button
-                        className={periodo === "semana" ? "active" : ""}
-                        onClick={() => setPeriodo("semana")}
-                    >
-                        Semana
-                    </button>
-                    <button
-                        className={periodo === "mes" ? "active" : ""}
-                        onClick={() => setPeriodo("mes")}
-                    >
-                        Mes
-                    </button>
+                    {["dia", "semana", "mes"].map((p) => (
+                        <button
+                            key={p}
+                            className={periodo === p ? "active" : ""}
+                            onClick={() => setPeriodo(p)}
+                        >
+                            {p.charAt(0).toUpperCase() + p.slice(1)}
+                        </button>
+                    ))}
                 </div>
 
-                {/* Calendario y resumen */}
                 <CalendarioResumen periodo={periodo} />
+
+                {/* Forzamos nuevo cálculo de resumen cuando reloadKey cambie */}
                 <ResumenHoras
+                    key={reloadKey}
                     periodo={periodo}
                     onResumenCalculado={handleResumen}
                 />
 
-                {/* Formulario con tareas */}
                 {resumen && (
                     <FormularioImputacionConReparto
                         resumen={resumen}
                         tareas={tareas}
+                        onSaved={triggerReload}
                     />
                 )}
             </div>
-
-            {/* Anclas de navegación inferior */}
             <div className="scroll-buttons">
-                <a href="#top" className="scroll-btn" title="Ir arriba">
+                <a href="#top" title="Ir arriba">
                     ↑
                 </a>
-                <a href="#bottom" className="scroll-btn" title="Ir abajo">
+                <a href="#bottom" title="Ir abajo">
                     ↓
                 </a>
             </div>
-            <div id="bottom"></div>
+            <div id="bottom" />
         </>
     );
 }

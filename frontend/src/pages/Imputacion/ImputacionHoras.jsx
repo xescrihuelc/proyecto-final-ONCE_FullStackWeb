@@ -21,6 +21,7 @@ function ImputacionHoras() {
     const [diasTrabajados, setDiasTrabajados] = useState(0);
     const [horasTotales, setHorasTotales] = useState(0);
     const [horasImputadas, setHorasImputadas] = useState(0);
+    const [fechasTrabajadas, setFechasTrabajadas] = useState([]);
     const [isLoadingResumen, setIsLoadingResumen] = useState(true);
 
     // Obtener proyectos y tareas
@@ -36,39 +37,48 @@ function ImputacionHoras() {
         fetchProyectosYTareas();
     }, []);
 
-    // Cargar resumen de horas y días trabajados
+    // Cargar resumen de horas, días trabajados y fechas formateadas
     useEffect(() => {
         const cargarHorasYFechas = async () => {
             const { from, to } = getRangoDelPeriodo("mes");
-
             const [diasData, horasData] = await Promise.all([
                 getDiasSesame(user.sesameEmployeeId, from, to),
                 getImputacionesPorRango(user.id, from, to),
             ]);
 
-            const dias = diasData.filter((d) => d.secondsWorked > 0).length;
+            // Filtrar días con trabajo realizado
+            const diasConTrabajo = diasData.filter((d) => d.secondsWorked > 0);
+
+            // Mapear y formatear fechas a DD/MM/YYYY
+            const fechas = diasConTrabajo.map((d) => {
+                const fechaObj = new Date(d.date);
+                return fechaObj.toLocaleDateString("es-ES", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                });
+            });
+            setFechasTrabajadas(fechas);
+            setDiasTrabajados(diasConTrabajo.length);
+
+            // Cálculo de horas imputadas y totales
             const totalImputadas = horasData.reduce(
-                (sum, registro) => sum + registro.hours,
+                (sum, r) => sum + r.hours,
                 0
             );
-
-            setDiasTrabajados(dias);
             setHorasImputadas(totalImputadas);
-            setHorasTotales(dias * (user.dailyHours ?? 7.5));
+            setHorasTotales(diasConTrabajo.length * (user.dailyHours ?? 7.5));
+
             setIsLoadingResumen(false);
         };
 
-        if (!authLoading && user?.id && user?.sesameEmployeeId) {
+        if (!authLoading && user?.id && user?.sesameEmployeeId)
             cargarHorasYFechas();
-        }
     }, [user, authLoading]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setNuevoRegistro((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
+        setNuevoRegistro((prev) => ({ ...prev, [name]: value }));
     };
 
     const parseHoras = (input) => {
@@ -86,24 +96,25 @@ function ImputacionHoras() {
     const agregarRegistro = async () => {
         const horasPorDia = parseHoras(nuevoRegistro.horas);
 
-        for (let i = 0; i < diasTrabajados; i++) {
+        // Iterar sobre cada fecha formateada
+        const promesas = fechasTrabajadas.map((fechaTexto) => {
             const nuevo = {
                 userId: user.id,
                 proyectoId: nuevoRegistro.proyecto,
                 tareaId: nuevoRegistro.tarea,
-                date: new Date().toISOString(), // coincide con tu campo `date` en el modelo
+                date: fechaTexto,
                 hours: parseFloat(horasPorDia),
             };
-            await createHourRecord(nuevo);
-        }
+            return createHourRecord(nuevo);
+        });
+
+        await Promise.all(promesas);
 
         setRegistroHoras((prev) => [...prev, nuevoRegistro]);
         setNuevoRegistro({ proyecto: "", tarea: "", horas: "" });
     };
 
-    if (isLoadingResumen || authLoading) {
-        return <p>Cargando resumen...</p>;
-    }
+    if (isLoadingResumen || authLoading) return <p>Cargando resumen...</p>;
 
     return (
         <div className="imputacion-container">
