@@ -1,133 +1,136 @@
 // src/components/FormularioImputacionConReparto/FormularioImputacionConReparto.jsx
+
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import { useAuth } from "../../context/AuthContext";
 import SignaturePad from "../SignaturePad/SignaturePad";
-import { patchImputeHours } from "../../services/hourService";
+import { patchHourRecord } from "../../services/hourService";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import Papa from "papaparse";
 import "./FormularioImputacionConReparto.css";
 
 function roundToNearest15(hours) {
-    const interval = 0.25;
-    return Math.round(hours / interval) * interval;
+    return Math.round(hours / 0.25) * 0.25;
 }
 
 export default function FormularioImputacionConReparto({
-    resumen,
-    tareas,
+    resumen = {},
+    tareas = [],
     onSaved,
 }) {
-    const { user } = useAuth();
+    // 1) Desestructuramos el resumen
+    const {
+        userId,
+        diasTrabajados = 0,
+        horasTotales = 0,
+        fechasTrabajadas = [],
+    } = resumen;
+
+    // 2) Estado local
     const [items, setItems] = useState([]);
     const [inputs, setInputs] = useState([]);
     const [loading, setLoading] = useState(false);
     const [firmaImg, setFirmaImg] = useState(null);
 
+    // 3) Aplanamos la lista de tareas y preparamos la matriz de inputs
     useEffect(() => {
-        if (!Array.isArray(tareas)) {
-            setItems([]);
-            setInputs([]);
-            return;
-        }
-        const flat = tareas.flatMap((p) => {
-            const subs = p.tareas?.length
-                ? p.tareas
-                : [{ id: p.id, nombre: "(Sin subtarea)" }];
+        if (!Array.isArray(tareas)) return;
+
+        const flat = tareas.flatMap((proyecto) => {
+            // si no hay subtareas, creamos una entrada "(Sin subtarea)"
+            const subs =
+                Array.isArray(proyecto.tareas) && proyecto.tareas.length
+                    ? proyecto.tareas
+                    : [{ id: proyecto.id, nombre: "(Sin subtarea)" }];
+
             return subs.map((sub) => ({
-                tareaId: sub.id,
-                nombre: `${p.estructura} / ${p.subnivel} / ${sub.nombre}`,
+                tareaId: sub._id ?? sub.id, // el identificador verdadero
+                nombre: `${proyecto.estructura} / ${proyecto.subnivel} / ${sub.nombre}`,
             }));
         });
+
         setItems(flat);
         setInputs(Array(flat.length).fill(""));
     }, [tareas]);
 
-    const handleChange = (idx, val) => {
-        const copia = [...inputs];
-        copia[idx] = val;
-        setInputs(copia);
-    };
+    // 4) Preparamos un array de payloads, uno por cada fecha trabajada
+    const prepararPayloads = () =>
+        fechasTrabajadas.map((date) => {
+            const tasks = items
+                .map((it, i) => {
+                    const raw = inputs[i]?.trim();
+                    if (!raw) return null;
 
-    const prepararPayloads = () => {
-        const dias = resumen.diasTrabajados;
-        const tot = resumen.horasTotales;
+                    const isPct = raw.endsWith("%");
+                    const num = parseFloat(raw.replace("%", ""));
+                    if (isNaN(num) || num < 0) return null;
 
-        const fechas = Array.from({ length: dias }, (_, i) => {
-            const d = new Date();
-            d.setDate(d.getDate() - (dias - 1 - i));
-            return d.toISOString().slice(0, 10);
+                    const totalH = isPct ? (num / 100) * horasTotales : num;
+                    const perDay = totalH / diasTrabajados;
+
+                    const pureId =
+                        it.tareaId.length > 24
+                            ? it.tareaId.slice(0, 24)
+                            : it.tareaId;
+                    return {
+                        taskId: pureId,
+                        hours: roundToNearest15(perDay),
+                    };
+                })
+                .filter(Boolean);
+
+            return {
+                userId,
+                date,
+                tasks,
+            };
         });
 
-        return fechas
-            .map((fecha) => {
-                const tasks = items
-                    .map((it, i) => {
-                        const v = inputs[i]?.trim();
-                        if (!v) return null;
-                        const isPct = v.endsWith("%");
-                        const num = parseFloat(v.replace("%", ""));
-                        if (isNaN(num) || num < 0) return null;
-                        const totalHoras = isPct ? (num / 100) * tot : num;
-                        const porDia = totalHoras / dias;
-                        return {
-                            taskId: it.tareaId,
-                            hours: roundToNearest15(porDia),
-                        };
-                    })
-                    .filter(Boolean);
-                return { userId: user.id, date: fecha, tasks };
-            })
-            .filter((p) => p.tasks.length > 0);
-    };
+    // 5) Mensajes de bloqueo / carga
+    if (!userId) {
+        return (
+            <p className="aviso">
+                ⚠️ Por favor selecciona un usuario arriba para cargar el
+                formulario.
+            </p>
+        );
+    }
+    if (!fechasTrabajadas.length) {
+        return <p className="aviso">Cargando fechas de imputación…</p>;
+    }
 
+    // 6) Envío de los PATCH al backend
     const handleGuardar = async () => {
         setLoading(true);
         try {
-            const payloads = prepararPayloads();
-            if (payloads.length === 0) {
+            // filtramos payloads con tareas
+            const payloads = prepararPayloads().filter(
+                (p) => p.tasks.length > 0
+            );
+
+            if (!payloads.length) {
                 alert("No hay nada que guardar.");
                 setLoading(false);
                 return;
             }
 
             for (const pl of payloads) {
-                try {
-                    // 🔍 Log de cada payload individual
-                    console.log(
-                        `✏️ [Form] Enviando PATCH para ${pl.date} — body:\n`,
-                        JSON.stringify(pl, null, 2)
-                    );
-                    const resp = await patchImputeHours(pl);
-                    // 🔍 Log de la respuesta JSON
-                    console.log(
-                        `✅ [Form] Respuesta OK para ${pl.date}:\n`,
-                        JSON.stringify(resp, null, 2)
-                    );
-                } catch (e) {
-                    console.error(
-                        `❌ [Form] Error en PATCH ${pl.date}:`,
-                        e.message
-                    );
-                    throw e;
-                }
+                console.log("✏️ [Form] Enviando PATCH", pl);
+                await patchHourRecord(pl);
             }
 
-            alert("Imputaciones guardadas ✅");
+            alert("✅ Imputaciones guardadas");
             setInputs(Array(items.length).fill(""));
             onSaved?.();
         } catch (err) {
-            console.error(
-                "❌ [Form] Error al guardar imputaciones:",
-                err.message
-            );
+            console.error("❌ Error al guardar imputaciones:", err);
             alert("Error al guardar imputaciones: " + err.message);
         } finally {
             setLoading(false);
         }
     };
 
+    // 7) Función para exportar a PDF
     const exportPDF = () => {
         const doc = new jsPDF();
         doc.text("Imputación de Horas", 20, 20);
@@ -149,6 +152,7 @@ export default function FormularioImputacionConReparto({
         doc.save("imputacion.pdf");
     };
 
+    // 8) Función para exportar a CSV
     const exportCSV = () => {
         const data = items.map((it, i) => ({
             tarea: it.nombre,
@@ -165,14 +169,11 @@ export default function FormularioImputacionConReparto({
         document.body.removeChild(a);
     };
 
-    if (!resumen || items.length === 0) return <p>Cargando formulario…</p>;
-
+    // 9) Renderizado final
     return (
         <div className="formulario-imputacion-reparto">
-            <h3>
-                Asignar horas a tareas ({resumen.diasTrabajados} días
-                trabajados)
-            </h3>
+            <h3>Asignar horas a tareas ({diasTrabajados} días trabajados)</h3>
+
             <table>
                 <thead>
                     <tr>
@@ -189,9 +190,11 @@ export default function FormularioImputacionConReparto({
                                     type="text"
                                     placeholder="Ej: 6 o 25%"
                                     value={inputs[i]}
-                                    onChange={(e) =>
-                                        handleChange(i, e.target.value)
-                                    }
+                                    onChange={(e) => {
+                                        const copy = [...inputs];
+                                        copy[i] = e.target.value;
+                                        setInputs(copy);
+                                    }}
                                     disabled={loading}
                                 />
                             </td>
@@ -199,6 +202,7 @@ export default function FormularioImputacionConReparto({
                     ))}
                 </tbody>
             </table>
+
             <div className="botones-imputacion">
                 <button onClick={handleGuardar} disabled={loading}>
                     {loading ? "Guardando…" : "Guardar imputación"}
@@ -206,6 +210,7 @@ export default function FormularioImputacionConReparto({
                 <button onClick={exportPDF}>Descargar PDF</button>
                 <button onClick={exportCSV}>Descargar CSV</button>
             </div>
+
             <h4>Firma electrónica</h4>
             <SignaturePad onEnd={setFirmaImg} />
             {firmaImg && (
@@ -221,8 +226,10 @@ export default function FormularioImputacionConReparto({
 
 FormularioImputacionConReparto.propTypes = {
     resumen: PropTypes.shape({
-        diasTrabajados: PropTypes.number.isRequired,
-        horasTotales: PropTypes.number.isRequired,
+        userId: PropTypes.string,
+        diasTrabajados: PropTypes.number,
+        horasTotales: PropTypes.number,
+        fechasTrabajadas: PropTypes.arrayOf(PropTypes.string),
     }).isRequired,
     tareas: PropTypes.array.isRequired,
     onSaved: PropTypes.func,

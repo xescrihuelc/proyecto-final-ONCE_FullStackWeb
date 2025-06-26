@@ -1,16 +1,14 @@
-// src/services/userService.js
 import { API_URL } from "../utils/config";
 
-// Helper para construir headers de autenticación, incluyendo impersonation si está activo
+// Incluimos el token normal y, si existe, el userId a “impersonar”
 const authHeaders = () => {
+    const token = localStorage.getItem("token");
     const headers = {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+        Authorization: `Bearer ${token}`,
     };
-    const impId = localStorage.getItem("impersonateUserId");
-    if (impId) {
-        headers["X-Impersonate-User"] = impId;
-    }
+    const imp = localStorage.getItem("impersonateUserId");
+    if (imp) headers["X-Impersonate-User"] = imp;
     return headers;
 };
 
@@ -19,7 +17,7 @@ export const getAllUsers = async () => {
         headers: authHeaders(),
     });
     if (!res.ok) throw new Error("Error al obtener usuarios");
-    return await res.json();
+    return res.json();
 };
 
 export const createUser = async (usuario) => {

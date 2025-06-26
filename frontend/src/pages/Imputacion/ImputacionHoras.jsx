@@ -1,190 +1,130 @@
+// src/pages/ImputacionHoras.jsx
 import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { getAllTasks } from "../../services/taskService";
-import { createHourRecord } from "../../services/hourService";
+import { getAllUsers } from "../../services/userService";
 import { getDiasSesame } from "../../services/sesameService";
 import { getImputacionesPorRango } from "../../services/imputacionService";
 import { getRangoDelPeriodo } from "../../utils/dateUtils";
+import FormularioImputacionConReparto from "../FormularioImputacionConReparto/FormularioImputacionConReparto";
 import "./ImputacionHoras.css";
 
-function ImputacionHoras() {
+export default function ImputacionHoras() {
     const { user, loading: authLoading } = useAuth();
+    const isAdmin = user.roles.includes("admin");
+
+    // ActiveUserId arranca siempre con tu propio ID
+    const [activeUserId, setActiveUserId] = useState(user.id);
+    const [allUsers, setAllUsers] = useState([]);
 
     const [proyectos, setProyectos] = useState([]);
-    const [registroHoras, setRegistroHoras] = useState([]);
-    const [nuevoRegistro, setNuevoRegistro] = useState({
-        proyecto: "",
-        tarea: "",
-        horas: "",
+    const [resumen, setResumen] = useState({
+        userId: user.id,
+        diasTrabajados: 0,
+        horasTotales: 0,
+        horasImputadas: 0,
+        fechasTrabajadas: [],
     });
+    const [isLoading, setIsLoading] = useState(true);
 
-    const [diasTrabajados, setDiasTrabajados] = useState(0);
-    const [horasTotales, setHorasTotales] = useState(0);
-    const [horasImputadas, setHorasImputadas] = useState(0);
-    const [fechasTrabajadas, setFechasTrabajadas] = useState([]);
-    const [isLoadingResumen, setIsLoadingResumen] = useState(true);
-
-    // Obtener proyectos y tareas
+    // 1) Carga usuarios si eres admin
     useEffect(() => {
-        const fetchProyectosYTareas = async () => {
-            try {
-                const data = await getAllTasks();
-                setProyectos(data);
-            } catch (error) {
-                console.error("Error al cargar tareas:", error);
-            }
-        };
-        fetchProyectosYTareas();
+        if (!isAdmin) return;
+        getAllUsers()
+            .then(setAllUsers)
+            .catch((err) => console.error(err));
+    }, [isAdmin]);
+
+    // 2) Carga proyectos/tareas
+    useEffect(() => {
+        getAllTasks()
+            .then(setProyectos)
+            .catch((err) => console.error(err));
     }, []);
 
-    // Cargar resumen de horas, días trabajados y fechas formateadas
+    // 3) Carga resumen cuando cambie activeUserId
     useEffect(() => {
-        const cargarHorasYFechas = async () => {
+        if (authLoading || !activeUserId || !user.sesameEmployeeId) return;
+        setIsLoading(true);
+        (async () => {
             const { from, to } = getRangoDelPeriodo("mes");
             const [diasData, horasData] = await Promise.all([
                 getDiasSesame(user.sesameEmployeeId, from, to),
-                getImputacionesPorRango(user.id, from, to),
+                getImputacionesPorRango(activeUserId, from, to),
             ]);
-
-            // Filtrar días con trabajo realizado
             const diasConTrabajo = diasData.filter((d) => d.secondsWorked > 0);
+            const fechas = diasConTrabajo.map((d) => d.date.slice(0, 10));
+            const sumaHoras = horasData.reduce((sum, r) => sum + r.hours, 0);
+            const totalHoras = fechas.length * (user.dailyHours ?? 7.5);
 
-            // Mapear y formatear fechas a DD/MM/YYYY
-            const fechas = diasConTrabajo.map((d) => {
-                const fechaObj = new Date(d.date);
-                return fechaObj.toLocaleDateString("es-ES", {
-                    day: "2-digit",
-                    month: "2-digit",
-                    year: "numeric",
-                });
+            setResumen({
+                userId: activeUserId,
+                diasTrabajados: fechas.length,
+                horasTotales: totalHoras,
+                horasImputadas: sumaHoras,
+                fechasTrabajadas: fechas,
             });
-            setFechasTrabajadas(fechas);
-            setDiasTrabajados(diasConTrabajo.length);
+            setIsLoading(false);
+        })();
+    }, [authLoading, activeUserId, user]);
 
-            // Cálculo de horas imputadas y totales
-            const totalImputadas = horasData.reduce(
-                (sum, r) => sum + r.hours,
-                0
-            );
-            setHorasImputadas(totalImputadas);
-            setHorasTotales(diasConTrabajo.length * (user.dailyHours ?? 7.5));
-
-            setIsLoadingResumen(false);
-        };
-
-        if (!authLoading && user?.id && user?.sesameEmployeeId)
-            cargarHorasYFechas();
-    }, [user, authLoading]);
-
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setNuevoRegistro((prev) => ({ ...prev, [name]: value }));
-    };
-
-    const parseHoras = (input) => {
-        if (input.includes("%")) {
-            const porcentaje = parseFloat(input.replace("%", ""));
-            return (
-                ((horasTotales * porcentaje) / 100 / diasTrabajados).toFixed(
-                    2
-                ) || "0.00"
-            );
-        }
-        return (parseFloat(input) / diasTrabajados || 0).toFixed(2);
-    };
-
-    const agregarRegistro = async () => {
-        const horasPorDia = parseHoras(nuevoRegistro.horas);
-
-        // Iterar sobre cada fecha formateada
-        const promesas = fechasTrabajadas.map((fechaTexto) => {
-            const nuevo = {
-                userId: user.id,
-                proyectoId: nuevoRegistro.proyecto,
-                tareaId: nuevoRegistro.tarea,
-                date: fechaTexto,
-                hours: parseFloat(horasPorDia),
-            };
-            return createHourRecord(nuevo);
-        });
-
-        await Promise.all(promesas);
-
-        setRegistroHoras((prev) => [...prev, nuevoRegistro]);
-        setNuevoRegistro({ proyecto: "", tarea: "", horas: "" });
-    };
-
-    if (isLoadingResumen || authLoading) return <p>Cargando resumen...</p>;
+    if (authLoading) return <p>Cargando usuario…</p>;
 
     return (
         <div className="imputacion-container">
             <h2>Imputación de Horas</h2>
 
-            <div className="resumen-horas">
-                <p>
-                    <strong>Días trabajados:</strong> {diasTrabajados}
-                </p>
-                <p>
-                    <strong>Horas totales:</strong> {horasTotales.toFixed(2)}h
-                </p>
-                <p>
-                    <strong>Horas imputadas:</strong>{" "}
-                    {horasImputadas.toFixed(2)}h
-                </p>
-                <p>
-                    <strong>Horas restantes:</strong>{" "}
-                    {(horasTotales - horasImputadas).toFixed(2)}h
-                </p>
-            </div>
-
-            <h3>Registrar horas</h3>
-
-            <select
-                name="proyecto"
-                value={nuevoRegistro.proyecto}
-                onChange={handleChange}
-            >
-                <option value="">Selecciona proyecto</option>
-                {proyectos.map((p) => (
-                    <option key={p.id} value={p.id}>
-                        {p.nombre}
-                    </option>
-                ))}
-            </select>
-
-            <select
-                name="tarea"
-                value={nuevoRegistro.tarea}
-                onChange={handleChange}
-                disabled={!nuevoRegistro.proyecto}
-            >
-                <option value="">Selecciona tarea</option>
-                {nuevoRegistro.proyecto &&
-                    proyectos
-                        .find((p) => p.id === nuevoRegistro.proyecto)
-                        ?.tareas.map((t) => (
-                            <option key={t.id} value={t.id}>
-                                {t.nombre}
+            {isAdmin && (
+                <div className="user-filter">
+                    <label htmlFor="userSelect">Usuario:</label>
+                    <select
+                        id="userSelect"
+                        value={activeUserId}
+                        onChange={(e) => setActiveUserId(e.target.value)}
+                    >
+                        <option value="">— Selecciona usuario —</option>
+                        {allUsers.map((u) => (
+                            <option key={u._id} value={u._id}>
+                                {u.nombre} ({u.email})
                             </option>
                         ))}
-            </select>
+                    </select>
+                </div>
+            )}
 
-            <input
-                type="text"
-                name="horas"
-                value={nuevoRegistro.horas}
-                onChange={handleChange}
-                placeholder="Ej: 12 o 50%"
-            />
+            {isLoading ? (
+                <p>Cargando datos…</p>
+            ) : (
+                <>
+                    <div className="resumen-horas">
+                        <p>
+                            <strong>Días trabajados:</strong>{" "}
+                            {resumen.diasTrabajados}
+                        </p>
+                        <p>
+                            <strong>Horas totales:</strong>{" "}
+                            {resumen.horasTotales.toFixed(2)}h
+                        </p>
+                        <p>
+                            <strong>Horas imputadas:</strong>{" "}
+                            {resumen.horasImputadas.toFixed(2)}h
+                        </p>
+                        <p>
+                            <strong>Horas restantes:</strong>{" "}
+                            {(
+                                resumen.horasTotales - resumen.horasImputadas
+                            ).toFixed(2)}
+                            h
+                        </p>
+                    </div>
 
-            <button
-                onClick={agregarRegistro}
-                disabled={horasTotales - horasImputadas <= 0}
-            >
-                Imputar
-            </button>
+                    <FormularioImputacionConReparto
+                        resumen={resumen}
+                        tareas={proyectos}
+                        onSaved={() => setActiveUserId((id) => id)} // recarga resumen
+                    />
+                </>
+            )}
         </div>
     );
 }
-
-export default ImputacionHoras;

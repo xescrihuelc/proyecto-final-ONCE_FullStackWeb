@@ -1,15 +1,17 @@
+// backend/db.js
 const mongoose = require("mongoose");
 const { MONGO_URI } = require("./config-local");
-
-// Conexión a la db de Mongo
 const dbConnection = async () => {
-    try {
-        await mongoose.connect(MONGO_URI);
-        console.log("BBDD conectada con exito");
-    } catch (error) {
-        console.error(error);
-        throw new Error("Error al conectarse a la base de datos");
-    }
+  try {
+    await mongoose.connect(MONGO_URI, { 
+      useNewUrlParser: true, 
+      useUnifiedTopology: true 
+    });
+    console.log("✅ Conectado a MongoDB:", MONGO_URI);
+  } catch (err) {
+    console.error("❌ Error conectando a MongoDB:", err);
+    throw err;
+  }
 };
 
 module.exports = { dbConnection };

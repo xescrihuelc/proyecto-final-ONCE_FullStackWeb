@@ -80,11 +80,9 @@ const getImputacionesPorUsuarioYRango = async (req, res) => {
         const { userId, from, to } = req.query;
 
         if (!userId || !isDateFormat(from) || !isDateFormat(to)) {
-            return res
-                .status(400)
-                .json({
-                    error: "Missing or invalid parameters: userId, from, to",
-                });
+            return res.status(400).json({
+                error: "Missing or invalid parameters: userId, from, to",
+            });
         }
 
         const records = await Hours.find({
@@ -100,6 +98,10 @@ const getImputacionesPorUsuarioYRango = async (req, res) => {
 };
 
 const imputeHours = async (req, res) => {
+    console.log(
+        "📥 [controller] imputeHours payload:",
+        JSON.stringify(req.body, null, 2)
+    );
     try {
         const { date, userId, tasks } = req.body;
 
@@ -109,11 +111,9 @@ const imputeHours = async (req, res) => {
             !Array.isArray(tasks) ||
             tasks.length === 0
         ) {
-            return res
-                .status(400)
-                .json({
-                    error: "Invalid input. 'userId', valid 'date', and non-empty 'tasks' array are required.",
-                });
+            return res.status(400).json({
+                error: "Invalid input. 'userId', valid 'date', and non-empty 'tasks' array are required.",
+            });
         }
 
         const dateProper = new Date(date);
@@ -129,11 +129,9 @@ const imputeHours = async (req, res) => {
             const { taskId, hours } = task;
 
             if (!taskId || typeof hours !== "number" || hours < 0) {
-                return res
-                    .status(400)
-                    .json({
-                        error: "Each task must have a valid 'taskId' and non-negative 'hours'",
-                    });
+                return res.status(400).json({
+                    error: "Each task must have a valid 'taskId' and non-negative 'hours'",
+                });
             }
 
             await Hours.updateOne(
