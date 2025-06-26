@@ -1,5 +1,4 @@
 // src/components/CalendarioResumen/CalendarioResumen.jsx
-
 import React, { useEffect, useState, useMemo } from "react";
 import PropTypes from "prop-types";
 import { useAuth } from "../../context/AuthContext";
@@ -28,33 +27,36 @@ const buttonLabels = { dia: "Día", semana: "Semana", mes: "Mes" };
 
 export default function CalendarioResumen({ periodo = "mes" }) {
     const { user } = useAuth();
-    const [currentDate, setCurrentDate] = useState(new Date());
     const [view, setView] = useState(periodo);
-    const [diasMes, setDiasMes] = useState([]);
+    useEffect(() => {
+        setView(periodo);
+    }, [periodo]);
 
     const engView = viewMap[view] || "month";
+    const [currentDate, setCurrentDate] = useState(new Date());
+    const [diasMes, setDiasMes] = useState([]);
 
-    // Calcula rango de fechas
     const rango = useMemo(() => {
-        if (engView === "day")
+        if (engView === "day") {
             return { from: startOfDay(currentDate), to: endOfDay(currentDate) };
-        if (engView === "week")
+        }
+        if (engView === "week") {
             return {
                 from: startOfWeek(currentDate, { weekStartsOn: 1 }),
                 to: endOfWeek(currentDate, { weekStartsOn: 1 }),
             };
+        }
         return {
             from: startOfMonth(currentDate),
             to: endOfMonth(currentDate),
         };
     }, [currentDate, engView]);
 
-    // Trae días trabajados de Sesame
     useEffect(() => {
         if (!user?.sesameEmployeeId) return;
         (async () => {
-            const fromISO = rango.from.toISOString().split("T")[0];
-            const toISO = rango.to.toISOString().split("T")[0];
+            const fromISO = format(rango.from, "yyyy-MM-dd");
+            const toISO = format(rango.to, "yyyy-MM-dd");
             const dias = await getDiasSesame(
                 user.sesameEmployeeId,
                 fromISO,
@@ -82,7 +84,6 @@ export default function CalendarioResumen({ periodo = "mes" }) {
         );
     const goToday = () => setCurrentDate(new Date());
 
-    // Prepara array de casillas
     const diasParaRender = useMemo(() => {
         if (engView === "month") {
             const start = startOfMonth(currentDate);
@@ -98,7 +99,7 @@ export default function CalendarioResumen({ periodo = "mes" }) {
             return [...blanks, ...monthDays];
         }
         const days = [];
-        let cursor = new Date(rango.from);
+        let cursor = rango.from;
         while (cursor <= rango.to) {
             days.push(new Date(cursor));
             cursor = addDays(cursor, 1);
@@ -152,17 +153,17 @@ export default function CalendarioResumen({ periodo = "mes" }) {
             >
                 {diasParaRender.map((day, idx) => {
                     if (!day) return <div key={idx} className="dia blank" />;
-                    const iso = day.toISOString().split("T")[0];
+                    const iso = format(day, "yyyy-MM-dd");
                     const entry = diasMes.find((d) => d.date.startsWith(iso));
-                    const trabajado = entry && entry.secondsWorked > 0;
+                    const worked = entry && entry.secondsWorked > 0;
                     return (
                         <div
                             key={iso}
                             className={`dia ${
-                                trabajado ? "trabajado" : "no-trabajado"
+                                worked ? "trabajado" : "no-trabajado"
                             }`}
                             title={
-                                trabajado
+                                worked
                                     ? `${(entry.secondsWorked / 3600).toFixed(
                                           2
                                       )}h`

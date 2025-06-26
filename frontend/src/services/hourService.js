@@ -2,11 +2,7 @@
 import { API_URL } from "../utils/config";
 import { getToken } from "./authService";
 
-/**
- * PATCH /hours
- * body: { userId, date: "YYYY-MM-DD", tasks: [ { taskId, hours }, … ] }
- */
-export const patchImputeHours = async (payload) => {
+export const patchHourRecord = async (payload) => {
     console.log("💡 [hourService] PATCH /hours – payload:", payload);
 
     const res = await fetch(`${API_URL}/hours`, {

@@ -1,4 +1,3 @@
-// src/components/ResumenHoras/ResumenHoras.jsx
 import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import { useAuth } from "../../context/AuthContext";
@@ -8,9 +7,6 @@ import { getRangoDelPeriodo } from "../../utils/dateUtils";
 
 export default function ResumenHoras({ periodo = "mes", onResumenCalculado }) {
     const { user, loading: authLoading } = useAuth();
-    const [diasTrabajados, setDiasTrabajados] = useState(0);
-    const [horasTotales, setHorasTotales] = useState(0);
-    const [horasImputadas, setHorasImputadas] = useState(0);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -18,36 +14,40 @@ export default function ResumenHoras({ periodo = "mes", onResumenCalculado }) {
             setLoading(true);
             try {
                 const { from, to } = getRangoDelPeriodo(periodo);
+
+                // A) Días trabajados (Sesame)
                 const diasData = await getDiasSesame(
                     user.sesameEmployeeId,
                     from,
                     to
                 );
+                const trabajados = diasData.filter((d) => d.secondsWorked > 0);
+                const fechasTrabajadas = trabajados.map((d) =>
+                    d.date.slice(0, 10)
+                );
+
+                // B) Imputaciones existentes
                 const imputaciones = await getImputacionesPorRango(
                     user.id,
                     from,
                     to
                 );
 
-                const diasHabiles = diasData.filter(
-                    (d) => d.secondsWorked > 0
-                ).length;
+                // Cálculo
                 const dailyHours = user.dailyHours ?? 7.5;
-                const totales = diasHabiles * dailyHours;
-                const totalImputadas = imputaciones.reduce(
-                    (sum, imp) => sum + (imp.hours ?? 0),
+                const horasTotales = trabajados.length * dailyHours;
+                const horasImputadas = imputaciones.reduce(
+                    (sum, r) => sum + (r.hours || 0),
                     0
                 );
 
-                setDiasTrabajados(diasHabiles);
-                setHorasTotales(totales);
-                setHorasImputadas(totalImputadas);
-
+                // Avisamos al padre con todos los datos
                 onResumenCalculado?.({
-                    diasTrabajados: diasHabiles,
-                    horasTotales: totales,
-                    horasImputadas: totalImputadas,
-                    horasRestantes: totales - totalImputadas,
+                    userId: user.id,
+                    diasTrabajados: trabajados.length,
+                    horasTotales,
+                    horasImputadas,
+                    fechasTrabajadas,
                 });
             } catch (err) {
                 console.error("Error al cargar resumen:", err);
@@ -59,39 +59,17 @@ export default function ResumenHoras({ periodo = "mes", onResumenCalculado }) {
         if (!authLoading && user?.id && user?.sesameEmployeeId) {
             cargarResumen();
         }
-        // <-- QUITAMOS onResumenCalculado de aquí:
-    }, [periodo, user, authLoading]);
+    }, [periodo, user, authLoading, onResumenCalculado]);
 
     if (loading || authLoading) {
-        return <p>Cargando resumen de {periodo}...</p>;
+        return <p>Cargando resumen de {periodo}…</p>;
     }
 
-    const horasRestantes = horasTotales - horasImputadas;
-    const labels = { dia: "hoy", semana: "esta semana", mes: "este mes" };
-    const label = labels[periodo] || periodo;
-
-    return (
-        <div className="resumen-horas">
-            <p>
-                <strong>Días trabajados {label}:</strong> {diasTrabajados}
-            </p>
-            <p>
-                <strong>Horas totales {label}:</strong>{" "}
-                {horasTotales.toFixed(2)}h
-            </p>
-            <p>
-                <strong>Horas imputadas {label}:</strong>{" "}
-                {horasImputadas.toFixed(2)}h
-            </p>
-            <p>
-                <strong>Horas restantes {label}:</strong>{" "}
-                {horasRestantes.toFixed(2)}h
-            </p>
-        </div>
-    );
+    // (En este componente la visualización queda a cargo de VistaImputacion)
+    return null;
 }
 
 ResumenHoras.propTypes = {
     periodo: PropTypes.oneOf(["dia", "semana", "mes"]).isRequired,
-    onResumenCalculado: PropTypes.func,
+    onResumenCalculado: PropTypes.func.isRequired,
 };
