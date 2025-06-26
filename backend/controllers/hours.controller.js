@@ -26,6 +26,12 @@ const checkImportantField = (userIds, date) => {
 const getHours = async (req, res) => {
     try {
         const { userIds, date } = req.body;
+        const dateProper = new Date(date);
+        const normalizedDate = new Date(Date.UTC(
+            dateProper.getUTCFullYear(),
+            dateProper.getUTCMonth(),
+            dateProper.getUTCDate()
+        ));
 
         const [ok, errMsg] = checkImportantField(userIds, date);
         if (!ok) {
@@ -33,17 +39,16 @@ const getHours = async (req, res) => {
         }
 
         const filter = {
-            date: new Date(date),
+            date: normalizedDate,
         };
 
         if (userIds.length > 0) {
-            filter.userId = { $in: userIds };
+            const objectUserIds = userIds.map(id => new mongoose.Types.ObjectId(id));
+            filter.userId = { $in: objectUserIds };
         }
 
         const records = await Hours.find(filter).lean();
-
         const result = {};
-
         for (const rec of records) {
             const userId = rec.userId.toString();
             if (!result[userId]) {
@@ -95,7 +100,12 @@ const imputeHours = async (req, res) => {
             return res.status(400).json({ error: "Invalid input. 'userId', valid 'date', and non-empty 'tasks' array are required." });
         }
 
-        const parsedDate = new Date(date);
+        const dateProper = new Date(date);
+        const normalizedDate = new Date(Date.UTC(
+            dateProper.getUTCFullYear(),
+            dateProper.getUTCMonth(),
+            dateProper.getUTCDate()
+        ));
 
         for (const task of tasks) {
             const { taskId, hours } = task;
@@ -105,7 +115,7 @@ const imputeHours = async (req, res) => {
             }
 
             await Hours.updateOne(
-                { userId, taskId, date: parsedDate },
+                { userId, taskId, date: normalizedDate },
                 { $set: { hours } },
                 { upsert: true }
             );
