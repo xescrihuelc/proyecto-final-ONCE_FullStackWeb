@@ -1,5 +1,6 @@
 // src/pages/Dashboard/Dashboard.jsx
-import React, { useContext } from "react";
+
+import React, { useContext, useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { ProyectoContext } from "../../context/ProyectoContext";
 import {
@@ -10,45 +11,48 @@ import {
     Tooltip,
     ResponsiveContainer,
 } from "recharts";
-import CalendarResumen from "../../components/CalendarioResumen/CalendarioResumen";
+import { getImputacionesPorRango } from "../../services/imputacionService";
 import "./Dashboard.css";
 
 const Dashboard = () => {
     const { roles, user } = useAuth();
     const { proyectos } = useContext(ProyectoContext);
 
-    const proyectosActivos = proyectos?.filter((p) => p.activo) || [];
-    const proyectosInactivos = proyectos?.filter((p) => !p.activo) || [];
+    // Estado para horas reales del usuario en el mes actual
+    const [horasReales, setHorasReales] = useState(0);
 
-    const tareasPorProyecto =
-        proyectos?.map((p) => ({
-            nombre: p.nombre,
-            tareas: Array.isArray(p.tareas) ? p.tareas.length : 0,
-        })) || [];
+    // Calculamos mes actual y cargamos imputaciones SOLO del usuario logado
+    useEffect(() => {
+        const hoy = new Date();
+        const from = new Date(hoy.getFullYear(), hoy.getMonth(), 1)
+            .toISOString()
+            .slice(0, 10);
+        const to = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0)
+            .toISOString()
+            .slice(0, 10);
 
-    const horasTotales = proyectos?.reduce((acc, p) => {
-        return (
-            acc +
-            (Array.isArray(p.tareas)
-                ? p.tareas.reduce((sum, t) => sum + (t.horas || 0), 0)
-                : 0)
-        );
-    }, 0);
+        getImputacionesPorRango(user.id, from, to)
+            .then((imps) => {
+                const suma = imps.reduce(
+                    (acc, imp) => acc + (imp.hours || 0),
+                    0
+                );
+                setHorasReales(suma);
+            })
+            .catch((err) => console.error("Error cargando horas reales:", err));
+    }, [user.id]);
 
-    const tareasUsuario =
-        proyectos?.flatMap((p) =>
-            (p.tareas || []).filter((t) => t.asignados?.includes(user?.id))
-        ) || [];
+    // Filtrados para el dashboard
+    const proyectosActivos = proyectos.filter((p) => p.activo);
+    const proyectosInactivos = proyectos.filter((p) => !p.activo);
+    const tareasPorProyecto = proyectos.map((p) => ({
+        nombre: p.nombre || p.estructura,
+        tareas: Array.isArray(p.tareas) ? p.tareas.length : 0,
+    }));
 
     return (
         <div className="dashboard-container">
             <h2 className="dashboard-title">Bienvenido, {user?.name}</h2>
-            <p className="dashboard-subtitle"></p>
-
-            <section className="dashboard-section">
-                <h3>Resumen de calendario</h3>
-                <CalendarResumen initialView="week" />
-            </section>
 
             {roles?.includes("admin") && (
                 <section className="dashboard-section">
@@ -75,10 +79,11 @@ const Dashboard = () => {
                             </p>
                         </div>
                         <div className="dashboard-card">
-                            <h2>Horas Imputadas (demo)</h2>
-                            <p>{horasTotales.toFixed(1)} h</p>
+                            <h2>Horas Imputadas</h2>
+                            <p>{horasReales.toFixed(2)} h</p>
                         </div>
                     </div>
+
                     <div className="dashboard-graph-container">
                         <h3>Gráfico: Tareas por Proyecto</h3>
                         <ResponsiveContainer width="100%" height={300}>
@@ -89,49 +94,6 @@ const Dashboard = () => {
                                 <Bar dataKey="tareas" fill="#00a3e0" />
                             </BarChart>
                         </ResponsiveContainer>
-                    </div>
-                </section>
-            )}
-
-            {roles?.includes("manager") && (
-                <section className="dashboard-section">
-                    <div className="dashboard-grid">
-                        <div className="dashboard-card">
-                            <h2>Proyectos Activos</h2>
-                            <p>{proyectosActivos.length}</p>
-                        </div>
-                        <div className="dashboard-card">
-                            <h2>Tareas por Validar</h2>
-                            <p>{tareasUsuario.length}</p>
-                        </div>
-                    </div>
-                    <div className="dashboard-message">
-                        Este panel será más útil cuando se integren validaciones
-                        por backend.
-                    </div>
-                </section>
-            )}
-
-            {roles?.includes("trabajador") && (
-                <section className="dashboard-section">
-                    <div className="dashboard-grid">
-                        <div className="dashboard-card">
-                            <h2>Tareas Asignadas</h2>
-                            <p>{tareasUsuario.length}</p>
-                        </div>
-                        <div className="dashboard-card">
-                            <h2>Proyectos</h2>
-                            <p>
-                                {
-                                    new Set(
-                                        tareasUsuario.map((t) => t.proyectoId)
-                                    ).size
-                                }
-                            </p>
-                        </div>
-                    </div>
-                    <div className="dashboard-message">
-                        Recuerda imputar tus horas cada día. ¡Gracias!
                     </div>
                 </section>
             )}

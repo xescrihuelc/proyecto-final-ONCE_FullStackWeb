@@ -1,33 +1,32 @@
+// src/services/imputacionService.js
 import { API_URL } from "../utils/config";
+import { getToken } from "./authService";
 
-// ✅ Obtener imputaciones
 export const getImputacionesPorRango = async (userId, from, to) => {
     const url = `${API_URL}/tasks/hours?userId=${userId}&from=${from}&to=${to}`;
-    try {
-        const res = await fetch(url);
-        if (!res.ok) {
-            const msg = await res.text();
-            throw new Error(`Error ${res.status}: ${msg}`);
-        }
-        return await res.json();
-    } catch (err) {
-        console.error("❌ Fallo en fetch de imputaciones:", url, err);
-        return [];
+    const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${getToken()}` },
+    });
+    if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(`Error ${res.status}: ${txt}`);
     }
+    return res.json();
 };
 
-// ✅ Crear imputaciones distribuidas
 export const postImputacionesDistribuidas = async (imputaciones) => {
-    const res = await fetch(`${API_URL}/hours`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+    const url = `${API_URL}/hours`;
+    const res = await fetch(url, {
+        method: "PATCH",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${getToken()}`,
+        },
         body: JSON.stringify(imputaciones),
     });
-
     if (!res.ok) {
-        const { error } = await res.json();
-        throw new Error(error || "Error al guardar imputaciones");
+        const payload = await res.json().catch(() => ({}));
+        throw new Error(payload.error || `Error ${res.status}`);
     }
-
-    return await res.json();
+    return res.json();
 };
