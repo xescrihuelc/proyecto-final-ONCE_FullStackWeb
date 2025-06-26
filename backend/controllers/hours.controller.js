@@ -27,6 +27,7 @@ const getHours = async (req, res) => {
     try {
         const { userIds, date } = req.body;
         const dateProper = new Date(date);
+<<<<<<< ruben
         const normalizedDate = new Date(
             Date.UTC(
                 dateProper.getUTCFullYear(),
@@ -34,6 +35,13 @@ const getHours = async (req, res) => {
                 dateProper.getUTCDate()
             )
         );
+=======
+        const normalizedDate = new Date(Date.UTC(
+            dateProper.getUTCFullYear(),
+            dateProper.getUTCMonth(),
+            dateProper.getUTCDate()
+        ));
+>>>>>>> main
 
         const [ok, errMsg] = checkImportantField(userIds, date);
         if (!ok) {
@@ -45,9 +53,13 @@ const getHours = async (req, res) => {
         };
 
         if (userIds.length > 0) {
+<<<<<<< ruben
             const objectUserIds = userIds.map(
                 (id) => new mongoose.Types.ObjectId(id)
             );
+=======
+            const objectUserIds = userIds.map(id => new mongoose.Types.ObjectId(id));
+>>>>>>> main
             filter.userId = { $in: objectUserIds };
         }
 
@@ -117,6 +129,7 @@ const imputeHours = async (req, res) => {
         }
 
         const dateProper = new Date(date);
+<<<<<<< ruben
         const normalizedDate = new Date(
             Date.UTC(
                 dateProper.getUTCFullYear(),
@@ -124,6 +137,13 @@ const imputeHours = async (req, res) => {
                 dateProper.getUTCDate()
             )
         );
+=======
+        const normalizedDate = new Date(Date.UTC(
+            dateProper.getUTCFullYear(),
+            dateProper.getUTCMonth(),
+            dateProper.getUTCDate()
+        ));
+>>>>>>> main
 
         for (const task of tasks) {
             const { taskId, hours } = task;
