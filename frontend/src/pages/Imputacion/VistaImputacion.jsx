@@ -14,40 +14,32 @@ export default function VistaImputacion() {
     const { user, loading: authLoading } = useAuth();
     const isAdmin = user.roles.includes("admin");
 
-    // Estado principal
     const [periodo, setPeriodo] = useState("mes");
     const [rango, setRango] = useState({ from: null, to: null });
     const [tareas, setTareas] = useState([]);
     const [allUsers, setAllUsers] = useState([]);
     const [selectedUser, setSelectedUser] = useState(user.id);
 
-    // Resumen numérico
     const [fechasTrabajadas, setFechasTrabajadas] = useState([]);
     const [diasTrabajados, setDiasTrabajados] = useState(0);
     const [horasTotales, setHorasTotales] = useState(0);
     const [horasImputadas, setHorasImputadas] = useState(0);
-
-    // Informe por tarea (admin)
     const [tareasImputadas, setTareasImputadas] = useState([]);
 
-    // 1) Cargo todas las tareas
     useEffect(() => {
         getAllTasks().then(setTareas).catch(console.error);
     }, []);
 
-    // 2) Cargo todos los usuarios si soy admin
     useEffect(() => {
         if (!isAdmin) return;
         getAllUsers().then(setAllUsers).catch(console.error);
     }, [isAdmin]);
 
-    // 3) Cada vez que cambie el periodo, recalculo rango
     useEffect(() => {
         const { from, to } = getRangoDelPeriodo(periodo);
         setRango({ from, to });
     }, [periodo]);
 
-    // 4) Cada vez que cambie el rango o el usuario seleccionado, vuelvo a fetchar resumen
     useEffect(() => {
         if (!rango.from || !rango.to) return;
         Promise.all([
@@ -72,7 +64,6 @@ export default function VistaImputacion() {
             .catch(console.error);
     }, [rango, selectedUser, user]);
 
-    // 5) Informe por tarea (solo admin)
     useEffect(() => {
         if (!isAdmin || fechasTrabajadas.length === 0) return;
         getImputacionesPorRango(
@@ -101,7 +92,6 @@ export default function VistaImputacion() {
         <div className="vista-imputacion-container">
             <h2>Panel de Imputación de Horas</h2>
 
-            {/* Selector de periodo */}
             <div className="periodo-selector">
                 {["dia", "semana", "mes"].map((p) => (
                     <button
@@ -114,7 +104,6 @@ export default function VistaImputacion() {
                 ))}
             </div>
 
-            {/* Selector de usuario (solo admin) */}
             {isAdmin && (
                 <div className="user-filter">
                     <label htmlFor="userSelect">Usuario:</label>
@@ -132,13 +121,11 @@ export default function VistaImputacion() {
                 </div>
             )}
 
-            {/* Calendario */}
             <CalendarioResumen
                 periodo={periodo}
                 onRangoChange={({ from, to }) => setRango({ from, to })}
             />
 
-            {/* Resumen numérico */}
             <div className="resumen-horas">
                 <p>
                     <strong>Días trabajados:</strong> {diasTrabajados}
@@ -156,7 +143,6 @@ export default function VistaImputacion() {
                 </p>
             </div>
 
-            {/* Informe de tareas (solo admin) */}
             {isAdmin && tareasImputadas.length > 0 && (
                 <div className="informe-tareas">
                     <h3>Informe de Tareas Imputadas</h3>
@@ -179,7 +165,6 @@ export default function VistaImputacion() {
                 </div>
             )}
 
-            {/* Formulario de imputación */}
             <FormularioImputacionConReparto
                 resumen={{
                     userId: selectedUser,
@@ -189,7 +174,6 @@ export default function VistaImputacion() {
                 }}
                 tareas={tareas}
                 onSaved={() => {
-                    /* recarga si quieres */
                 }}
             />
         </div>

@@ -30,14 +30,12 @@ export default function CalendarioResumen({ periodo, onRangoChange }) {
     const [currentDate, setCurrentDate] = useState(new Date());
     const [diasMes, setDiasMes] = useState([]);
 
-    // Mantener sincronizada la vista con la prop
     useEffect(() => {
         setView(periodo);
     }, [periodo]);
 
     const engView = viewMap[view] || "month";
 
-    // Helper para calcular rango según vista y fecha
     const computeRango = (viewType, date) => {
         if (viewType === "day") {
             return { from: startOfDay(date), to: endOfDay(date) };
@@ -54,7 +52,6 @@ export default function CalendarioResumen({ periodo, onRangoChange }) {
         };
     };
 
-    // Helper para notificar al padre en ISO
     const reportRango = ({ from, to }) => {
         onRangoChange({
             from: format(from, "yyyy-MM-dd"),
@@ -62,7 +59,6 @@ export default function CalendarioResumen({ periodo, onRangoChange }) {
         });
     };
 
-    // Navegación: prev/today/next
     const goPrev = () => {
         setCurrentDate((d) => {
             const next =
@@ -93,7 +89,6 @@ export default function CalendarioResumen({ periodo, onRangoChange }) {
         reportRango(computeRango(engView, today));
     };
 
-    // Cuando cambie la fecha o la vista, traemos de nuevo sesame
     useEffect(() => {
         const { from, to } = computeRango(engView, currentDate);
         if (!user?.sesameEmployeeId) return;
@@ -107,7 +102,6 @@ export default function CalendarioResumen({ periodo, onRangoChange }) {
         })();
     }, [engView, currentDate, user]);
 
-    // Construir la grilla
     const diasParaRender = useMemo(() => {
         if (engView === "month") {
             const start = startOfMonth(currentDate);
@@ -140,7 +134,7 @@ export default function CalendarioResumen({ periodo, onRangoChange }) {
                     <button onClick={goToday}>Hoy</button>
                     <button onClick={goNext}>→</button>
                 </div>
-                {/* Título del rango */}
+
                 <h3 className="titulo">
                     {engView === "day" &&
                         format(currentDate, "EEEE, d MMM yyyy")}
@@ -157,7 +151,6 @@ export default function CalendarioResumen({ periodo, onRangoChange }) {
                         })()}
                     {engView === "month" && format(currentDate, "MMMM yyyy")}
                 </h3>
-                {/* Aquí eliminamos el antiguo bloque .view-switch */}
             </div>
 
             {engView !== "day" && (
