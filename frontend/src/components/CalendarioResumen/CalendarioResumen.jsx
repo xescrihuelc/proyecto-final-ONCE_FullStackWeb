@@ -53,8 +53,8 @@ export default function CalendarioResumen({ periodo = "mes" }) {
     useEffect(() => {
         if (!user?.sesameEmployeeId) return;
         (async () => {
-            const fromISO = rango.from.toISOString().split("T")[0];
-            const toISO = rango.to.toISOString().split("T")[0];
+            const fromISO = format(rango.from, "yyyy-MM-dd");
+            const toISO = format(rango.to, "yyyy-MM-dd");
             const dias = await getDiasSesame(
                 user.sesameEmployeeId,
                 fromISO,
