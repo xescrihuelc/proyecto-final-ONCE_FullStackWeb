@@ -13,7 +13,6 @@ export default function ImputacionHoras() {
     const { user, loading: authLoading } = useAuth();
     const isAdmin = user.roles.includes("admin");
 
-    // ActiveUserId arranca siempre con tu propio ID
     const [activeUserId, setActiveUserId] = useState(user.id);
     const [allUsers, setAllUsers] = useState([]);
 
@@ -27,7 +26,6 @@ export default function ImputacionHoras() {
     });
     const [isLoading, setIsLoading] = useState(true);
 
-    // 1) Carga usuarios si eres admin
     useEffect(() => {
         if (!isAdmin) return;
         getAllUsers()
@@ -35,14 +33,12 @@ export default function ImputacionHoras() {
             .catch((err) => console.error(err));
     }, [isAdmin]);
 
-    // 2) Carga proyectos/tareas
     useEffect(() => {
         getAllTasks()
             .then(setProyectos)
             .catch((err) => console.error(err));
     }, []);
 
-    // 3) Carga resumen cuando cambie activeUserId
     useEffect(() => {
         if (authLoading || !activeUserId || !user.sesameEmployeeId) return;
         setIsLoading(true);
@@ -121,7 +117,7 @@ export default function ImputacionHoras() {
                     <FormularioImputacionConReparto
                         resumen={resumen}
                         tareas={proyectos}
-                        onSaved={() => setActiveUserId((id) => id)} // recarga resumen
+                        onSaved={() => setActiveUserId((id) => id)}
                     />
                 </>
             )}

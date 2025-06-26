@@ -17,7 +17,6 @@ import { createTask } from "../../services/taskService";
 const AdminPage = () => {
     const { proyectos, setProyectos } = useContext(ProyectoContext);
 
-    // Usuarios (no afectados aquí, pero los conservamos)
     const [usuarios, setUsuarios] = useState([]);
     const [nuevoUsuario, setNuevoUsuario] = useState({
         email: "",
@@ -25,7 +24,6 @@ const AdminPage = () => {
         roles: ["user"],
     });
 
-    // Estado del formulario de proyecto
     const [nuevoProyecto, setNuevoProyecto] = useState({
         nombre: "",
         tareas: [],
@@ -34,7 +32,6 @@ const AdminPage = () => {
     });
     const [nuevaTarea, setNuevaTarea] = useState({ nombre: "" });
 
-    // Carga inicial de usuarios (igual que antes)
     useEffect(() => {
         const cargarUsuarios = async () => {
             try {
@@ -47,7 +44,6 @@ const AdminPage = () => {
         cargarUsuarios();
     }, []);
 
-    // Añadir una tarea al formulario de proyecto
     const agregarTarea = () => {
         if (!nuevaTarea.nombre.trim()) return;
         setNuevoProyecto((prev) => ({
@@ -57,7 +53,6 @@ const AdminPage = () => {
         setNuevaTarea({ nombre: "" });
     };
 
-    // Enviar el nuevo proyecto al backend
     const guardarProyecto = async () => {
         if (!nuevoProyecto.nombre.trim() || nuevoProyecto.tareas.length === 0) {
             return alert("Proyecto inválido: nombre y al menos una tarea.");
@@ -72,9 +67,7 @@ const AdminPage = () => {
 
         try {
             const res = await createTask(body);
-            // Actualizamos el contexto para que aparezca en pantalla
             setProyectos((prev) => [...prev, res]);
-            // Reiniciamos formulario
             setNuevoProyecto({
                 nombre: "",
                 tareas: [],
@@ -87,9 +80,6 @@ const AdminPage = () => {
         }
     };
 
-    // La parte de usuarios se mantiene igual; la omito para brevedad
-
-    // Datos para el gráfico
     const datosGrafico = proyectos.map((p) => ({
         nombre: p.nombre || p.estructura,
         tareas: Array.isArray(p.tareas) ? p.tareas.length : 0,

@@ -1,6 +1,5 @@
 import { API_URL } from "../utils/config";
 
-// Incluimos el token normal y, si existe, el userId a “impersonar”
 const authHeaders = () => {
     const token = localStorage.getItem("token");
     const headers = {
@@ -55,5 +54,3 @@ export const deleteUser = async (id) => {
     return await res.json();
 };
 
-// ENDPOINTS DE USUARIO (SIN un método POST dedicado para impersonate,
-// ya que la impersonation la manejamos por header X-Impersonate-User)

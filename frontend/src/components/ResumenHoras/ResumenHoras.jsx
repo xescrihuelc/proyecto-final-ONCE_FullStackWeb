@@ -15,7 +15,6 @@ export default function ResumenHoras({ periodo = "mes", onResumenCalculado }) {
             try {
                 const { from, to } = getRangoDelPeriodo(periodo);
 
-                // A) Días trabajados (Sesame)
                 const diasData = await getDiasSesame(
                     user.sesameEmployeeId,
                     from,
@@ -26,14 +25,12 @@ export default function ResumenHoras({ periodo = "mes", onResumenCalculado }) {
                     d.date.slice(0, 10)
                 );
 
-                // B) Imputaciones existentes
                 const imputaciones = await getImputacionesPorRango(
                     user.id,
                     from,
                     to
                 );
 
-                // Cálculo
                 const dailyHours = user.dailyHours ?? 7.5;
                 const horasTotales = trabajados.length * dailyHours;
                 const horasImputadas = imputaciones.reduce(
@@ -41,7 +38,6 @@ export default function ResumenHoras({ periodo = "mes", onResumenCalculado }) {
                     0
                 );
 
-                // Avisamos al padre con todos los datos
                 onResumenCalculado?.({
                     userId: user.id,
                     diasTrabajados: trabajados.length,
@@ -65,7 +61,6 @@ export default function ResumenHoras({ periodo = "mes", onResumenCalculado }) {
         return <p>Cargando resumen de {periodo}…</p>;
     }
 
-    // (En este componente la visualización queda a cargo de VistaImputacion)
     return null;
 }
 
