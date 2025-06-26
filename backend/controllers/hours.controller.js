@@ -157,20 +157,28 @@ const imputeHours = async (req, res) => {
             )
         );
 
-        for (const task of tasks) {
+        const updatePromises = tasks.map((task) => {
             const { taskId, hours } = task;
 
             if (!taskId || typeof hours !== "number" || hours < 0) {
-                return res.status(400).json({
-                    error: "Each task must have a valid 'taskId' and non-negative 'hours'",
-                });
+                throw new Error(
+                    "Each task must have a valid 'taskId' and non-negative 'hours'"
+                );
             }
 
-            await Hours.updateOne(
+            return Hours.updateOne(
                 { userId, taskId, date: normalizedDate },
                 { $set: { hours } },
                 { upsert: true }
             );
+        });
+
+        try {
+            await Promise.all(updatePromises);
+        } catch (err) {
+            return res.status(400).json({
+                error: err.message || "Error updating tasks",
+            });
         }
 
         return res.status(200).json({ message: "Hours imputed successfully." });
