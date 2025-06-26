@@ -1,4 +1,3 @@
-// src/components/CalendarioResumen/CalendarioResumen.jsx
 
 import React, { useEffect, useState, useMemo } from "react";
 import PropTypes from "prop-types";
@@ -34,7 +33,6 @@ export default function CalendarioResumen({ periodo = "mes" }) {
 
     const engView = viewMap[view] || "month";
 
-    // Calcula rango de fechas
     const rango = useMemo(() => {
         if (engView === "day")
             return { from: startOfDay(currentDate), to: endOfDay(currentDate) };
@@ -49,7 +47,6 @@ export default function CalendarioResumen({ periodo = "mes" }) {
         };
     }, [currentDate, engView]);
 
-    // Trae días trabajados de Sesame
     useEffect(() => {
         if (!user?.sesameEmployeeId) return;
         (async () => {
@@ -82,7 +79,6 @@ export default function CalendarioResumen({ periodo = "mes" }) {
         );
     const goToday = () => setCurrentDate(new Date());
 
-    // Prepara array de casillas
     const diasParaRender = useMemo(() => {
         if (engView === "month") {
             const start = startOfMonth(currentDate);

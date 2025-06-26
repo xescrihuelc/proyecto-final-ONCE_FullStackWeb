@@ -1,4 +1,3 @@
-// src/components/SignaturePad/SignaturePad.jsx
 
 import React, { useRef } from "react";
 import SignatureCanvas from "react-signature-canvas";

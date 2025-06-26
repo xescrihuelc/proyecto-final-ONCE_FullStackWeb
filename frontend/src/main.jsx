@@ -6,11 +6,9 @@ import { AuthProvider } from "./context/AuthContext";
 import { ProyectoProvider } from "./context/ProyectoContext";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-    //<React.StrictMode>
     <AuthProvider>
         <ProyectoProvider>
             <App />
         </ProyectoProvider>
     </AuthProvider>
-    //</React.StrictMode>
 );

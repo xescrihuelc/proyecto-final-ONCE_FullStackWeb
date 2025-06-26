@@ -1,4 +1,3 @@
-// ===== Archivo: pages/AsignacionProyecto/AsignacionProyecto.jsx =====
 
 import MisProyectos from "../../components/ListaProyectos/MisProyectos";
 import BuscadorTareas from "../../components/ListaProyectos/BuscadorTareas";

@@ -1,9 +1,7 @@
-// src/services/taskService.js
 
 import { API_URL } from "../utils/config";
 import { getToken } from "./authService";
 
-// Reutilizamos el parser que ya tienes
 export const parseTasksFromBackend = (task) => {
     const tareas =
         task.subtarea?.length > 0
@@ -24,12 +22,11 @@ export const parseTasksFromBackend = (task) => {
         id: task._id,
         nombre: task.estructura,
         esEuropeo: task.lineaTrabajo?.includes("Europeo"),
-        activo: true, // 👈 Fuerza que sean visibles temporalmente
+        activo: true,  
         tareas,
     };
 };
 
-// ✅ Esta es la única función que debes usar
 export const getAllTasks = async () => {
     const token = getToken();
     const res = await fetch(`${API_URL}/tasks`, {
@@ -46,7 +43,6 @@ export const getAllTasks = async () => {
     return raw.map(parseTasksFromBackend);
 };
 
-// El resto permanece igual si lo necesitas más adelante:
 export const createTask = async (task) => {
     const res = await fetch(`${API_URL}/tasks`, {
         method: "POST",

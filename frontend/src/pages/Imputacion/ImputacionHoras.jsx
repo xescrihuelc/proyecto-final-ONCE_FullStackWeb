@@ -36,7 +36,6 @@ function ImputacionHoras() {
         fetchProyectosYTareas();
     }, []);
 
-    // Cargar resumen de horas y días trabajados
     useEffect(() => {
         const cargarHorasYFechas = async () => {
             const { from, to } = getRangoDelPeriodo("mes");

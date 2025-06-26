@@ -1,7 +1,5 @@
-// src/services/userService.js
 import { API_URL } from "../utils/config";
 
-// Helper para construir headers de autenticación, incluyendo impersonation si está activo
 const authHeaders = () => {
     const headers = {
         "Content-Type": "application/json",
@@ -56,6 +54,3 @@ export const deleteUser = async (id) => {
     if (!res.ok) throw new Error("Error al eliminar usuario");
     return await res.json();
 };
-
-// ENDPOINTS DE USUARIO (SIN un método POST dedicado para impersonate,
-// ya que la impersonation la manejamos por header X-Impersonate-User)

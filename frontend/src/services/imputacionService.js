@@ -1,6 +1,5 @@
 import { API_URL } from "../utils/config";
 
-// ✅ Obtener imputaciones
 export const getImputacionesPorRango = async (userId, from, to) => {
     const url = `${API_URL}/tasks/hours?userId=${userId}&from=${from}&to=${to}`;
     try {
@@ -16,7 +15,6 @@ export const getImputacionesPorRango = async (userId, from, to) => {
     }
 };
 
-// ✅ Crear imputaciones distribuidas
 export const postImputacionesDistribuidas = async (imputaciones) => {
     const res = await fetch(`${API_URL}/hours`, {
         method: "POST",

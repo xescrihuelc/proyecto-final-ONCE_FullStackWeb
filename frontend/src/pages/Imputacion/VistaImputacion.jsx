@@ -1,4 +1,3 @@
-// src/pages/Imputacion/VistaImputacion.jsx
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../../context/AuthContext";
@@ -12,7 +11,7 @@ export default function VistaImputacion() {
     const { user, loading } = useAuth();
     const [resumen, setResumen] = useState(null);
     const [tareas, setTareas] = useState([]);
-    const [periodo, setPeriodo] = useState("mes"); // "dia" | "semana" | "mes"
+    const [periodo, setPeriodo] = useState("mes");  
 
     const handleResumen = useCallback((data) => {
         setResumen(data);

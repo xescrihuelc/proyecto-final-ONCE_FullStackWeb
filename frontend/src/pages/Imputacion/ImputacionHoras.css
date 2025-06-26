@@ -1,6 +1,4 @@
-/* ===== Archivo: ImputacionHoras.css ===== */
 
-/* === Contenedor principal === */
 .imputacion-horas-container {
     max-width: 800px;
     margin: 2rem auto;
@@ -10,7 +8,6 @@
     box-shadow: 0 0 15px rgba(0, 64, 128, 0.08);
 }
 
-/* === Títulos === */
 .imputacion-horas-container h2 {
     font-size: 1.8rem;
     color: #003366;
@@ -36,7 +33,6 @@
     box-sizing: border-box;
 }
 
-/* === Botón === */
 .imputacion-horas-container button {
     width: 100%;
     background-color: #004080;
@@ -60,7 +56,6 @@
     cursor: not-allowed;
 }
 
-/* === Estadísticas === */
 .imputacion-horas-container p {
     margin-top: 1.5rem;
     font-size: 0.95rem;

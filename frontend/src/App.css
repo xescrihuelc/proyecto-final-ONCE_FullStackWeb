@@ -1,4 +1,3 @@
-/* Reset básico */
 html,
 body {
     overflow-x: hidden;
@@ -19,13 +18,11 @@ html,
     color: #1a1a1a; /* Gris muy oscuro para texto */
 }
 
-/* Layout */
 .app-container {
     display: flex;
     height: 100vh;
     font-size: 16px;
     overflow-x: hidden;
-    /* flex-direction: row es por defecto, no hace falta ponerlo */
 }
 
 .sidebar {
@@ -35,7 +32,6 @@ html,
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    /* si quieres que el sidebar tenga scroll si se desborda */
     overflow-y: auto;
 }
 
@@ -48,7 +44,6 @@ html,
     display: flex;
     flex-direction: column;
 }
-/* Responsive básico */
 @media (max-width: 768px) {
     .app-container {
         flex-direction: column;

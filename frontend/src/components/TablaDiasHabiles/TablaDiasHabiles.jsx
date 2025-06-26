@@ -1,4 +1,3 @@
-// ===== Archivo: components/TablaDiasHabiles/TablaDiasHabiles.jsx =====
 
 import React, { useEffect, useState } from "react";
 import { getDiasHabiles } from "../../services/imputacionService";

@@ -1,4 +1,3 @@
-// src/components/ResumenHoras/ResumenHoras.jsx
 import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import { useAuth } from "../../context/AuthContext";
@@ -59,7 +58,6 @@ export default function ResumenHoras({ periodo = "mes", onResumenCalculado }) {
         if (!authLoading && user?.id && user?.sesameEmployeeId) {
             cargarResumen();
         }
-        // <-- QUITAMOS onResumenCalculado de aquí:
     }, [periodo, user, authLoading]);
 
     if (loading || authLoading) {

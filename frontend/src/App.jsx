@@ -29,7 +29,6 @@ function App() {
                     <div className="main-content">
                         <Header onLogout={logout} />
                         <Routes>
-                            {/* Intentar acceder a /login redirige al panel */}
                             <Route
                                 path="/login"
                                 element={
@@ -37,7 +36,6 @@ function App() {
                                 }
                             />
 
-                            {/* Rutas protegidas */}
                             <Route
                                 path="/panel-imputacion"
                                 element={
@@ -87,7 +85,6 @@ function App() {
                                 }
                             />
 
-                            {/* Cualquier otra ruta en sesión autenticada vuelve al panel */}
                             <Route
                                 path="*"
                                 element={
@@ -99,9 +96,7 @@ function App() {
                 </div>
             ) : (
                 <Routes>
-                    {/* Ruta pública de login */}
                     <Route path="/login" element={<Login />} />
-                    {/* Si no está autenticado, cualquier otra URL va a login */}
                     <Route
                         path="*"
                         element={<Navigate to="/login" replace />}

@@ -1,4 +1,3 @@
-// src/pages/Dashboard/Dashboard.jsx
 import React, { useContext } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { ProyectoContext } from "../../context/ProyectoContext";

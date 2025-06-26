@@ -1,4 +1,3 @@
-// src/context/ProyectoContext.jsx
 import React, { createContext, useState, useEffect, useContext } from "react";
 import { getAllTasks } from "../services/taskService";
 import { AuthContext } from "./AuthContext"; // ✅ importante
