@@ -21,6 +21,7 @@ function ImputacionHoras() {
     const [diasTrabajados, setDiasTrabajados] = useState(0);
     const [horasTotales, setHorasTotales] = useState(0);
     const [horasImputadas, setHorasImputadas] = useState(0);
+    const [fechasTrabajadas, setFechasTrabajadas] = useState([]);
     const [isLoadingResumen, setIsLoadingResumen] = useState(true);
 
     // Obtener proyectos y tareas
@@ -36,39 +37,32 @@ function ImputacionHoras() {
         fetchProyectosYTareas();
     }, []);
 
-    // Cargar resumen de horas y días trabajados
+    // Cargar resumen de horas, días trabajados y fechas
     useEffect(() => {
         const cargarHorasYFechas = async () => {
             const { from, to } = getRangoDelPeriodo("mes");
-
             const [diasData, horasData] = await Promise.all([
                 getDiasSesame(user.sesameEmployeeId, from, to),
                 getImputacionesPorRango(user.id, from, to),
             ]);
-
-            const dias = diasData.filter((d) => d.secondsWorked > 0).length;
+            const diasConTrabajo = diasData.filter((d) => d.secondsWorked > 0);
+            setFechasTrabajadas(diasConTrabajo.map((d) => d.date));
+            setDiasTrabajados(diasConTrabajo.length);
             const totalImputadas = horasData.reduce(
-                (sum, registro) => sum + registro.hours,
+                (sum, r) => sum + r.hours,
                 0
             );
-
-            setDiasTrabajados(dias);
             setHorasImputadas(totalImputadas);
-            setHorasTotales(dias * (user.dailyHours ?? 7.5));
+            setHorasTotales(diasConTrabajo.length * (user.dailyHours ?? 7.5));
             setIsLoadingResumen(false);
         };
-
-        if (!authLoading && user?.id && user?.sesameEmployeeId) {
+        if (!authLoading && user?.id && user?.sesameEmployeeId)
             cargarHorasYFechas();
-        }
     }, [user, authLoading]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setNuevoRegistro((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
+        setNuevoRegistro((prev) => ({ ...prev, [name]: value }));
     };
 
     const parseHoras = (input) => {
@@ -85,30 +79,26 @@ function ImputacionHoras() {
 
     const agregarRegistro = async () => {
         const horasPorDia = parseHoras(nuevoRegistro.horas);
-
-        for (let i = 0; i < diasTrabajados; i++) {
+        // Iterar con forEach usando cada fecha trabajada
+        fechasTrabajadas.forEach(async (fechaItem) => {
             const nuevo = {
                 userId: user.id,
                 proyectoId: nuevoRegistro.proyecto,
                 tareaId: nuevoRegistro.tarea,
-                date: new Date().toISOString(), // coincide con tu campo `date` en el modelo
+                date: fechaItem,
                 hours: parseFloat(horasPorDia),
             };
             await createHourRecord(nuevo);
-        }
-
+        });
         setRegistroHoras((prev) => [...prev, nuevoRegistro]);
         setNuevoRegistro({ proyecto: "", tarea: "", horas: "" });
     };
 
-    if (isLoadingResumen || authLoading) {
-        return <p>Cargando resumen...</p>;
-    }
+    if (isLoadingResumen || authLoading) return <p>Cargando resumen...</p>;
 
     return (
         <div className="imputacion-container">
             <h2>Imputación de Horas</h2>
-
             <div className="resumen-horas">
                 <p>
                     <strong>Días trabajados:</strong> {diasTrabajados}
@@ -125,9 +115,7 @@ function ImputacionHoras() {
                     {(horasTotales - horasImputadas).toFixed(2)}h
                 </p>
             </div>
-
             <h3>Registrar horas</h3>
-
             <select
                 name="proyecto"
                 value={nuevoRegistro.proyecto}
@@ -140,7 +128,6 @@ function ImputacionHoras() {
                     </option>
                 ))}
             </select>
-
             <select
                 name="tarea"
                 value={nuevoRegistro.tarea}
@@ -157,7 +144,6 @@ function ImputacionHoras() {
                             </option>
                         ))}
             </select>
-
             <input
                 type="text"
                 name="horas"
@@ -165,7 +151,6 @@ function ImputacionHoras() {
                 onChange={handleChange}
                 placeholder="Ej: 12 o 50%"
             />
-
             <button
                 onClick={agregarRegistro}
                 disabled={horasTotales - horasImputadas <= 0}
