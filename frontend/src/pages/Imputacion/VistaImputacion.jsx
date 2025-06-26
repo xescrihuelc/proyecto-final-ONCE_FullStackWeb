@@ -1,91 +1,35 @@
-// src/components/VistaImputacion/VistaImputacion.jsx
+// src/pages/VistaImputacion.jsx
 import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { getAllTasks } from "../../services/taskService";
-import { getAllUsers } from "../../services/userService";
-import { getDiasSesame } from "../../services/sesameService";
-import { getImputacionesPorRango } from "../../services/imputacionService";
-import { getRangoDelPeriodo } from "../../utils/dateUtils";
 import CalendarioResumen from "../../components/CalendarioResumen/CalendarioResumen";
 import ResumenHoras from "../../components/ResumenHoras/ResumenHoras";
 import FormularioImputacionConReparto from "../../components/FormularioImputacionConReparto/FormularioImputacionConReparto";
+import { getAllTasks } from "../../services/taskService";
 import "./VistaImputacion.css";
 
 export default function VistaImputacion() {
     const { user, loading: authLoading } = useAuth();
-    const isAdmin = user.roles.includes("admin");
-
-    // Mismo esquema de activeUserId
-    const [activeUserId, setActiveUserId] = useState(user.id);
-    const [allUsers, setAllUsers] = useState([]);
-
+    const [periodo, setPeriodo] = useState("mes");
     const [tareas, setTareas] = useState([]);
     const [resumen, setResumen] = useState(null);
-    const [periodo, setPeriodo] = useState("mes");
-    const [isLoadingResumen, setIsLoadingResumen] = useState(true);
 
-    // 1) Carga usuarios para admin
     useEffect(() => {
-        if (!isAdmin) return;
-        getAllUsers().then(setAllUsers).catch(console.error);
-    }, [isAdmin]);
-
-    // 2) Carga todas las tareas (para el formulario)
-    useEffect(() => {
-        getAllTasks().then(setTareas).catch(console.error);
+        getAllTasks()
+            .then((all) => setTareas(all))
+            .catch((err) => console.error("Error cargando tareas:", err));
     }, []);
 
-    // 3) Recalcula resumen cada vez que cambien periodo o activeUserId
-    const recalculateResumen = useCallback(async () => {
-        if (!activeUserId || !user.sesameEmployeeId) return;
-        setIsLoadingResumen(true);
-        const { from, to } = getRangoDelPeriodo(periodo);
-        const [diasData, horasData] = await Promise.all([
-            getDiasSesame(user.sesameEmployeeId, from, to),
-            getImputacionesPorRango(activeUserId, from, to),
-        ]);
-        const diasConTrabajo = diasData.filter((d) => d.secondsWorked > 0);
-        const fechas = diasConTrabajo.map((d) => d.date.slice(0, 10));
-        const sumaHoras = horasData.reduce((sum, r) => sum + r.hours, 0);
-        const totalHoras = fechas.length * (user.dailyHours ?? 7.5);
+    const handleResumen = useCallback((data) => {
+        setResumen(data);
+    }, []);
 
-        setResumen({
-            userId: activeUserId,
-            diasTrabajados: fechas.length,
-            horasTotales: totalHoras,
-            horasImputadas: sumaHoras,
-            fechasTrabajadas: fechas,
-        });
-        setIsLoadingResumen(false);
-    }, [activeUserId, user, periodo]);
-
-    useEffect(() => {
-        if (!authLoading) recalculateResumen();
-    }, [authLoading, recalculateResumen]);
-
-    if (authLoading) return <p>Cargando usuario…</p>;
+    if (authLoading || !user) {
+        return <p>Cargando usuario…</p>;
+    }
 
     return (
         <div className="vista-imputacion-container">
             <h2>Panel de Imputación de Horas</h2>
-
-            {isAdmin && (
-                <div className="user-filter">
-                    <label htmlFor="userSelect">Usuario:</label>
-                    <select
-                        id="userSelect"
-                        value={activeUserId}
-                        onChange={(e) => setActiveUserId(e.target.value)}
-                    >
-                        <option value="">— Selecciona usuario —</option>
-                        {allUsers.map((u) => (
-                            <option key={u._id} value={u._id}>
-                                {u.nombre} ({u.email})
-                            </option>
-                        ))}
-                    </select>
-                </div>
-            )}
 
             <div className="periodo-selector">
                 {["dia", "semana", "mes"].map((p) => (
@@ -101,17 +45,42 @@ export default function VistaImputacion() {
 
             <CalendarioResumen periodo={periodo} />
 
-            {isLoadingResumen ? (
-                <p>Cargando datos…</p>
-            ) : (
-                <>
-                    <ResumenHoras resumen={resumen} />
-                    <FormularioImputacionConReparto
-                        resumen={resumen}
-                        tareas={tareas}
-                        onSaved={recalculateResumen}
-                    />
-                </>
+            <ResumenHoras
+                periodo={periodo}
+                onResumenCalculado={handleResumen}
+            />
+            {resumen && (
+                <div className="resumen-horas">
+                    <p>
+                        <strong>Días trabajados:</strong>{" "}
+                        {resumen.diasTrabajados}
+                    </p>
+                    <p>
+                        <strong>Horas totales:</strong>{" "}
+                        {resumen.horasTotales.toFixed(2)}h
+                    </p>
+                    <p>
+                        <strong>Horas imputadas:</strong>{" "}
+                        {resumen.horasImputadas.toFixed(2)}h
+                    </p>
+                    <p>
+                        <strong>Horas restantes:</strong>{" "}
+                        {(
+                            resumen.horasTotales - resumen.horasImputadas
+                        ).toFixed(2)}
+                        h
+                    </p>
+                </div>
+            )}
+
+            {resumen && (
+                <FormularioImputacionConReparto
+                    resumen={resumen}
+                    tareas={tareas}
+                    onSaved={() => {
+                        setResumen(null);
+                    }}
+                />
             )}
         </div>
     );
