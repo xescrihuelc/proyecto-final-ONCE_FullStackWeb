@@ -180,3 +180,7 @@
     gap: 0.5rem;
     justify-content: flex-end;
 }
+
+label input[type="checkbox"] {
+    margin-right: 0.5rem;
+}
