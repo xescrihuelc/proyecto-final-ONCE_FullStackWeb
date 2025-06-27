@@ -100,9 +100,10 @@ export default function GestionUsuarios() {
                     <div className="usuario-card" key={usuario._id}>
                         {editando === usuario._id ? (
                             <>
-                                <p>
+                                {/* <p>
                                     <strong>ID:</strong> {usuario._id}
                                 </p>
+                                */}
                                 <p>
                                     <strong>Sesame Employee ID:</strong>{" "}
                                     {usuario.sesameEmployeeId}
@@ -153,22 +154,22 @@ export default function GestionUsuarios() {
                             </>
                         ) : (
                             <>
-                                <p>
+                                {/* <p>
                                     <strong>ID:</strong> {usuario._id}
                                 </p>
                                 <p>
                                     <strong>Sesame Employee ID:</strong>{" "}
                                     {usuario.sesameEmployeeId}
-                                </p>
+                                </p> */}
                                 <p>
-                                    <strong>Nombre:</strong> {usuario.name}
+                                    <strong>Nombre:</strong> {usuario.name} {usuario.surnames}
                                 </p>
-                                <p>
+                                {/* <p>
                                     <strong>Apellidos:</strong>{" "}
                                     {usuario.surnames}
-                                </p>
+                                </p> */}
                                 <p>
-                                    <strong>Email:</strong> {usuario.email}
+                                    {usuario.email}
                                 </p>
                                 <div className="acciones">
                                     <button
