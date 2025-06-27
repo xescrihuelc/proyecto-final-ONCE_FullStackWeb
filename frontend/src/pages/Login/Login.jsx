@@ -22,7 +22,15 @@ const Login = () => {
         setError(null);
         try {
             await login(credentials.email, credentials.password);
+            // console.log(comprobeLogin);
+            setError("Username not founs")
             navigate("/panel-imputacion", { replace: true });
+        } catch (err) {
+            if (err?.code === "INVALID_CREDENTIALS" || err?.message === "INVALID_CREDENTIALS") {
+                setError("Credenciales incorrectas");
+            } else {
+                setError("Error al iniciar sesión");
+            }
         } finally {
             setLoading(false);
         }
