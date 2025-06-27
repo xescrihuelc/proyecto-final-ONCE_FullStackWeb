@@ -22,8 +22,6 @@ const Login = () => {
         setError(null);
         try {
             await login(credentials.email, credentials.password);
-            // console.log(comprobeLogin);
-            setError("Username not founs")
             navigate("/panel-imputacion", { replace: true });
         } catch (err) {
             if (err?.code === "INVALID_CREDENTIALS" || err?.message === "INVALID_CREDENTIALS") {
