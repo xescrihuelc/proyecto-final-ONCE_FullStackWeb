@@ -1,5 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import VICLogo from '../../assets/LOGO_VIC_BLANCO.png'
 import "./Sidebar.css";
 
 export default function Sidebar() {
@@ -8,6 +9,7 @@ export default function Sidebar() {
   return (
     <>
       <nav className="sidebar">
+        <img src={VICLogo} alt="Logo" />
         <h2>Menú</h2>
         <ul>
           <li>
@@ -22,9 +24,9 @@ export default function Sidebar() {
               <li>
                 <NavLink to="/AsignacionProyecto">Proyectos</NavLink>
               </li>
-              <li>
+              {/* <li>
                 <NavLink to="/admin">Admin Proyectos</NavLink>
-              </li>
+              </li> */}
               <li>
                 <NavLink to="/GestionUser">Gestión de Usuarios</NavLink>
               </li>
