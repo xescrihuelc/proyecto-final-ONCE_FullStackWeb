@@ -17,7 +17,7 @@ export default function GestionUsuarios() {
         email: "",
         password: "",
         roles: ["user"],
-        dailyHours: 8,
+        dailyHours: 7.5,
         isActive: true,
         sesameEmployeeId: "",
     });
