@@ -158,7 +158,7 @@ export default function GestionUsuarios() {
                                 >
                                     Guardar
                                 </button>
-                                <button onClick={() => setEditando(null)}>
+                                <button id="cancel_edit" onClick={() => setEditando(null)}>
                                     Cancelar
                                 </button>
                             </>
