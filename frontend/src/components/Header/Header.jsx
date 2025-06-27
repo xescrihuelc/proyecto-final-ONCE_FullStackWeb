@@ -1,14 +1,14 @@
 import React from "react";
-import "./Header.css";
 import { useAuth } from "../../context/AuthContext";
+import "./Header.css";
 
 export default function Header({ onLogout }) {
-    const { user } = useAuth();
+  const { user } = useAuth();
 
-    return (
-        <header className="header">
-            <h1>Equipo VIC - Gestión de Horas</h1>
-            {user && <div className="header-user-info"></div>}
-        </header>
-    );
+  return (
+    <header className="header">
+      <h1>Imputación de Horas</h1>
+      {user && <div className="header-user-info"></div>}
+    </header>
+  );
 }
