@@ -89,18 +89,6 @@ export default function VistaImputacion() {
     <div className="vista-imputacion-container">
       <h2>Panel de Imputación de Horas</h2>
 
-      <div className="periodo-selector">
-        {["dia", "semana", "mes"].map((p) => (
-          <button
-            key={p}
-            className={periodo === p ? "active" : ""}
-            onClick={() => setPeriodo(p)}
-          >
-            {p.charAt(0).toUpperCase() + p.slice(1)}
-          </button>
-        ))}
-      </div>
-
       {isAdmin && (
         <div className="user-filter">
           <label htmlFor="userSelect">Usuario:</label>
@@ -121,6 +109,20 @@ export default function VistaImputacion() {
           </select>
         </div>
       )}
+
+      <div className="periodo-selector">
+        {["dia", "semana", "mes"].map((p) => (
+          <button
+            key={p}
+            className={periodo === p ? "active" : ""}
+            onClick={() => setPeriodo(p)}
+          >
+            {p.charAt(0).toUpperCase() + p.slice(1)}
+          </button>
+        ))}
+      </div>
+
+
 
       <CalendarioResumen
         periodo={periodo}
@@ -174,7 +176,7 @@ export default function VistaImputacion() {
           fechasTrabajadas,
         }}
         tareas={tareas}
-        onSaved={() => {}}
+        onSaved={() => { }}
       />
     </div>
   );
