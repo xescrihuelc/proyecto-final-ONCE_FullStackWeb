@@ -172,7 +172,7 @@ export default function GestionUsuarios() {
                                     {usuario.sesameEmployeeId}
                                 </p> */}
                                 <p>
-                                    <strong>Nombre:</strong> {usuario.name} {usuario.surnames}
+                                    <b>{usuario.name} {usuario.surnames}</b>
                                 </p>
                                 {/* <p>
                                     <strong>Apellidos:</strong>{" "}
