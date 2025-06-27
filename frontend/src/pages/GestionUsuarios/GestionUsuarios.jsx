@@ -104,10 +104,20 @@ export default function GestionUsuarios() {
                                     <strong>ID:</strong> {usuario._id}
                                 </p>
                                 */}
-                                <p>
+                                {/* <p>
                                     <strong>Sesame Employee ID:</strong>{" "}
                                     {usuario.sesameEmployeeId}
-                                </p>
+                                </p> */}
+                                <input
+                                    value={valoresEditados.sesameEmployeeId || usuario.sesameEmployeeId}
+                                    onChange={(e) =>
+                                        setValoresEditados((prev) => ({
+                                            ...prev,
+                                            name: e.target.value,
+                                        }))
+                                    }
+                                    placeholder="Sesame Employee ID"
+                                />
                                 <input
                                     value={valoresEditados.name || usuario.name}
                                     onChange={(e) =>
