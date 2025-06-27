@@ -2,150 +2,149 @@
 
 /* Contenedor general */
 .calendario-resumen {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-    font-family: sans-serif;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  font-family: sans-serif;
 }
 
 .calendario-header .titulo {
-    text-align: center;
+  text-align: center;
 }
 
 h3 {
-    text-align: center;
+  text-align: center;
 }
 
 /* Header: navegación y título */
 .calendario-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap; /* permite que los items envuelvan en móvil */
-    gap: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap; /* permite que los items envuelvan en móvil */
+  gap: 0.5rem;
 }
 
 /* Botones de navegación ← Hoy → */
 /* Botones de navegación ← Hoy → */
 .controls button {
-    border: none;
-    font-size: 1.2rem;
-    padding: 0.2rem 0.5rem;
-    cursor: pointer;
-    transition: background 0.2s, color 0.2s;
-    background: #00a3e0; /* fondo azul por defecto */
-    color: #fff; /* texto/flecha en blanco */
-    border-radius: 4px;
+  border: none;
+  font-size: 1.2rem;
+  padding: 0.2rem 0.5rem;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  background: #00a3e0; /* fondo azul por defecto */
+  color: #fff; /* texto/flecha en blanco */
+  border-radius: 4px;
 }
 .controls button + button {
-    margin-left: 0.3rem;
+  margin-left: 0.3rem;
 }
 
 /* Hover con un azul más oscuro, para que siga viéndose bien */
 .controls button:hover {
-    background: #0288b0;
-    color: #fff;
+  background: #0288b0;
+  color: #fff;
 }
 
 /* Botón “Hoy” activo (opcional) */
 .controls button.active {
-    background: #0288b0;
-    color: #fff;
+  background: #0288b0;
+  color: #fff;
 }
 
 /* Título de fecha (día/semana/mes) */
 .calendario-header .titulo {
-    flex: 1 1 auto;
-    text-align: center;
-    margin: 0;
-    font-size: 1rem;
-    font-weight: bold;
-    white-space: nowrap;
+  flex: 1 1 auto;
+  text-align: center;
+  margin: 0;
+  font-size: 1rem;
+  font-weight: bold;
+  white-space: nowrap;
 }
 
 /* Switch de vistas Día/Semana/Mes */
 .view-switch {
-    display: flex;
-    gap: 0.3rem;
+  display: flex;
+  gap: 0.3rem;
 }
 .view-switch button {
-    border: none;
-    padding: 0.3rem 0.6rem;
-    cursor: pointer;
-    border-radius: 4px;
-    transition: background 0.2s, color 0.2s;
+  border: none;
+  padding: 0.3rem 0.6rem;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.2s, color 0.2s;
 }
 .view-switch button.active,
 .view-switch button:hover {
-    background: #00a3e0;
-    color: #fff;
+  background: #00a3e0;
+  color: #fff;
 }
 
 /* Cabecera de días de la semana */
 .dias-semana {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    font-weight: bold;
-    text-align: center;
-    font-size: 0.85rem;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  font-weight: bold;
+  text-align: center;
+  font-size: 0.85rem;
 }
 
 /* Rejilla de días */
 .grilla {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 0.3rem;
-    text-align: center;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.3rem;
+  text-align: center;
 }
 
 /* Cada celda día */
 .dia {
-    padding: 0.5rem;
-    border-radius: 4px;
-    font-size: 0.85rem;
-    transition: transform 0.1s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  padding: 0.5rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  transition: transform 0.1s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .dia:hover {
-    transform: scale(1.05);
+  transform: scale(1.05);
 }
 
 /* Días trabajados */
 .trabajado {
-    background-color: #d4edda;
-    color: #155724;
+  background-color: #d4edda;
+  color: #155724;
 }
 
 /* Días no trabajados */
 .no-trabajado {
-    background-color: #f8d7da;
-    color: #721c24;
-    text-decoration: line-through;
-    opacity: 0.6;
+  background-color: #f8d7da;
+  color: #721c24;
+  opacity: 0.6;
 }
 
 /* Media queries para responsividad */
 @media (max-width: 600px) {
-    .calendario-header {
-        flex-direction: column;
-        align-items: center;
-    }
-    .controls button {
-        font-size: 1rem;
-        padding: 0.3rem 0.6rem;
-    }
-    .view-switch button {
-        font-size: 0.9rem;
-        padding: 0.3rem 0.5rem;
-    }
-    .dias-semana,
-    .grilla {
-        grid-template-columns: repeat(auto-fill, minmax(32px, 1fr));
-    }
-    .titulo {
-        font-size: 0.95rem;
-    }
+  .calendario-header {
+    flex-direction: column;
+    align-items: center;
+  }
+  .controls button {
+    font-size: 1rem;
+    padding: 0.3rem 0.6rem;
+  }
+  .view-switch button {
+    font-size: 0.9rem;
+    padding: 0.3rem 0.5rem;
+  }
+  .dias-semana,
+  .grilla {
+    grid-template-columns: repeat(auto-fill, minmax(32px, 1fr));
+  }
+  .titulo {
+    font-size: 0.95rem;
+  }
 }
