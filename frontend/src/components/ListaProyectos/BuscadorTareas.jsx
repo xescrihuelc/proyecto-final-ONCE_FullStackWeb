@@ -39,7 +39,7 @@ const BuscadorTareas = () => {
     const listado = proyectos.flatMap((proyecto) =>
       proyecto.tareas.map((t) => ({
         id: t.id,
-        proyectoNombre: proyecto.estructura,
+        proyectoNombre: proyecto.lineaTrabajo,
         subnivelNombre: proyecto.subnivel, // el nivel intermedio
         subtareaNombre: t.nombre, // el nivel final
         activo: proyecto.activo,
@@ -51,8 +51,9 @@ const BuscadorTareas = () => {
     // filtro sobre subtarea o sobre subnivel
     const resultados = listado.filter(
       (e) =>
-        e.subtareaNombre.toLowerCase().includes(term) ||
-        (e.subnivelNombre && e.subnivelNombre.toLowerCase().includes(term))
+        e.proyectoNombre.toLowerCase().includes(term) ||
+        e.subnivelNombre.toLowerCase().includes(term) ||
+        (e.subtareaNombre && e.subtareaNombre.toLowerCase().includes(term))
     );
 
     setCoincidencias(resultados);
@@ -70,11 +71,12 @@ const BuscadorTareas = () => {
       // sólo necesitamos taskId y userId
       const [taskId] = entry.id.split("-");
       await assignTaskToUser({ taskId, userId });
+
+      const usuario = usuarios.find((u) => u._id === userId);
       alert(
-        `✅ “${entry.subtareaNombre}” de “${entry.proyectoNombre}” asignada a ${
-          usuarios.find((u) => u._id === userId).email
-        }`
+        `✅ “${entry.subtareaNombre}” de “${entry.proyectoNombre}” asignada a ${usuario.name} ${usuario.surnames}`
       );
+
       // refrescamos datos para ver la actualización
       await cargarDatos();
       // limpiar selección de esa entrada
@@ -93,7 +95,7 @@ const BuscadorTareas = () => {
       <h3>Buscar Tareas</h3>
       <input
         type="text"
-        placeholder="Filtra por subtarea o subnivel..."
+        placeholder=""
         value={busqueda}
         onChange={(e) => setBusqueda(e.target.value)}
         className="input-group"
@@ -115,9 +117,12 @@ const BuscadorTareas = () => {
                 <div className="asignados">
                   Asignado a:{" "}
                   {e.asignados
-                    .map(
-                      (uid) => usuarios.find((u) => u._id === uid)?.email || uid
-                    )
+                    .map((uid) => {
+                      const user = usuarios.find((u) => u._id === uid);
+                      console.log(user);
+                      
+                      return user ? `${user.name} ${user.surnames}` : uid;
+                    })
                     .join(", ")}
                 </div>
               )}
@@ -131,7 +136,7 @@ const BuscadorTareas = () => {
                 <option value="">— usuario —</option>
                 {usuarios.map((u) => (
                   <option key={u._id} value={u._id}>
-                    {u.nombre || u.email}
+                    {u.name} {u.surnames}
                   </option>
                 ))}
               </select>
