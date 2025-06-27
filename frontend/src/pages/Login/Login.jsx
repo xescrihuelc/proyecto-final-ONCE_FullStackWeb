@@ -21,8 +21,16 @@ const Login = () => {
         setLoading(true);
         setError(null);
         try {
-            await login(credentials.email, credentials.password);
-            navigate("/panel-imputacion", { replace: true });
+            // login debe devolver el objeto user con su propiedad roles
+            const user = await login(credentials.email, credentials.password);
+
+            if (user.roles?.includes("admin")) {
+                navigate("/admin-proyectos", { replace: true });
+            } else {
+                navigate("/panel-imputacion", { replace: true });
+            }
+        } catch (err) {
+            setError("Usuario o contraseña incorrectos");
         } finally {
             setLoading(false);
         }
