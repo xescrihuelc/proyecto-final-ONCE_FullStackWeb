@@ -1,3 +1,5 @@
+// src/controllers/users.controller.js
+
 const mongoose = require("mongoose");
 const { Users } = require("../models/users.model");
 const bcrypt = require("bcryptjs");
@@ -22,7 +24,7 @@ const checkImportantFields = async (body) => {
         return [false, err_msg];
     }
 
-    if (!body.dailyHours) {
+    if (body.dailyHours == null) {
         err_msg = "Daily hours required";
         return [false, err_msg];
     } else {
@@ -32,28 +34,30 @@ const checkImportantFields = async (body) => {
         }
     }
 
+    if (!body.sesameEmployeeId) {
+        err_msg = "Missing Sesame Employee ID";
+        return [false, err_msg];
+    }
+
     return [true];
 };
 
 const login = async (req, res) => {
-    //
-    // Recibir username y passwd
     const { email, password } = req.body;
     if (!email || !password) {
         return res.status(404).json({ error: "Missing email or password" });
     }
-    // Validar que el email exista
-    const user = await Users.findOne({ email: email });
+
+    const user = await Users.findOne({ email });
     if (!user) {
         return res.status(404).json({ error: "INVALID_CREDENTIALS" });
     }
-    // Validar que el password del email sea la misma que el recibido
+
     const isPasswordMatch = bcrypt.compareSync(password, user.password);
     if (!isPasswordMatch) {
         return res.status(404).json({ error: "INVALID_CREDENTIALS" });
     }
 
-    // Generar token con el userId en el payload .sign() y un JWT secret
     const accessToken = jwt.sign({ userId: user._id }, JWT_SECRET);
     res.json({
         token: accessToken,
@@ -64,14 +68,13 @@ const login = async (req, res) => {
             email: user.email,
             roles: user.roles,
             dailyHours: user.dailyHours,
-            sesameEmployeeId: user.sesameEmployeeId, // 👈 CLAVE PARA EL SESAME
+            sesameEmployeeId: user.sesameEmployeeId,
             assignedTasks: user.assignedTasks,
         },
     });
 };
 
 const createUser = async (req, res) => {
-    // Recibir email, password, name, surnames, roles, dailyHours, assignedTasks
     const {
         email,
         password,
@@ -79,39 +82,36 @@ const createUser = async (req, res) => {
         surnames,
         roles,
         dailyHours,
+        sesameEmployeeId,
         assignedTasks,
     } = req.body;
 
-    const arePresentImportantFields = await checkImportantFields(req.body);
-
-    if (arePresentImportantFields[0] == false) {
-        const error_msg = arePresentImportantFields[1];
-        return res.status(406).json({ error: `${error_msg}` });
+    const [ok, error_msg] = await checkImportantFields(req.body);
+    if (!ok) {
+        return res.status(406).json({ error: error_msg });
     }
 
-    // Hashear password
     const hashedPassword = bcrypt.hashSync(password);
-    // Añadir usuario en la DB
     try {
         const user = new Users({
             _id: new mongoose.Types.ObjectId(),
-            name: name,
-            surnames: surnames,
+            name,
+            surnames,
             password: hashedPassword,
-            email: email,
-            roles: roles,
-            dailyHours: dailyHours,
-            assignedTasks: assignedTasks,
+            email,
+            roles,
+            dailyHours,
+            sesameEmployeeId,
+            assignedTasks,
         });
         await user.save();
         res.status(201).send("User created");
     } catch (error) {
-        console.log(error);
-        if (error.errorResponse.errmsg) {
+        console.error(error);
+        if (error.errorResponse && error.errorResponse.errmsg) {
             return res.status(500).json({ error: error.errorResponse.errmsg });
-        } else {
-            return res.status(500).json({ error: "Unexpected error" });
         }
+        return res.status(500).json({ error: "Unexpected error" });
     }
 };
 
@@ -133,53 +133,43 @@ const updateUser = async (req, res) => {
             return res.status(404).json({ error: "User not found" });
         }
 
-        //If exists password field on body, it will be hashed
+        // Si viene password, lo hasheamos si es distinto
         if (req.body.password) {
             const newPassword = req.body.password;
-            const currentPassword = user.password;
-            const isPasswordMatch = bcrypt.compareSync(
-                newPassword,
-                currentPassword
-            );
-
-            // If new password is the same as current password, return error
-            if (isPasswordMatch) {
+            const isSame = bcrypt.compareSync(newPassword, user.password);
+            if (isSame) {
                 return res
                     .status(406)
                     .json({ error: "New password is the current password" });
             }
-            req.body.password = bcrypt.hashSync(req.body.password);
+            req.body.password = bcrypt.hashSync(newPassword);
         }
 
         const updatedUser = await Users.findByIdAndUpdate(
             req.params.id,
             req.body,
-            {
-                new: true,
-            }
+            { new: true }
         );
         res.json(updatedUser);
     } catch (error) {
-        console.error(err);
+        console.error(error);
         res.status(500).json({ error: "Server error" });
     }
 };
 
 const deleteUser = async (req, res) => {
     const { id } = req.params;
-
     try {
         const deletedUser = await Users.findByIdAndDelete(id);
-
         if (!deletedUser) {
             return res.status(404).json({ message: "User not found" });
         }
-
         res.status(200).json({
             message: "User deleted successfully",
             user: deletedUser,
         });
     } catch (error) {
+        console.error(error);
         res.status(500).json({
             message: "Error deleting user",
             error: error.message,

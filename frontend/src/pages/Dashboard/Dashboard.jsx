@@ -30,7 +30,8 @@ const Dashboard = () => {
             .slice(0, 10);
 
         getImputacionesPorRango(user.id, from, to)
-            .then((imps) => {
+            .then((resp) => {
+                const imps = Array.isArray(resp.data) ? resp.data : [];
                 const suma = imps.reduce(
                     (acc, imp) => acc + (imp.hours || 0),
                     0

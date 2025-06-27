@@ -1,4 +1,5 @@
-// src/pages/VistaImputacion.jsx
+// src/pages/VistaImputacion/VistaImputacion.jsx
+
 import React, { useEffect, useState } from "react";
 import CalendarioResumen from "../../components/CalendarioResumen/CalendarioResumen";
 import FormularioImputacionConReparto from "../../components/FormularioImputacionConReparto/FormularioImputacionConReparto";
@@ -51,7 +52,10 @@ export default function VistaImputacion() {
         const fechas = trabajados.map((d) => d.date.slice(0, 10));
         const dailyH = user.dailyHours ?? 7.5;
         const totales = trabajados.length * dailyH;
-        const imputadas = impData.data.reduce((a, r) => a + (r.hours || 0), 0);
+        const imputadas = (impData.data || []).reduce(
+          (a, r) => a + (r.hours || 0),
+          0
+        );
 
         setFechasTrabajadas(fechas);
         setDiasTrabajados(trabajados.length);
@@ -63,20 +67,22 @@ export default function VistaImputacion() {
 
   useEffect(() => {
     if (!isAdmin || fechasTrabajadas.length === 0) return;
+
     getImputacionesPorRango(
       selectedUser._id,
       fechasTrabajadas[0],
       fechasTrabajadas.at(-1)
     )
-      .then((arr) => {
+      .then((resp) => {
+        const arr = Array.isArray(resp.data) ? resp.data : [];
         const map = {};
         arr.forEach((r) => {
-          map[r.taskId] = (map[r.taskId] || 0) + r.hours;
+          map[r.taskId] = (map[r.taskId] || 0) + (r.hours || 0);
         });
         setTareasImputadas(
-          Object.entries(map).map(([taskId, h]) => ({
+          Object.entries(map).map(([taskId, hours]) => ({
             taskId,
-            hours: h,
+            hours,
           }))
         );
       })
@@ -88,27 +94,6 @@ export default function VistaImputacion() {
   return (
     <div className="vista-imputacion-container">
       <h2>Panel de Imputación de Horas</h2>
-
-      {isAdmin && (
-        <div className="user-filter">
-          <label htmlFor="userSelect">Usuario:</label>
-          <select
-            id="userSelect"
-            value={selectedUser._id}
-            onChange={(e) => {
-              const userId = e.target.value;
-              const userObj = allUsers.find((u) => u._id === userId);
-              setSelectedUser(userObj);
-            }}
-          >
-            {allUsers.map((u) => (
-              <option key={u._id} value={u._id}>
-                {u.name} {u.surnames}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
 
       <div className="periodo-selector">
         {["dia", "semana", "mes"].map((p) => (
@@ -122,7 +107,27 @@ export default function VistaImputacion() {
         ))}
       </div>
 
-
+      {isAdmin && (
+        <div className="user-filter">
+          <label htmlFor="userSelect">Usuario:</label>
+          <select
+            id="userSelect"
+            value={selectedUser._id}
+            onChange={(e) => {
+              const userObj = allUsers.find(
+                (u) => u._id === e.target.value
+              );
+              setSelectedUser(userObj);
+            }}
+          >
+            {allUsers.map((u) => (
+              <option key={u._id} value={u._id}>
+                {u.name} {u.surnames}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       <CalendarioResumen
         periodo={periodo}
@@ -138,7 +143,8 @@ export default function VistaImputacion() {
           <strong>Horas totales:</strong> {horasTotales.toFixed(2)}h
         </p>
         <p>
-          <strong>Horas imputadas:</strong> {horasImputadas.toFixed(2)}h
+          <strong>Horas imputadas:</strong>{" "}
+          {horasImputadas.toFixed(2)}h
         </p>
         <p>
           <strong>Horas restantes:</strong>{" "}
@@ -152,17 +158,34 @@ export default function VistaImputacion() {
           <table>
             <thead>
               <tr>
-                <th>Tarea ID</th>
+                <th>Subnivel / Subtarea</th>
                 <th>Horas</th>
               </tr>
             </thead>
             <tbody>
-              {tareasImputadas.map(({ taskId, hours }) => (
-                <tr key={taskId}>
-                  <td>{taskId}</td>
-                  <td>{hours.toFixed(2)}h</td>
-                </tr>
-              ))}
+              {tareasImputadas.map(({ taskId, hours }) => {
+                // taskId viene sin índice. Emparejamos con prefix del id de cada subtask.
+                const match = tareas
+                  .flatMap((p) =>
+                    p.tareas.map((t) => ({
+                      prefix: t.id.split("-")[0], // id original
+                      nombre: t.nombre,
+                      subnivel: p.subnivel,
+                    }))
+                  )
+                  .find((t) => t.prefix === taskId);
+
+                const label = match
+                  ? `${match.subnivel} / ${match.nombre}`
+                  : taskId;
+
+                return (
+                  <tr key={taskId}>
+                    <td>{label}</td>
+                    <td>{hours.toFixed(2)}h</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

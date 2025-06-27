@@ -17,7 +17,7 @@ export default function GestionUsuarios() {
         email: "",
         password: "",
         roles: ["user"],
-        dailyHours: 8,
+        dailyHours: 7.5,
         isActive: true,
         sesameEmployeeId: "",
     });
@@ -100,13 +100,24 @@ export default function GestionUsuarios() {
                     <div className="usuario-card" key={usuario._id}>
                         {editando === usuario._id ? (
                             <>
-                                <p>
+                                {/* <p>
                                     <strong>ID:</strong> {usuario._id}
                                 </p>
-                                <p>
+                                */}
+                                {/* <p>
                                     <strong>Sesame Employee ID:</strong>{" "}
                                     {usuario.sesameEmployeeId}
-                                </p>
+                                </p> */}
+                                <input
+                                    value={valoresEditados.sesameEmployeeId || usuario.sesameEmployeeId}
+                                    onChange={(e) =>
+                                        setValoresEditados((prev) => ({
+                                            ...prev,
+                                            name: e.target.value,
+                                        }))
+                                    }
+                                    placeholder="Sesame Employee ID"
+                                />
                                 <input
                                     value={valoresEditados.name || usuario.name}
                                     onChange={(e) =>
@@ -147,28 +158,28 @@ export default function GestionUsuarios() {
                                 >
                                     Guardar
                                 </button>
-                                <button onClick={() => setEditando(null)}>
+                                <button id="cancel_edit" onClick={() => setEditando(null)}>
                                     Cancelar
                                 </button>
                             </>
                         ) : (
                             <>
-                                <p>
+                                {/* <p>
                                     <strong>ID:</strong> {usuario._id}
                                 </p>
                                 <p>
                                     <strong>Sesame Employee ID:</strong>{" "}
                                     {usuario.sesameEmployeeId}
-                                </p>
+                                </p> */}
                                 <p>
-                                    <strong>Nombre:</strong> {usuario.name}
+                                    <b>{usuario.name} {usuario.surnames}</b>
                                 </p>
-                                <p>
+                                {/* <p>
                                     <strong>Apellidos:</strong>{" "}
                                     {usuario.surnames}
-                                </p>
+                                </p> */}
                                 <p>
-                                    <strong>Email:</strong> {usuario.email}
+                                    {usuario.email}
                                 </p>
                                 <div className="acciones">
                                     <button
