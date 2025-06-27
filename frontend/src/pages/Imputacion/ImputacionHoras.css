@@ -26,7 +26,8 @@
 
 /* === Selector de usuario (solo admins) === */
 .imputacion-container .user-filter {
-    border: 1px solid hotpink; /* para depurar */
+    border: 1px solid hotpink;
+    /* para depurar */
     padding: 8px;
     margin-bottom: 16px;
     background: #fff8f0;

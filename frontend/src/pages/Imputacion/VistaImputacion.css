@@ -14,9 +14,10 @@
 }
 
 /* === Espaciado entre secciones === */
-.vista-imputacion-container > *:not(:last-child) {
+.vista-imputacion-container>*:not(:last-child) {
     margin-bottom: 2.5rem;
 }
+
 .vista-imputacion-container {
     max-width: 900px;
     margin: 2rem auto;
@@ -26,8 +27,11 @@
 .user-filter {
     margin-bottom: 1rem;
     display: flex;
-    align-items: center;
     gap: 0.5rem;
+    width: 500px;
+    align-items: center;
+    justify-content: center;
+
 }
 
 .user-filter label {
@@ -37,6 +41,11 @@
 .user-filter select {
     flex: 1;
     padding: 0.5rem;
+    width: 10px;
+}
+
+#userSelect {
+    width: 31px;
 }
 
 .resumen-horas {
@@ -68,4 +77,23 @@
 
 .informe-tareas th {
     background: #eef6ff;
+}
+
+.periodo-selector {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+}
+
+.periodo-selector button {
+    border: none;
+    font-size: 1.2rem;
+    padding: 0.2rem 0.5rem;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    background: #00a3e0;
+    /* fondo azul por defecto */
+    color: #fff;
+    /* texto/flecha en blanco */
+    border-radius: 4px;
 }
