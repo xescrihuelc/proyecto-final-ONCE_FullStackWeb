@@ -24,3 +24,22 @@ export const getDiasSesame = async (employeeId, from, to) => {
 
   return data.data[0]?.days || [];
 };
+
+export const getSesameUser = async (email) => {
+  const params = new URLSearchParams({ email });
+  const url = `${API_URL}/sesame/employees?${params.toString()}`;
+  const res = await fetch(url, {
+    method: "GET",
+  });
+
+  if (!res.ok) {
+    const { error } = await res.json();
+    throw new Error(error || "Error al consultar usuario de Sesame");
+  }
+
+  const { data } = await res.json();
+  console.log("RESPUESTA BRUTA DE /sesame employee:", data);
+
+  // Return the first (and only) employee object
+  return data[0] || null;
+};
