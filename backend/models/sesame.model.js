@@ -15,6 +15,22 @@ const sesameSchema = new mongoose.Schema({
     },
 });
 
-const Sesame = mongoose.model("Sesame", sesameSchema);
+const sesameUserSchema = new mongoose.Schema({
+    _id: Schema.Types.ObjectId,
+    employeeId: { type: String, required: true },
+    firstName: String,
+    lastName: String,
+    email: String,
+    workStatus: String,
+    imageProfileURL: String,
+    phone: String,
+    dateOfBirth: Date,
+    status: String,
+    professionalCategoryDescription: String,
+    jobChargeName: String
+});
 
-module.exports = { Sesame };
+const Sesame = mongoose.model("Sesame", sesameSchema);
+const SesameUser = mongoose.model("SesameUser", sesameUserSchema);
+
+module.exports = { Sesame, SesameUser };
