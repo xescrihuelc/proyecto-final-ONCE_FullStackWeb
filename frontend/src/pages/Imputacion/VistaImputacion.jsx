@@ -1,5 +1,3 @@
-// src/pages/VistaImputacion/VistaImputacion.jsx
-
 import React, { useEffect, useState } from "react";
 import CalendarioResumen from "../../components/CalendarioResumen/CalendarioResumen";
 import FormularioImputacionConReparto from "../../components/FormularioImputacionConReparto/FormularioImputacionConReparto";
@@ -27,6 +25,32 @@ export default function VistaImputacion() {
   const [horasImputadas, setHorasImputadas] = useState(0);
   const [tareasImputadas, setTareasImputadas] = useState([]);
 
+  // Función para recargar datos (para pasar a FormularioImputacionConReparto)
+  const recargarDatos = () => {
+    if (!rango.from || !rango.to || !selectedUser?._id) return;
+
+    Promise.all([
+      getDiasSesame(selectedUser.sesameEmployeeId, rango.from, rango.to),
+      getImputacionesPorRango(selectedUser._id, rango.from, rango.to),
+    ])
+      .then(([diasData, impData]) => {
+        const trabajados = diasData.filter((d) => d.secondsWorked > 0);
+        const fechas = trabajados.map((d) => d.date.slice(0, 10));
+        const dailyH = selectedUser.dailyHours ?? 7.5;
+        const totales = trabajados.length * dailyH;
+        const imputadas = (impData.data || []).reduce(
+          (a, r) => a + (r.hours || 0),
+          0
+        );
+
+        setFechasTrabajadas(fechas);
+        setDiasTrabajados(trabajados.length);
+        setHorasTotales(totales);
+        setHorasImputadas(imputadas);
+      })
+      .catch(console.error);
+  };
+
   useEffect(() => {
     getAllTasks().then(setTareas).catch(console.error);
   }, []);
@@ -41,29 +65,10 @@ export default function VistaImputacion() {
     setRango({ from, to });
   }, [periodo]);
 
+  // Carga inicial y recarga cada vez que cambia rango o usuario
   useEffect(() => {
-    if (!rango.from || !rango.to) return;
-    Promise.all([
-      getDiasSesame(user.sesameEmployeeId, rango.from, rango.to),
-      getImputacionesPorRango(selectedUser._id, rango.from, rango.to),
-    ])
-      .then(([diasData, impData]) => {
-        const trabajados = diasData.filter((d) => d.secondsWorked > 0);
-        const fechas = trabajados.map((d) => d.date.slice(0, 10));
-        const dailyH = user.dailyHours ?? 7.5;
-        const totales = trabajados.length * dailyH;
-        const imputadas = (impData.data || []).reduce(
-          (a, r) => a + (r.hours || 0),
-          0
-        );
-
-        setFechasTrabajadas(fechas);
-        setDiasTrabajados(trabajados.length);
-        setHorasTotales(totales);
-        setHorasImputadas(imputadas);
-      })
-      .catch(console.error);
-  }, [rango, selectedUser, user]);
+    recargarDatos();
+  }, [rango, selectedUser]);
 
   useEffect(() => {
     if (!isAdmin || fechasTrabajadas.length === 0) return;
@@ -114,9 +119,7 @@ export default function VistaImputacion() {
             id="userSelect"
             value={selectedUser._id}
             onChange={(e) => {
-              const userObj = allUsers.find(
-                (u) => u._id === e.target.value
-              );
+              const userObj = allUsers.find((u) => u._id === e.target.value);
               setSelectedUser(userObj);
             }}
           >
@@ -143,12 +146,10 @@ export default function VistaImputacion() {
           <strong>Horas totales:</strong> {horasTotales.toFixed(2)}h
         </p>
         <p>
-          <strong>Horas imputadas:</strong>{" "}
-          {horasImputadas.toFixed(2)}h
+          <strong>Horas imputadas:</strong> {horasImputadas.toFixed(2)}h
         </p>
         <p>
-          <strong>Horas restantes:</strong>{" "}
-          {(horasTotales - horasImputadas).toFixed(2)}h
+          <strong>Horas restantes:</strong> {(horasTotales - horasImputadas).toFixed(2)}h
         </p>
       </div>
 
@@ -164,20 +165,17 @@ export default function VistaImputacion() {
             </thead>
             <tbody>
               {tareasImputadas.map(({ taskId, hours }) => {
-                // taskId viene sin índice. Emparejamos con prefix del id de cada subtask.
                 const match = tareas
                   .flatMap((p) =>
                     p.tareas.map((t) => ({
-                      prefix: t.id.split("-")[0], // id original
+                      prefix: t.id.split("-")[0],
                       nombre: t.nombre,
                       subnivel: p.subnivel,
                     }))
                   )
                   .find((t) => t.prefix === taskId);
 
-                const label = match
-                  ? `${match.subnivel} / ${match.nombre}`
-                  : taskId;
+                const label = match ? `${match.subnivel} / ${match.nombre}` : taskId;
 
                 return (
                   <tr key={taskId}>
@@ -199,7 +197,7 @@ export default function VistaImputacion() {
           fechasTrabajadas,
         }}
         tareas={tareas}
-        onSaved={() => { }}
+        onSaved={recargarDatos}  
       />
     </div>
   );
