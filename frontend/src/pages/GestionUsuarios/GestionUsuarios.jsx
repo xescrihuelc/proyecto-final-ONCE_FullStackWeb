@@ -100,26 +100,21 @@ export default function GestionUsuarios() {
                     <div className="usuario-card" key={usuario._id}>
                         {editando === usuario._id ? (
                             <>
-                                {/* <p>
-                                    <strong>ID:</strong> {usuario._id}
-                                </p>
-                                */}
-                                {/* <p>
-                                    <strong>Sesame Employee ID:</strong>{" "}
-                                    {usuario.sesameEmployeeId}
-                                </p> */}
                                 <input
-                                    value={valoresEditados.sesameEmployeeId || usuario.sesameEmployeeId}
+                                    value={
+                                        valoresEditados.sesameEmployeeId ??
+                                        usuario.sesameEmployeeId
+                                    }
                                     onChange={(e) =>
                                         setValoresEditados((prev) => ({
                                             ...prev,
-                                            name: e.target.value,
+                                            sesameEmployeeId: e.target.value,
                                         }))
                                     }
                                     placeholder="Sesame Employee ID"
                                 />
                                 <input
-                                    value={valoresEditados.name || usuario.name}
+                                    value={valoresEditados.name ?? usuario.name}
                                     onChange={(e) =>
                                         setValoresEditados((prev) => ({
                                             ...prev,
@@ -130,7 +125,7 @@ export default function GestionUsuarios() {
                                 />
                                 <input
                                     value={
-                                        valoresEditados.surnames ||
+                                        valoresEditados.surnames ??
                                         usuario.surnames
                                     }
                                     onChange={(e) =>
@@ -143,7 +138,7 @@ export default function GestionUsuarios() {
                                 />
                                 <input
                                     value={
-                                        valoresEditados.email || usuario.email
+                                        valoresEditados.email ?? usuario.email
                                     }
                                     onChange={(e) =>
                                         setValoresEditados((prev) => ({
@@ -158,29 +153,21 @@ export default function GestionUsuarios() {
                                 >
                                     Guardar
                                 </button>
-                                <button id="cancel_edit" onClick={() => setEditando(null)}>
+                                <button
+                                    id="cancel_edit"
+                                    onClick={() => setEditando(null)}
+                                >
                                     Cancelar
                                 </button>
                             </>
                         ) : (
                             <>
-                                {/* <p>
-                                    <strong>ID:</strong> {usuario._id}
-                                </p>
                                 <p>
-                                    <strong>Sesame Employee ID:</strong>{" "}
-                                    {usuario.sesameEmployeeId}
-                                </p> */}
-                                <p>
-                                    <b>{usuario.name} {usuario.surnames}</b>
+                                    <b>
+                                        {usuario.name} {usuario.surnames}
+                                    </b>
                                 </p>
-                                {/* <p>
-                                    <strong>Apellidos:</strong>{" "}
-                                    {usuario.surnames}
-                                </p> */}
-                                <p>
-                                    {usuario.email}
-                                </p>
+                                <p>{usuario.email}</p>
                                 <div className="acciones">
                                     <button
                                         onClick={() => {
