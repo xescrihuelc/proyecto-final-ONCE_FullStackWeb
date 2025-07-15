@@ -9,7 +9,7 @@ const usersSchema = new mongoose.Schema({
   password: { type: String, required: true },
   roles: {
     type: [String],
-    enum: ["admin", "user"],
+    enum: ["director", "admin", "user"],
     default: ["user"],
     required: true,
   },
@@ -27,6 +27,10 @@ const usersSchema = new mongoose.Schema({
   },
   imageProfileURL: String,
   jobChargeName: String,
+  signature: {
+    data: { type: Buffer }, // Store the image in binary format
+    contentType: { type: String }, // Store the content type of the image as 'image/png', 'image/jpeg', etc...
+  },
 });
 
 const Users = mongoose.model("Users", usersSchema);

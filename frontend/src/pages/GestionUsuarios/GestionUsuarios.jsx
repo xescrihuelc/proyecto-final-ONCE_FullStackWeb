@@ -149,7 +149,8 @@ export default function GestionUsuarios() {
   // Estilos del botón Sesame
   const buttonStyle = (disabled) => ({
     marginLeft: "8px",
-    backgroundColor: "blue",
+    fontSize: "0.8rem",
+    backgroundColor: "#3498db",
     color: "white",
     cursor: disabled ? "not-allowed" : "pointer",
   });
@@ -321,6 +322,7 @@ export default function GestionUsuarios() {
                   </b>
                 </p>
                 <p>{usuario.email}</p>
+
                 <div className="acciones">
                   <button
                     onClick={() => {
