@@ -48,36 +48,36 @@ const Dashboard = () => {
     }, [user.id, roles, mes, anio]);
 
     // Proyectos activos/inactivos para cards
-    const proyectosActivos = proyectos.filter((p) => p.activo);
-    const proyectosInactivos = proyectos.filter((p) => !p.activo);
+    const proyectosActivos = proyectos.filter((planing) => planing.activo);
+    const proyectosInactivos = proyectos.filter((planing) => !planing.activo);
 
     // Tareas totales (suponiendo tareas es array)
     const tareasTotales = proyectos.reduce(
-        (acc, p) => acc + (Array.isArray(p.tareas) ? p.tareas.length : 0),
+        (acc, planing) => acc + (Array.isArray(planing.tareas) ? planing.tareas.length : 0),
         0
     );
 
     // Preparar datos para gráfico: tareas y horas imputadas por proyecto
     // Mapeamos proyectos a objeto { nombre, tareas, horasImputadas, horasPlanificadas, diferencia }
-    const dataProyectos = proyectos.map((p) => {
-        const nombre = p.nombre || p.estructura || "Sin nombre";
+    const dataProyectos = proyectos.map((planing) => {
+        const nombre = planing.nombre || planing.estructura || "Sin nombre";
 
         // Contar tareas
-        const tareasCount = Array.isArray(p.tareas) ? p.tareas.length : 0;
+        const tareasCount = Array.isArray(planing.tareas) ? planing.tareas.length : 0;
 
         // Calcular horas imputadas para ese proyecto sumando las imputaciones que tengan taskId de sus tareas
-        const tareasIds = Array.isArray(p.tareas)
-            ? p.tareas.map((t) => t._id || t.id)
+        const tareasIds = Array.isArray(planing.tareas)
+            ? planing.tareas.map((t) => t._id || t.id)
             : [];
 
         // Filtrar imputaciones que correspondan a tareas del proyecto
         const horasImputadasProyecto = imputaciones
-            .filter((imp) => tareasIds.includes(imp.taskId))
-            .reduce((acc, imp) => acc + (imp.hours || 0), 0);
+            .filter((imput) => tareasIds.includes(imput.taskId))
+            .reduce((acc, imput) => acc + (imput.hours || 0), 0);
 
         // Suponemos que cada tarea tiene plannedHours (horas previstas)
-        const horasPlanificadas = Array.isArray(p.tareas)
-            ? p.tareas.reduce((acc, t) => acc + (t.plannedHours || 0), 0)
+        const horasPlanificadas = Array.isArray(planing.tareas)
+            ? planing.tareas.reduce((acc, t) => acc + (t.plannedHours || 0), 0)
             : 0;
 
         const diferencia = horasPlanificadas - horasImputadasProyecto;
@@ -121,8 +121,8 @@ const Dashboard = () => {
                         min="2000"
                         max="2100"
                         value={anio}
-                        onChange={(e) =>
-                            setAnio(parseInt(e.target.value) || anio)
+                        onChange={(event) =>
+                            setAnio(parseInt(event.target.value) || anio)
                         }
                     />
                 </label>

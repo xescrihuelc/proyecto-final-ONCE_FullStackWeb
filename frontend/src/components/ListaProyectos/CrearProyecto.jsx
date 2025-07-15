@@ -29,10 +29,10 @@ const CrearProyecto = () => {
   }, []);
 
   // Agregar usuario seleccionado desde el select
-  const handleUsuarioAgregar = (e) => {
-    const userId = e.target.value;
-    if (userId && !usuariosSeleccionados.some((u) => u._id === userId)) {
-      const usuario = usuarios.find((u) => u._id === userId);
+  const handleUsuarioAgregar = (event) => {
+    const userId = event.target.value;
+    if (userId && !usuariosSeleccionados.some((user) => user._id === userId)) {
+      const usuario = usuarios.find((user) => user._id === userId);
       if (usuario) {
         setUsuariosSeleccionados([...usuariosSeleccionados, usuario]);
       }
@@ -42,11 +42,11 @@ const CrearProyecto = () => {
 
   // Quitar usuario de la selección
   const handleUsuarioQuitar = (id) => {
-    setUsuariosSeleccionados(usuariosSeleccionados.filter((u) => u._id !== id));
+    setUsuariosSeleccionados(usuariosSeleccionados.filter((user) => user._id !== id));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     setLoading(true);
     setMensaje(null);
 
@@ -67,7 +67,7 @@ const CrearProyecto = () => {
         subtarea,
         esProyectoEuropeo,
         isActive: activo,
-        assignedUsers: usuariosSeleccionados.map((u) => u._id),
+        assignedUsers: usuariosSeleccionados.map((user) => user._id),
       });
 
       setMensaje("Proyecto creado con éxito 🎉");
@@ -94,7 +94,7 @@ const CrearProyecto = () => {
           id="estructura"
           type="text"
           value={estructura}
-          onChange={(e) => setEstructura(e.target.value)}
+          onChange={(event) => setEstructura(event.target.value)}
           placeholder="Ej. Estructura X"
           required
         />
@@ -104,7 +104,7 @@ const CrearProyecto = () => {
           id="lineaTrabajo"
           type="text"
           value={lineaTrabajo}
-          onChange={(e) => setLineaTrabajo(e.target.value)}
+          onChange={(event) => setLineaTrabajo(event.target.value)}
           placeholder="Ej. Línea 1"
           required
         />
@@ -114,7 +114,7 @@ const CrearProyecto = () => {
           id="subnivel"
           type="text"
           value={subnivel}
-          onChange={(e) => setSubnivel(e.target.value)}
+          onChange={(event) => setSubnivel(event.target.value)}
           placeholder="Ej. Subnivel A"
           required
         />
@@ -124,7 +124,7 @@ const CrearProyecto = () => {
           id="subtarea"
           type="text"
           value={subtarea}
-          onChange={(e) => setSubtarea(e.target.value)}
+          onChange={(event) => setSubtarea(event.target.value)}
           placeholder="Escribe la subtarea"
         />
 
@@ -142,7 +142,7 @@ const CrearProyecto = () => {
             <input
               type="checkbox"
               checked={activo}
-              onChange={(e) => setActivo(e.target.checked)}
+              onChange={(event) => setActivo(event.target.checked)}
             />
             Activo
           </label>
@@ -160,7 +160,7 @@ const CrearProyecto = () => {
           {usuarios
             .filter(
               (usuario) =>
-                !usuariosSeleccionados.some((u) => u._id === usuario._id)
+                !usuariosSeleccionados.some((user) => user._id === usuario._id)
             )
             .map((usuario) => (
               <option key={usuario._id} value={usuario._id}>
