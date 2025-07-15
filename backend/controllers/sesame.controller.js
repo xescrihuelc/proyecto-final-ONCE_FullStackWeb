@@ -167,15 +167,7 @@ const getSesameUser = async (req, res) => {
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
-      workStatus: user.workStatus,
       imageProfileURL: user.imageProfileURL,
-      phone: user.phone,
-      dateOfBirth:
-        user.dateOfBirth instanceof Date
-          ? user.dateOfBirth.toISOString().split("T")[0]
-          : user.dateOfBirth,
-      status: user.status,
-      professionalCategoryDescription: user.professionalCategoryDescription,
       jobChargeName: user.jobChargeName,
     };
 
