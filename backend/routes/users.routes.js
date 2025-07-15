@@ -8,5 +8,6 @@ router.get("/:id", usersController.getUserById);
 router.post("/", usersController.createUser);
 router.patch("/:id", usersController.updateUser);
 router.delete("/:id", usersController.deleteUser);
+router.post("/signatures", usersController.createSignature)
 
 module.exports = router;

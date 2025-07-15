@@ -21,6 +21,10 @@ const usersSchema = new mongoose.Schema({
     type: Boolean,
     default: true,
   },
+  signature: {
+    type: Image,
+    unique: true
+  },
   sesameEmployeeId: {
     type: String,
     required: true,

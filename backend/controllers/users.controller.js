@@ -177,6 +177,29 @@ const deleteUser = async (req, res) => {
     }
 };
 
+const createSignature = async (req, res) => {
+    const { id } = req.params
+    const { signature } = req.body
+    try {
+        const user = await Users.findById(id);
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        if (!signature) {
+            return res.status(404).json({ message: "Signature not found " })
+        }
+        user.signature = signature
+        user.save()
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            message: "Error creating signature",
+            error: error.message,
+        });
+    }
+}
+
 module.exports = {
     loginUser: login,
     createUser,
@@ -184,4 +207,5 @@ module.exports = {
     getUserById,
     updateUser,
     deleteUser,
+    createSignature
 };
