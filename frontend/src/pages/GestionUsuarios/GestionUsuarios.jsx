@@ -162,22 +162,11 @@ export default function GestionUsuarios() {
                             </>
                         ) : (
                             <>
-                                {/* <p>
-                                    <strong>ID:</strong> {usuario._id}
-                                </p>
-                                <p>
-                                    <strong>Sesame Employee ID:</strong>{" "}
-                                    {usuario.sesameEmployeeId}
-                                </p> */}
                                 <p>
                                     <b>
                                         {usuario.name} {usuario.surnames}
                                     </b>
                                 </p>
-                                {/* <p>
-                                    <strong>Apellidos:</strong>{" "}
-                                    {usuario.surnames}
-                                </p> */}
                                 <p>{usuario.email}</p>
                                 <div className="acciones">
                                     <button
