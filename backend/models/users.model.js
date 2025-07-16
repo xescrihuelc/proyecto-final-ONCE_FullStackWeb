@@ -1,38 +1,36 @@
 const mongoose = require("mongoose");
 const { Schema } = mongoose;
 
-const usersSchema = new mongoose.Schema({
-  _id: Schema.Types.ObjectId,
-  name: { type: String, required: true },
-  surnames: String,
-  email: { type: String, required: true },
-  password: { type: String, required: true },
-  roles: {
-    type: [String],
-    enum: ["director", "admin", "user"],
-    default: ["user"],
-    required: true,
+// Sub-schema for storing an image blob and its MIME type
+const signatureSchema = new Schema(
+  {
+    data: Buffer, // Binary image data
+    contentType: String, // MIME type, e.g. 'image/png'
   },
-  dailyHours: {
-    type: Number,
-    required: true,
-  },
-  isActive: {
-    type: Boolean,
-    default: true,
-  },
-  sesameEmployeeId: {
-    type: String,
-    required: true,
-  },
-  imageProfileURL: String,
-  jobChargeName: String,
-  signature: {
-    data: { type: Buffer }, // Store the image in binary format
-    contentType: { type: String }, // Store the content type of the image as 'image/png', 'image/jpeg', etc...
-  },
-});
+  { _id: false }
+);
 
-const Users = mongoose.model("Users", usersSchema);
+const userSchema = new Schema(
+  {
+    name: { type: String, required: true },
+    surnames: String,
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+    roles: { type: [String], default: [] },
+    dailyHours: { type: Number, default: 0 },
+    sesameEmployeeId: { type: String, required: true },
+    imageProfileURL: String,
+    jobChargeName: String,
+    isActive: { type: Boolean, default: true },
+    // Signature field: always present as an object, may hold image blob
+    signature: {
+      type: signatureSchema,
+      default: {},
+    },
+  },
+  { timestamps: true }
+);
+
+const Users = mongoose.model("Users", userSchema);
 
 module.exports = { Users };

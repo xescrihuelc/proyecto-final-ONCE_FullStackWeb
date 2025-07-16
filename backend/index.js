@@ -13,23 +13,22 @@ const sesameRoutes = require("./routes/sesame.routes");
 const hoursRoutes = require("./routes/hours.routes");
 
 const main = () => {
-    const app = express();
-    app.use(cors());
-    app.use(express.json());
-    console.log("Mongo URL: ", process.env.MONGO_URI);
+  const app = express();
+  app.use(cors());
+  app.use(express.json());
 
-    // app.use("/template", auth, templateRoutes);
-    app.use("/tasks", tasksRoutes);
-    app.use("/users", usersRoutes);
-    app.use("/hours", hoursRoutes);
-    app.use("/sesame", sesameRoutes);
-    app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+  // app.use("/template", auth, templateRoutes);
+  app.use("/tasks", tasksRoutes);
+  app.use("/users", usersRoutes);
+  app.use("/hours", hoursRoutes);
+  app.use("/sesame", sesameRoutes);
+  app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-    dbConnection();
+  dbConnection();
 
-    app.listen(PORT, () => {
-        console.log(`App listening on port ${PORT}`);
-    });
+  app.listen(PORT, () => {
+    console.log(`App listening on port ${PORT}`);
+  });
 };
 
 main();
