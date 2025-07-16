@@ -22,7 +22,7 @@ const usersSchema = new mongoose.Schema({
     default: true,
   },
   signature: {
-    type: Image,
+    type: String,
     unique: true
   },
   sesameEmployeeId: {
