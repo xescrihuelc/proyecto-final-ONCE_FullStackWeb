@@ -7,9 +7,10 @@ import { getDiasSesame } from "../../services/sesameService";
 import { getAllTasks } from "../../services/taskService";
 import { getAllUsers } from "../../services/userService";
 import { getRangoDelPeriodo } from "../../utils/dateUtils";
+import UserSelectorHeader from "../../components/UserSelectorHeader/UserSelectorHeader";
 import "./VistaImputacion.css";
 
-export default function VistaImputacion() {
+export default function VistaImputacion({ onDashboardRefresh }) {
   const { user, loading: authLoading } = useAuth();
   const isAdmin = user.roles.includes("admin");
 
@@ -25,7 +26,6 @@ export default function VistaImputacion() {
   const [horasImputadas, setHorasImputadas] = useState(0);
   const [tareasImputadas, setTareasImputadas] = useState([]);
 
-  // Función para recargar datos (para pasar a FormularioImputacionConReparto)
   const recargarDatos = () => {
     if (!rango.from || !rango.to || !selectedUser?._id) return;
 
@@ -65,7 +65,11 @@ export default function VistaImputacion() {
     setRango({ from, to });
   }, [periodo]);
 
-  // Carga inicial y recarga cada vez que cambia rango o usuario
+  useEffect(() => {
+    const { from, to } = getRangoDelPeriodo(periodo);
+    setRango({ from, to });
+  }, [selectedUser]);
+
   useEffect(() => {
     recargarDatos();
   }, [rango, selectedUser]);
@@ -100,6 +104,12 @@ export default function VistaImputacion() {
     <div className="vista-imputacion-container">
       <h2>Panel de Imputación de Horas</h2>
 
+      <UserSelectorHeader
+        allUsers={allUsers}
+        selectedUser={selectedUser}
+        setSelectedUser={setSelectedUser}
+      />
+
       <div className="periodo-selector">
         {["dia", "semana", "mes"].map((p) => (
           <button
@@ -111,26 +121,6 @@ export default function VistaImputacion() {
           </button>
         ))}
       </div>
-
-      {isAdmin && (
-        <div className="user-filter">
-          <label htmlFor="userSelect">Usuario:</label>
-          <select
-            id="userSelect"
-            value={selectedUser._id}
-            onChange={(e) => {
-              const userObj = allUsers.find((u) => u._id === e.target.value);
-              setSelectedUser(userObj);
-            }}
-          >
-            {allUsers.map((u) => (
-              <option key={u._id} value={u._id}>
-                {u.name} {u.surnames}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
 
       <CalendarioResumen
         periodo={periodo}
@@ -149,7 +139,8 @@ export default function VistaImputacion() {
           <strong>Horas imputadas:</strong> {horasImputadas.toFixed(2)}h
         </p>
         <p>
-          <strong>Horas restantes:</strong> {(horasTotales - horasImputadas).toFixed(2)}h
+          <strong>Horas restantes:</strong>{" "}
+          {(horasTotales - horasImputadas).toFixed(2)}h
         </p>
       </div>
 
@@ -175,7 +166,9 @@ export default function VistaImputacion() {
                   )
                   .find((t) => t.prefix === taskId);
 
-                const label = match ? `${match.subnivel} / ${match.nombre}` : taskId;
+                const label = match
+                  ? `${match.subnivel} / ${match.nombre}`
+                  : taskId;
 
                 return (
                   <tr key={taskId}>
@@ -197,7 +190,11 @@ export default function VistaImputacion() {
           fechasTrabajadas,
         }}
         tareas={tareas}
-        onSaved={recargarDatos}  
+        horasImputadasBase={horasImputadas}
+        onSaved={() => {
+          recargarDatos();
+          if (onDashboardRefresh) onDashboardRefresh();
+        }}
       />
     </div>
   );

@@ -5,152 +5,204 @@ import { getAllUsers } from "../../services/userService";
 import "./BuscadorTareas.css";
 
 const BuscadorTareas = () => {
-  const { user } = useAuth(); // asume rol admin
-  const [proyectos, setProyectos] = useState([]);
-  const [usuarios, setUsuarios] = useState([]);
-  const [busqueda, setBusqueda] = useState("");
-  const [coincidencias, setCoincidencias] = useState([]);
-  const [seleccion, setSeleccion] = useState({}); // { "taskId-subIdx": userId }
+    const { user } = useAuth(); // asume rol admin
+    const [proyectos, setProyectos] = useState([]);
+    const [usuarios, setUsuarios] = useState([]);
+    const [busqueda, setBusqueda] = useState("");
+    const [coincidencias, setCoincidencias] = useState([]);
+    const [usuarioSeleccionado, setUsuarioSeleccionado] = useState(null);
+    const [tareasAsignadas, setTareasAsignadas] = useState(new Set()); // ids de tareas asignadas al usuario seleccionado
 
-  // 1) Cargo tareas y usuarios
-  const cargarDatos = async () => {
-    try {
-      const [tareas, users] = await Promise.all([getAllTasks(), getAllUsers()]);
-      setProyectos(tareas);
-      setUsuarios(users);
-    } catch (err) {
-      console.error("Error al cargar datos:", err);
-    }
-  };
+    // 1) Cargo tareas y usuarios
+    const cargarDatos = async () => {
+        try {
+            const [tareas, users] = await Promise.all([
+                getAllTasks(),
+                getAllUsers(),
+            ]);
+            setProyectos(tareas);
+            setUsuarios(users);
+        } catch (err) {
+            console.error("Error al cargar datos:", err);
+        }
+    };
 
-  useEffect(() => {
-    cargarDatos();
-  }, []);
+    useEffect(() => {
+        cargarDatos();
+    }, []);
 
-  // 2) Armo lista plana de “entradas” y filtro
-  useEffect(() => {
-    const term = busqueda.trim().toLowerCase();
-    if (!term) {
-      setCoincidencias([]);
-      return;
-    }
+    // 2) Armo lista plana de “entradas” y filtro
+    useEffect(() => {
+        const term = busqueda.trim().toLowerCase();
+        if (!term) {
+            setCoincidencias([]);
+            return;
+        }
 
-    // aplano: cada “tarea” lleva su subnivel y proyecto
-    const listado = proyectos.flatMap((proyecto) =>
-      proyecto.tareas.map((t) => ({
-        id: t.id,
-        proyectoNombre: proyecto.lineaTrabajo,
-        subnivelNombre: proyecto.subnivel, // el nivel intermedio
-        subtareaNombre: t.nombre, // el nivel final
-        activo: proyecto.activo,
-        asignados: t.asignados, // ahora podemos mostrarlos si queremos
-      }))
-    );
-    console.log(listado);
+        const listado = proyectos.flatMap((proyecto) =>
+            proyecto.tareas.map((t) => ({
+                id: t.id,
+                proyectoNombre: proyecto.lineaTrabajo,
+                subnivelNombre: proyecto.subnivel,
+                subtareaNombre: t.nombre,
+                activo: proyecto.activo,
+                asignados: t.asignados || [],
+            }))
+        );
 
-    // filtro sobre subtarea o sobre subnivel
-    const resultados = listado.filter(
-      (e) =>
-        e.proyectoNombre.toLowerCase().includes(term) ||
-        e.subnivelNombre.toLowerCase().includes(term) ||
-        (e.subtareaNombre && e.subtareaNombre.toLowerCase().includes(term))
-    );
+        const resultados = listado.filter(
+            (e) =>
+                e.proyectoNombre.toLowerCase().includes(term) ||
+                e.subnivelNombre.toLowerCase().includes(term) ||
+                (e.subtareaNombre &&
+                    e.subtareaNombre.toLowerCase().includes(term))
+        );
 
-    setCoincidencias(resultados);
-  }, [busqueda, proyectos]);
+        setCoincidencias(resultados);
+    }, [busqueda, proyectos]);
 
-  const handleSelect = (entryId, userId) => {
-    setSeleccion((prev) => ({ ...prev, [entryId]: userId }));
-  };
+    // Cada vez que cambie usuario seleccionado o proyectos, actualizo tareasAsignadas
+    useEffect(() => {
+        if (!usuarioSeleccionado) {
+            setTareasAsignadas(new Set());
+            return;
+        }
 
-  const handleAsignar = async (entry) => {
-    const userId = seleccion[entry.id];
-    if (!userId) return alert("🔸 Selecciona primero un usuario");
+        // busco las tareas asignadas a ese usuario
+        const assigned = new Set();
+        proyectos.forEach((proyecto) => {
+            proyecto.tareas.forEach((tarea) => {
+                if (tarea.asignados?.includes(usuarioSeleccionado._id)) {
+                    assigned.add(tarea.id);
+                }
+            });
+        });
+        setTareasAsignadas(assigned);
+    }, [usuarioSeleccionado, proyectos]);
 
-    try {
-      // sólo necesitamos taskId y userId
-      const [taskId] = entry.id.split("-");
-      await assignTaskToUser({ taskId, userId });
+    const toggleAsignacion = async (tareaId) => {
+        if (!usuarioSeleccionado)
+            return alert("Selecciona un usuario primero.");
 
-      const usuario = usuarios.find((u) => u._id === userId);
-      alert(
-        `✅ “${entry.subtareaNombre}” de “${entry.proyectoNombre}” asignada a ${usuario.name} ${usuario.surnames}`
-      );
+        const asignada = tareasAsignadas.has(tareaId);
 
-      // refrescamos datos para ver la actualización
-      await cargarDatos();
-      // limpiar selección de esa entrada
-      setSeleccion((prev) => {
-        const { [entry.id]: _, ...rest } = prev;
-        return rest;
-      });
-    } catch (err) {
-      console.error(err);
-      alert("❌ Error al asignar la tarea");
-    }
-  };
+        try {
+            // Si está asignada, la desasignamos; si no, la asignamos
+            // Aquí asumo que assignTaskToUser solo asigna, para desasignar puedes llamar a otro endpoint o modificar backend
+            if (!asignada) {
+                await assignTaskToUser({
+                    taskId: tareaId,
+                    userId: usuarioSeleccionado._id,
+                });
+            } else {
+                // TODO: Llamar a endpoint para desasignar tarea, si existe.
+                // Por ahora alertamos que no está implementado
+                alert(
+                    "Desasignar tarea no implementado. Implementa un endpoint PATCH /tasks/:id/unassign o similar."
+                );
+                return;
+            }
 
-  return (
-    <div className="seccion buscador-tareas-container">
-      <h3>Buscar Tareas</h3>
-      <input
-        type="text"
-        placeholder=""
-        value={busqueda}
-        onChange={(e) => setBusqueda(e.target.value)}
-        className="input-group"
-      />
+            // Refrescar datos
+            await cargarDatos();
+        } catch (err) {
+            console.error(err);
+            alert("Error al actualizar asignación");
+        }
+    };
 
-      <ul className="lista-tareas-filtradas">
-        {coincidencias.map((e) => (
-          <li
-            key={e.id}
-            className={`tarea-item ${!e.activo ? "tarea-inactiva" : ""}`}
-          >
-            <div className="tarea-info">
-              <strong>{e.proyectoNombre}</strong> / <em>{e.subnivelNombre}</em>{" "}
-              / {e.subtareaNombre}
-              {!e.activo && (
-                <span className="estado-inactivo"> (Inactiva)</span>
-              )}
-              {e.asignados.length > 0 && (
-                <div className="asignados">
-                  Asignado a:{" "}
-                  {e.asignados
-                    .map((uid) => {
-                      const user = usuarios.find((u) => u._id === uid);
-                      console.log(user);
-                      
-                      return user ? `${user.name} ${user.surnames}` : uid;
-                    })
-                    .join(", ")}
-                </div>
-              )}
+    return (
+        <div className="seccion buscador-tareas-container">
+            <h3>Buscar Tareas</h3>
+
+            <div style={{ marginBottom: "1rem" }}>
+                <label
+                    htmlFor="usuario-global"
+                    style={{ marginRight: "0.5rem" }}
+                >
+                    Usuario asignar:
+                </label>
+                <select
+                    id="usuario-global"
+                    value={usuarioSeleccionado?._id || ""}
+                    onChange={(e) => {
+                        const u = usuarios.find(
+                            (user) => user._id === e.target.value
+                        );
+                        setUsuarioSeleccionado(u || null);
+                    }}
+                    style={{ padding: "0.3rem", minWidth: "250px" }}
+                >
+                    <option value="" disabled>
+                        -- Seleccione usuario --
+                    </option>
+                    {usuarios.map((u) => (
+                        <option key={u._id} value={u._id}>
+                            {u.name} {u.surnames}
+                        </option>
+                    ))}
+                </select>
             </div>
 
-            <div className="tarea-acciones">
-              <select
-                value={seleccion[e.id] || ""}
-                onChange={(ev) => handleSelect(e.id, ev.target.value)}
-              >
-                <option value="">— usuario —</option>
-                {usuarios.map((u) => (
-                  <option key={u._id} value={u._id}>
-                    {u.name} {u.surnames}
-                  </option>
+            <input
+                type="text"
+                placeholder="Buscar tareas por proyecto, subnivel o subtarea..."
+                value={busqueda}
+                onChange={(e) => setBusqueda(e.target.value)}
+                className="input-group"
+            />
+
+            <ul className="lista-tareas-filtradas">
+                {coincidencias.map((e) => (
+                    <li
+                        key={e.id}
+                        className={`tarea-item ${
+                            !e.activo ? "tarea-inactiva" : ""
+                        }`}
+                    >
+                        <div className="tarea-info">
+                            <strong>{e.proyectoNombre}</strong> /{" "}
+                            <em>{e.subnivelNombre}</em> / {e.subtareaNombre}
+                            {!e.activo && (
+                                <span className="estado-inactivo">
+                                    {" "}
+                                    (Inactiva)
+                                </span>
+                            )}
+                            {e.asignados.length > 0 && (
+                                <div className="asignados">
+                                    Asignado a:{" "}
+                                    {e.asignados
+                                        .map((uid) => {
+                                            const user = usuarios.find(
+                                                (u) => u._id === uid
+                                            );
+                                            return user
+                                                ? `${user.name} ${user.surnames}`
+                                                : uid;
+                                        })
+                                        .join(", ")}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="tarea-acciones">
+                            <input
+                                type="checkbox"
+                                checked={tareasAsignadas.has(e.id)}
+                                onChange={() => toggleAsignacion(e.id)}
+                                disabled={!usuarioSeleccionado}
+                            />
+                        </div>
+                    </li>
                 ))}
-              </select>
-              <button onClick={() => handleAsignar(e)}>Asignar</button>
-            </div>
-          </li>
-        ))}
 
-        {coincidencias.length === 0 && busqueda && (
-          <li className="no-result">No se encontró ninguna tarea</li>
-        )}
-      </ul>
-    </div>
-  );
+                {coincidencias.length === 0 && busqueda && (
+                    <li className="no-result">No se encontró ninguna tarea</li>
+                )}
+            </ul>
+        </div>
+    );
 };
 
 export default BuscadorTareas;
