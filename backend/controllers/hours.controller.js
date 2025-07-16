@@ -27,11 +27,13 @@ const getHours = async (req, res) => {
     try {
         const { userIds, date } = req.body;
         const dateProper = new Date(date);
-        const normalizedDate = new Date(Date.UTC(
-            dateProper.getUTCFullYear(),
-            dateProper.getUTCMonth(),
-            dateProper.getUTCDate()
-        ));
+        const normalizedDate = new Date(
+            Date.UTC(
+                dateProper.getUTCFullYear(),
+                dateProper.getUTCMonth(),
+                dateProper.getUTCDate()
+            )
+        );
 
         const [ok, errMsg] = checkImportantField(userIds, date);
         if (!ok) {
@@ -43,7 +45,9 @@ const getHours = async (req, res) => {
         };
 
         if (userIds.length > 0) {
-            const objectUserIds = userIds.map(id => new mongoose.Types.ObjectId(id));
+            const objectUserIds = userIds.map(
+                (id) => new mongoose.Types.ObjectId(id)
+            );
             filter.userId = { $in: objectUserIds };
         }
 
@@ -73,18 +77,24 @@ const getHours = async (req, res) => {
 
 const getImputacionesPorUsuarioYRango = async (req, res) => {
     try {
-        const { userId, from, to } = req.query;
+        let { userId, from, to } = req.query;
 
-        if (!userId || !isDateFormat(from) || !isDateFormat(to)) {
+        if (!isDateFormat(from) || !isDateFormat(to)) {
             return res.status(400).json({
-                error: "Missing or invalid parameters: userId, from, to",
+                error: "Missing or invalid parameters: from, to",
             });
         }
 
-        const records = await Hours.find({
-            userId,
+        // Si userId es vacío, no filtramos por usuario
+        const filter = {
             date: { $gte: new Date(from), $lte: new Date(to) },
-        }).lean();
+        };
+
+        if (userId) {
+            filter.userId = userId;
+        }
+
+        const records = await Hours.find(filter).lean();
 
         return res.json({ data: records });
     } catch (err) {
@@ -113,11 +123,13 @@ const imputeHours = async (req, res) => {
         }
 
         const dateProper = new Date(date);
-        const normalizedDate = new Date(Date.UTC(
-            dateProper.getUTCFullYear(),
-            dateProper.getUTCMonth(),
-            dateProper.getUTCDate()
-        ));
+        const normalizedDate = new Date(
+            Date.UTC(
+                dateProper.getUTCFullYear(),
+                dateProper.getUTCMonth(),
+                dateProper.getUTCDate()
+            )
+        );
 
         for (const task of tasks) {
             const { taskId, hours } = task;

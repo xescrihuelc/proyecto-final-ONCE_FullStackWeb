@@ -1,5 +1,3 @@
-// src/App.jsx
-
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 
@@ -14,12 +12,18 @@ import Header from "./components/Header/Header";
 import ProtectedRoute from "./components/routing/ProtectedRoute";
 import Sidebar from "./components/Sidebar/Sidebar";
 
+import React, { useState } from "react";
+
 import "./App.css";
 
 function App() {
   const { token, logout, loading } = useAuth();
+  const [recargaTrigger, setRecargaTrigger] = useState(0);
 
   if (loading) return <p>Cargando autenticación...</p>;
+
+  // Función que incrementa el trigger para forzar recarga
+  const handleRecarga = () => setRecargaTrigger((prev) => prev + 1);
 
   return (
     <BrowserRouter>
@@ -29,37 +33,38 @@ function App() {
           <div className="main-content">
             <Header onLogout={logout} />
             <Routes>
-              {/* Intentar acceder a /login redirige al panel */}
               <Route
                 path="/login"
                 element={<Navigate to="/panel-imputacion" replace />}
               />
 
-              {/* Rutas protegidas */}
               <Route
                 path="/panel-imputacion"
                 element={
                   <ProtectedRoute>
-                    <VistaImputacion />
+                    <VistaImputacion onDashboardRefresh={handleRecarga} />
                   </ProtectedRoute>
                 }
               />
+
               <Route
                 path="/dashboard"
                 element={
                   <ProtectedRoute>
-                    <Dashboard />
+                    <Dashboard recargaTrigger={recargaTrigger} />
                   </ProtectedRoute>
                 }
               />
+
               <Route
                 path="/imputacion-horas"
                 element={
                   <ProtectedRoute>
-                    <VistaImputacion />
+                    <VistaImputacion onDashboardRefresh={handleRecarga} />
                   </ProtectedRoute>
                 }
               />
+
               <Route
                 path="/AsignacionProyecto"
                 element={
@@ -68,6 +73,7 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+
               <Route
                 path="/GestionUser"
                 element={
@@ -76,6 +82,7 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+
               <Route
                 path="/admin"
                 element={
@@ -85,7 +92,6 @@ function App() {
                 }
               />
 
-              {/* Cualquier otra ruta en sesión autenticada vuelve al panel */}
               <Route
                 path="*"
                 element={<Navigate to="/panel-imputacion" replace />}
@@ -95,9 +101,7 @@ function App() {
         </div>
       ) : (
         <Routes>
-          {/* Ruta pública de login */}
           <Route path="/login" element={<Login />} />
-          {/* Si no está autenticado, cualquier otra URL va a login */}
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       )}

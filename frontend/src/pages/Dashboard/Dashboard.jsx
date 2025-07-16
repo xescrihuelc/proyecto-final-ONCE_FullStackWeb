@@ -12,7 +12,7 @@ import {
 import { getImputacionesPorRango } from "../../services/imputacionService";
 import "./Dashboard.css";
 
-const Dashboard = () => {
+const Dashboard = ({ recargaTrigger }) => {
     const { roles, user } = useAuth();
     const { proyectos } = useContext(ProyectoContext);
 
@@ -28,7 +28,7 @@ const Dashboard = () => {
         const to = new Date(anio, mes + 1, 0).toISOString().slice(0, 10);
 
         // Si es admin, puede ver imputaciones de todos (null userId), sino solo las propias
-        const userId = roles?.includes("admin") ? null : user.id;
+        const userId = roles?.includes("admin") ? "" : user.id;
 
         setLoading(true);
         getImputacionesPorRango(userId, from, to)
@@ -45,7 +45,7 @@ const Dashboard = () => {
             })
             .catch((err) => console.error("Error cargando horas reales:", err))
             .finally(() => setLoading(false));
-    }, [user.id, roles, mes, anio]);
+    }, [user.id, roles, mes, anio, recargaTrigger]);
 
     // Proyectos activos/inactivos para cards
     const proyectosActivos = proyectos.filter((planing) => planing.activo);
@@ -53,7 +53,8 @@ const Dashboard = () => {
 
     // Tareas totales (suponiendo tareas es array)
     const tareasTotales = proyectos.reduce(
-        (acc, planing) => acc + (Array.isArray(planing.tareas) ? planing.tareas.length : 0),
+        (acc, planing) =>
+            acc + (Array.isArray(planing.tareas) ? planing.tareas.length : 0),
         0
     );
 
@@ -63,7 +64,9 @@ const Dashboard = () => {
         const nombre = planing.nombre || planing.estructura || "Sin nombre";
 
         // Contar tareas
-        const tareasCount = Array.isArray(planing.tareas) ? planing.tareas.length : 0;
+        const tareasCount = Array.isArray(planing.tareas)
+            ? planing.tareas.length
+            : 0;
 
         // Calcular horas imputadas para ese proyecto sumando las imputaciones que tengan taskId de sus tareas
         const tareasIds = Array.isArray(planing.tareas)

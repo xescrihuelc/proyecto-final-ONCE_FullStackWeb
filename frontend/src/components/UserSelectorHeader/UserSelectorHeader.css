@@ -1,0 +1,29 @@
+/* src/components/UserSelectorHeader/UserSelectorHeader.css */
+
+.user-selector-header {
+    position: sticky;
+    top: 0;
+    background-color: white;
+    padding: 0.75rem 1rem;
+    border-bottom: 2px solid #00a3e0;
+    display: flex;
+    align-items: center;
+    z-index: 1000; /* para que quede por encima */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.user-selector-label {
+    margin-right: 0.5rem;
+    font-weight: 600;
+    color: #005f8a;
+}
+
+.user-selector-select {
+    padding: 0.3rem 0.5rem;
+    font-size: 1rem;
+    min-width: 200px;
+    border: 1px solid #00a3e0;
+    border-radius: 4px;
+    background-color: white;
+    color: #004466;
+}
