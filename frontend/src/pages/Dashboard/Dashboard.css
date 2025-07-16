@@ -82,6 +82,10 @@
     margin-bottom: 1rem;
 }
 
+.dashboard-filter {
+    display: flex;
+    justify-content: center;
+}
 /* Responsive */
 
 /* 📱 Móviles – SOLO para Gestión de Usuarios */
